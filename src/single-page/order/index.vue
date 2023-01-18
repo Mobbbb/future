@@ -148,6 +148,85 @@
                     </el-table-column>
                 </el-table>
             </el-tab-pane>
+            <el-tab-pane label="账户分析" name="analyse">
+                <div class="table-search-input-wrap">
+                    <div class="search-item-wrap">
+                        <span>起止日期：</span>
+                        <el-date-picker
+                            v-model="analyseDate"
+                            type="daterange"
+                            unlink-panels
+                            range-separator="To"
+                            start-placeholder="开始日期"
+                            end-placeholder="结束日期"
+                            :clearable="false"
+                            :shortcuts="shortcuts"
+                            @change="changeAnalyseDateHandle"
+                            class="date-picker"
+						    popper-class="date-picker-popper"
+                            style="width: 260px;" />
+                    </div>
+                </div>
+                <el-card style="margin: 0 12px;">
+                    <div class="card-title">交易统计</div>
+                    <div class="card-item-wrap">
+                        <div class="card-line-wrap">
+                            <div class="card-item-title">多单胜率</div>
+                            <div class="card-item-value">{{analyseResult.buyRate}}%</div>
+                        </div>
+                        <div class="card-line-wrap">
+                            <div class="card-item-title">空单胜率</div>
+                            <div class="card-item-value">{{analyseResult.saleRate}}%</div>
+                        </div>
+                        <div class="card-line-wrap">
+                            <div class="card-item-title">总胜率</div>
+                            <div class="card-item-value">{{analyseResult.totalRate}}%</div>
+                        </div>
+                    </div>
+                    <div class="card-item-wrap">
+                        <div class="card-line-wrap">
+                            <div class="card-item-title">多单盈亏</div>
+                            <div class="card-item-value"
+                                :style="analyseResult.buyProfit >= 0 ?
+                                { color: 'rgb(235, 68, 54)' } :
+                                { color: 'rgb(14, 157, 88)' }">
+                                {{analyseResult.buyProfit}}
+                                <span class="card-item-unit">元</span>
+                            </div>
+                        </div>
+                        <div class="card-line-wrap">
+                            <div class="card-item-title">空单盈亏</div>
+                            <div class="card-item-value" 
+                                :style="analyseResult.saleProfit >= 0 ?
+                                { color: 'rgb(235, 68, 54)' } :
+                                { color: 'rgb(14, 157, 88)' }">
+                                {{analyseResult.saleProfit}}
+                                <span class="card-item-unit">元</span>
+                            </div>
+                        </div>
+                        <div class="card-line-wrap">
+                            <div class="card-item-title">多单每手盈亏</div>
+                            <div class="card-item-value"
+                                :style="analyseResult.preBuyProfit >= 0 ?
+                                { color: 'rgb(235, 68, 54)' } :
+                                { color: 'rgb(14, 157, 88)' }">
+                                {{analyseResult.preBuyProfit}}
+                                <span class="card-item-unit">元/手</span>
+                            </div>
+                        </div>
+                        <div class="card-line-wrap">
+                            <div class="card-item-title">空单每手盈亏</div>
+                            <div class="card-item-value"
+                                :style="analyseResult.preSaleProfit >= 0 ?
+                                { color: 'rgb(235, 68, 54)' } :
+                                { color: 'rgb(14, 157, 88)' }">
+                                {{analyseResult.preSaleProfit}}
+                                <span class="card-item-unit">元/手</span>
+                            </div>
+                        </div>
+                    </div>
+                </el-card>
+            </el-tab-pane>
         </el-tabs>
         <el-dialog v-model="centerDialogVisible"
             title="警告"
@@ -224,6 +303,18 @@ export default {
             status: 0,
         })
 
+        const analyseResult = reactive({
+            buyRate: 0,
+            saleRate: 0,
+            totalRate: 0,
+            buyProfit: 0,
+            saleProfit: 0,
+            preBuyProfit: 0,
+            preSaleProfit: 0,
+        })
+
+        const analyseDate = ref(monthShortcuts[0].value)
+
         const getGapDate = (gap = 1) => {
             const end = new Date()
             const start = new Date()
@@ -262,6 +353,12 @@ export default {
                 text: '近30天',
                 value: () => {
                     return getGapDate(30)
+                },
+            },
+            {
+                text: '近365天',
+                value: () => {
+                    return getGapDate(365)
                 },
             },
             ...monthShortcuts,
@@ -334,10 +431,9 @@ export default {
             }
         }
 
-        const getTableData = async () => {
-            if (!isLogin.value) return
-            if (searchParams.date[0]) {
-                let prevDay = Date.parse(new Date(searchParams.date[0])) - 24 * 60 * 60 * 1000
+        const parseDateParams = (dateParams) => {
+            if (dateParams[0]) {
+                let prevDay = Date.parse(new Date(dateParams[0])) - 24 * 60 * 60 * 1000
                 if (new Date(prevDay).getDay() === 0) { // 前一天是周日
                     prevDay -= 2 * 24 * 60 * 60 * 1000
                 }
@@ -346,12 +442,60 @@ export default {
                 }
                 searchParams.startDate = dateFormat(prevDay, 'yyyy-MM-dd') + ' 21:00:00'
             }
-            if (searchParams.date[1]) {
-                searchParams.endDate = dateFormat(searchParams.date[1], 'yyyy-MM-dd') + ' 20:59:59'
+            if (dateParams[1]) {
+                searchParams.endDate = dateFormat(dateParams[1], 'yyyy-MM-dd') + ' 20:59:59'
             }
+        }
+
+        const getTableData = async () => {
+            if (!isLogin.value) return
+
+            parseDateParams(searchParams.date)
             const res = await fetchOrderInfo(searchParams)
             const data = res.data || []
             tableData.value = data || []
+        }
+
+        const analyseAccount = async () => {
+            if (!isLogin.value) return
+            
+            parseDateParams(analyseDate.value)
+            const res = await fetchOrderInfo(searchParams)
+            const dataList = res.data || []
+            let buyNum = 0
+            let buyWinNum = 0
+            let saleNum = 0
+            let saleWinNum = 0
+            analyseResult.saleProfit = 0
+            analyseResult.buyProfit = 0
+            dataList.forEach(item => {
+                if (!item.openOrClose) { // 平单
+                    if (item.buyOrSale === 1) { // 平空单
+                        saleNum ++
+                        analyseResult.saleProfit += item.totalProfit
+                        if (item.totalProfit > 0) { // 盈利
+                            saleWinNum ++
+                        }
+                    } else { // 平多单
+                        buyNum ++
+                        analyseResult.buyProfit += item.totalProfit
+                        if (item.totalProfit > 0) { // 盈利
+                            buyWinNum ++
+                        }
+                    }
+                }
+            })
+
+            analyseResult.buyRate = (buyWinNum / buyNum).toFixed(4) * 100 || 0
+            analyseResult.saleRate = (saleWinNum / saleNum).toFixed(4) * 100 || 0
+            analyseResult.totalRate = ((saleWinNum + buyWinNum) / (buyNum + saleNum)).toFixed(4) * 100 || 0
+            analyseResult.preBuyProfit = (analyseResult.buyProfit / buyNum).toFixed(2) * 1 || 0
+            analyseResult.preSaleProfit = (analyseResult.saleProfit / saleNum).toFixed(2) * 1 || 0
+        }
+
+        
+        const changeAnalyseDateHandle = () => {
+            analyseAccount()
         }
 
         const handleClick = async () => {
@@ -362,8 +506,10 @@ export default {
                         orderTableHeight.value = tableTabWrap.value.$el.clientHeight - searchInputWrap.value.clientHeight
                     }
                 })
-            } else {
+            } else if (activeName.value === 'add') {
                 getOpeningTableData()
+            } else {
+                analyseAccount()
             }
         }
 
@@ -527,6 +673,8 @@ export default {
             orderTableHeight,
             shortcuts,
             searchParams,
+            analyseDate,
+            analyseResult,
             tableRowClassName,
             submitHandle,
             handleClick,
@@ -537,6 +685,7 @@ export default {
             resetHandle,
             changeInputHandle,
             confirmDelete,
+            changeAnalyseDateHandle,
         }
     },
 }
@@ -578,6 +727,31 @@ export default {
 }
 .search-item-wrap span {
     flex-shrink: 0;
+}
+.card-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+.card-item-wrap {
+    display: flex;
+    flex-wrap: wrap;
+}
+.card-line-wrap {
+    margin-right: 24px;
+    margin-bottom: 12px;
+}
+.card-item-title {
+    font-size: 12px;
+    margin-bottom: 4px;
+    color: var(--el-text-color-regular);
+}
+.card-item-value {
+    font-size: 16px;
+    font-weight: bold;
+}
+.card-item-unit {
+    font-size: 12px;
 }
 </style>
 
