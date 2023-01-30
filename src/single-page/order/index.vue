@@ -486,9 +486,11 @@ export default {
                 }
             })
 
-            analyseResult.buyRate = (buyWinNum / buyNum).toFixed(4) * 100 || 0
-            analyseResult.saleRate = (saleWinNum / saleNum).toFixed(4) * 100 || 0
-            analyseResult.totalRate = ((saleWinNum + buyWinNum) / (buyNum + saleNum)).toFixed(4) * 100 || 0
+            analyseResult.saleProfit = analyseResult.saleProfit.toFixed(2) * 1 || 0
+            analyseResult.buyProfit = analyseResult.buyProfit.toFixed(2) * 1 || 0
+            analyseResult.buyRate = (buyWinNum / buyNum * 100).toFixed(2) * 1 || 0
+            analyseResult.saleRate = (saleWinNum / saleNum * 100).toFixed(2) * 1 || 0
+            analyseResult.totalRate = ((saleWinNum + buyWinNum) / (buyNum + saleNum) * 100).toFixed(2) * 1 || 0
             analyseResult.preBuyProfit = (analyseResult.buyProfit / buyNum).toFixed(2) * 1 || 0
             analyseResult.preSaleProfit = (analyseResult.saleProfit / saleNum).toFixed(2) * 1 || 0
         }
