@@ -382,8 +382,8 @@ export default {
             name: '',
             buyOrSale: 0,
             openOrClose: 0,
-            hands: 1,
-            price: 0,
+            hands: NaN,
+            price: NaN,
         })
         
         const searchParams = reactive({
@@ -466,8 +466,20 @@ export default {
         const rules = reactive({
             date: [{ required: true, message: '请选择日期', trigger: 'change' }],
             name: [{ required: true, message: '请选择合约', trigger: 'change' }],
-            hands: [{ required: true, message: '请输入手数', trigger: 'change' }],
-            price: [{ required: true, message: '请输入成交价', trigger: 'change' }],
+            hands: [{ message: '请输入手数', trigger: 'change', validator: (rule, value, callback) => {
+                if (value) {
+                    callback()
+                } else {
+                    callback(new Error())
+                }
+            }}],
+            price: [{ message: '请输入成交价', trigger: 'change', validator: (rule, value, callback) => {
+                if (value) {
+                    callback()
+                } else {
+                    callback(new Error())
+                }
+            }}],
         })
 
         const futuresList = computed(() => store.getters['app/futuresList'])
@@ -667,6 +679,8 @@ export default {
                 if (success) {
                     ElMessage.success('操作成功')
                     getOpeningTableData()
+                    formData.hands = NaN
+                    formData.price = NaN
                 }
             }
         }
