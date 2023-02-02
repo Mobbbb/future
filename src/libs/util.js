@@ -191,3 +191,46 @@ export const delCookie = (name) => {
     // ios中需要添加max-age=0
     document.cookie = `${name}=${getCookie(name)};expires=${new Date(1)};max-age=0;domain=${domain};path=/`
 }
+
+export const formatNumUnit = (num, float = 2) => {
+    let flag = false
+    if (num === null || num === '' || typeof num === 'undefined') return {
+        num: 0,
+        unit: '',
+    }
+
+    if (/[^0-9\.\-]/.test(num)) return {
+        num,
+        unit: '',
+    }
+
+    if (num < 0) {
+        num = 0 - num
+        flag = true
+    }
+
+    let arr = num.toString().split('.')
+
+    let length = arr[0].length
+    let result = arr[0]
+    let unit = ''
+    if (length < 5) { // 0 - 9,999
+        result = arr[0]
+        unit = ''
+        if (arr.length > 1) {
+            result = Number(num).toFixed(float)
+        }
+    } else if (length >= 5 && length <= 8) { // 10,000 - 99,999,999
+        result = (arr[0] / 10000).toFixed(float)
+        unit = '万'
+    } else {
+        result = (arr[0] / 100000000).toFixed(float)
+        unit = '亿'
+    }
+
+    if (flag) result = '-' + result
+    return {
+        num: result,
+        unit,
+    }
+}
