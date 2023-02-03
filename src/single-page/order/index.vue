@@ -16,10 +16,10 @@
                             </el-select>
                         </el-form-item>
                         <el-form-item label="成交价" prop="price">
-                            <el-input-number v-model="formData.price" :controls="false" placeholder="请输入成交价" />
+                            <el-input-number v-model="formData.price" placeholder="请输入成交价" />
                         </el-form-item>
                         <el-form-item label="手数" prop="hands">
-                            <el-input-number v-model="formData.hands" :controls="false" placeholder="请输入手数" />
+                            <el-input-number v-model="formData.hands" placeholder="请输入手数" />
                         </el-form-item>
                     </el-form>
                     <div style="padding-left: 24px;">
@@ -680,7 +680,6 @@ export default {
                     ElMessage.success('操作成功')
                     getOpeningTableData()
                     formData.hands = NaN
-                    formData.price = NaN
                 }
             }
         }
