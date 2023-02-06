@@ -12,15 +12,6 @@
                 <el-avatar v-else class="list-uid"
                     src="/resource/message-board/images/jhh-avator2.jpg"/>
             </div>
-            <el-dialog v-model="centerDialogVisible" title="Forbidden" width="275px" center>
-                <el-input v-model="password" @keydown.enter="confirm" placeholder="password" />
-                <template #footer>
-                    <span class="dialog-footer">
-                        <el-button @click="centerDialogVisible = false">Cancel</el-button>
-                        <el-button type="primary" @click="confirm">Confirm</el-button>
-                    </span>
-                </template>
-            </el-dialog>
             <el-empty description="暂无数据" v-if="!showListData.length"></el-empty>
         </div>
         <el-pagination small background layout="prev, jumper, next, total" 
@@ -33,7 +24,6 @@
 </template>
 
 <script>
-import { useRouter } from 'vue-router'
 import { computed, ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
@@ -46,16 +36,12 @@ export default {
         Refresh,
     },
     setup() {
-        const router = useRouter()
         const store = new useStore()
-        const password = ref('')
-        const clickItem = ref({})
         const currentPage = ref(1)
         const isLoading = ref(false)
         const showRedPoint = ref(false)
         const newStatus = ref(null)
         const htmlContent = {}
-        const centerDialogVisible = ref(false)
         const homeListData = computed(() => store.state.app.homeListData.filter(item => !item.hideDefault))
 
         const requestHomeList = () => store.dispatch('app/requestHomeList')
@@ -70,30 +56,12 @@ export default {
         })
 
         const clickHandle = (params) => {
-            if (params.realContent) {
-                clickItem.value = params
-                centerDialogVisible.value = true
-            } else {
-                navigator.clipboard.writeText(htmlContent[params.index].innerText)
-                ElMessage({
-                    message: '复制成功！',
-                    customClass: 'el-message-wrap',
-                    type: 'success',
-                })
-            }
-        }
-
-        const confirm = () => {
-            if (password.value === clickItem.value.secret) {
-                router.push({
-                    name: 'detail',
-                    query: {
-                        id: clickItem.value.id,
-                    },
-                })
-            } else {
-                password.value = ''
-            }
+            navigator.clipboard.writeText(htmlContent[params.index].innerText)
+            ElMessage({
+                message: '复制成功！',
+                customClass: 'el-message-wrap',
+                type: 'success',
+            })
         }
 
         const setItemRef = (el, index) => {
@@ -156,13 +124,10 @@ export default {
             currentPage,
             pageSize,
             htmlContent,
-            password,
-            centerDialogVisible,
             homeListData,
             showListData,
             isLoading,
             showRedPoint,
-            confirm,
             clickHandle,
             setItemRef,
             refreshHandle,
