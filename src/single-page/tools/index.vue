@@ -265,13 +265,13 @@ export default {
         const setGoodsPriceNext = (value) => store.commit('app/setGoodsPriceNext', value)
         const setGoodsType = (value) => store.commit('app/setGoodsType', value)
         const setCommissionType = (value) => store.commit('app/setCommissionType', value)
-        const getFutureConfigInfo = () => store.dispatch('app/getFutureConfigInfo')
+        const getFutureConfigInfo = () => store.dispatch('order/getFutureConfigInfo')
 
         const isInPc = computed(() => config.device === PC)
         const spanNumberClass = computed(() => showNumber.value ? 'result-number' : '')
         const goods = computed(() => store.state.app.goods)
-        const futureConfigInfo = computed(() => store.state.app.futureConfigInfo)
-        const futuresList = computed(() => store.getters['app/futuresList'])
+        const futureConfigInfo = computed(() => store.state.order.futureConfigInfo)
+        const futuresList = computed(() => store.getters['order/futuresList'])
 
         const commissionList = computed(() => {
             const filterRes = futureConfigInfo.value.filter(item => item.name === currentGoodsType.value)

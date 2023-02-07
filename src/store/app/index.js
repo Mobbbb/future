@@ -1,4 +1,4 @@
-import { fetchFutureConfigInfo, fetchInsertLog, fetchUserInfo, fetchListData } from '@/api'
+import { fetchInsertLog, fetchUserInfo, fetchListData } from '@/api'
 import { getCurrentTime, getQueryVariable, getCookie, delCookie } from '@/libs/util'
 import router, { clearPrivateRoute, whiteUserList } from '@/router'
 
@@ -19,7 +19,7 @@ const app = {
 
             activeNavIndex: '/',
             activeIncomeTab: 'day',
-            activeOrderTab: 'add',
+            activeOrderTab: 'order',
 
             showLoginDrawerStatus: false,
 
@@ -30,7 +30,6 @@ const app = {
                 priceNext: 0,
                 commissionType: 0,
             },
-            futureConfigInfo: [],
             USER_INFO: {}, // 用户信息
         }
     },
@@ -46,9 +45,6 @@ const app = {
         overMediaCritical(state) {
             return document.body.clientWidth < state.mediaCriticalValue
         },
-        futuresList(state) { // 合约列表
-            return [...new Set(state.futureConfigInfo.map(item => item.name))]
-        },
         isLogin(state) {
             return !!state.USER_INFO.userId
         },
@@ -57,9 +53,6 @@ const app = {
         },
     },
     mutations: {
-        setFutureConfigInfo(state, value) {
-            state.futureConfigInfo = value
-        },
         setActiveIncomeTab(state, value) {
             state.activeIncomeTab = value
         },
@@ -122,11 +115,6 @@ const app = {
                     routerName: routerName || router.currentRoute.value.path,
                 })
             }
-        },
-        async getFutureConfigInfo({ commit }) {
-            const res = await fetchFutureConfigInfo()
-            const futureConfigInfo = res.data || []
-            commit('setFutureConfigInfo', futureConfigInfo)
         },
         logoutAction({ commit }) {
             commit('SET_USER_INFO', {})

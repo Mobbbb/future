@@ -234,3 +234,65 @@ export const formatNumUnit = (num, float = 2) => {
         unit,
     }
 }
+
+export const parseDateParams = (dateParams) => {
+    const params = {}
+    if (dateParams[0]) {
+        let prevDay = Date.parse(new Date(dateParams[0])) - 24 * 60 * 60 * 1000
+        if (new Date(prevDay).getDay() === 0) { // 前一天是周日
+            prevDay -= 2 * 24 * 60 * 60 * 1000
+        }
+        if (new Date(prevDay).getDay() === 6) { // 前一天是周六
+            prevDay -= 1 * 24 * 60 * 60 * 1000
+        }
+        params.startDate = dateFormat(prevDay, 'yyyy-MM-dd') + ' 21:00:00'
+    }
+    if (dateParams[1]) {
+        params.endDate = dateFormat(dateParams[1], 'yyyy-MM-dd') + ' 20:59:59'
+    }
+    return params
+}
+
+export const getGapDate = (gap = 1) => {
+    const end = new Date()
+    const start = new Date()
+
+    let deltaDay = 0
+    if (end.getHours() >= 21) { // 9点之后，区间往后延一天
+        deltaDay ++
+        end.setTime(end.getTime() + 3600 * 1000 * 24 * 1)
+    }
+    if (new Date(end).getDay() === 0) { // 明天是周日
+        deltaDay ++
+        end.setTime(end.getTime() + 3600 * 1000 * 24 * 1)
+    } else if (new Date(end).getDay() === 6) { // 明天是周六
+        deltaDay = deltaDay + 2
+        end.setTime(end.getTime() + 3600 * 1000 * 24 * 2)
+    }
+
+    start.setTime(start.getTime() - 3600 * 1000 * 24 * (gap - deltaDay - 1))
+    return [start, end]
+}
+
+export const getMonthShortcuts = () => {
+    const date = new Date()
+    let year = date.getFullYear()
+    let month = date.getMonth() + 1
+    const monthShortcuts = []
+    for (let i = 0; i < 5; i++) {
+        year = month < 1 ? year - 1 : year
+        month = month < 1 ? month + 12 : month
+        let nMonth = (month + 1) > 12 ? (month + 1) - 12 : (month + 1)
+        let nYear = (month + 1) > 12 ? year + 1 : year
+
+        const nextMonth = new Date(nYear, nMonth - 1, 1)
+        let nPrevDay = Date.parse(nextMonth) - 24 * 60 * 60 * 1000
+        
+        monthShortcuts.push({
+            text: month < 10 ? `${year}.${'0' + month}` : `${year}.${month}`,
+            value: [new Date(year, month - 1, 1), dateFormat(nPrevDay, 'yyyy-MM-dd')],
+        })
+        month--
+    }
+    return monthShortcuts
+}
