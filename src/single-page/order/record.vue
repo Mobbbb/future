@@ -42,8 +42,9 @@
             </div>
         </div>
         <el-table class="order-table" 
-            :height="orderTableHeight"
+            v-loading="loading"
             show-summary 
+            :height="orderTableHeight"
             :data="orderList"
             :summary-method="getSummaries"
             :row-class-name="tableRowClassName">
@@ -134,6 +135,7 @@ export default {
         const searchInputWrap = ref()
         const tableTabWrap = ref()
         const orderTableHeight = ref(0)
+        const loading = ref(false)
         const centerDialogVisible = ref(false)
 
         const searchParams = reactive({
@@ -184,12 +186,14 @@ export default {
             }
         }
 
-        const getTableData = () => {
+        const getTableData = async () => {
             if (!isLogin.value) return
             const params = parseDateParams(searchParams.date)
             searchParams.startDate = params.startDate
             searchParams.endDate = params.endDate
-            getOrderData(searchParams)
+            loading.value = true
+            await getOrderData(searchParams)
+            loading.value = false
         }
 
         let currentDeleteItem = null
@@ -275,6 +279,7 @@ export default {
         })
 
         return {
+            loading,
             centerDialogVisible,
             orderList,
             searchInputWrap,

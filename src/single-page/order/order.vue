@@ -1,17 +1,18 @@
 <template>
     <div class="order-wrap">
         <div class="table-wrap">
-            <el-form :model="formData" label-width="95px" label-position="left"
+            <el-form 
+                :model="formData"
+                :rules="rules" 
+                label-width="95px" 
+                label-position="left"
                 ref="ruleFormRef"
-                :rules="rules"
                 style="width: 325px;padding-left: 24px;">
                 <el-form-item label="交易日期" prop="date">
                     <el-date-picker v-model="formData.date" type="datetime" class="order-date-input" placeholder="请选择日期" :editable="false" :clearable="false" />
                 </el-form-item>
                 <el-form-item label="合约" prop="name">
-                    <el-select v-model="formData.name" style="width: 180px;" placeholder="请选择合约" filterable @change="changeOrderName">
-                        <el-option :label="item" :value="item" v-for="item in futuresConfigList" :key="item"></el-option>
-                    </el-select>
+                    <div class="drawer-input" @click="popOrderNameDrawer">{{formData.name}}</div>
                 </el-form-item>
                 <el-form-item label="成交价" prop="price">
                     <el-input-number v-model="formData.price" style="width: 180px;" placeholder="请输入成交价" />
@@ -40,6 +41,11 @@
             <el-table-column prop="hands" label="手数" />
             <el-table-column prop="commission" width="120" label="开仓总手续费" />
         </el-table>
+        <el-drawer v-model="showOrderNameDrawer" 
+            :direction="overMediaCritical ? 'btt' : 'rtl'" 
+            :size="overMediaCritical ? 250 : 450" custom-class="order-name-drawer">
+            <el-check-tag class="order-name-label" checked v-for="item in futuresConfigList" @click="selectOrderName(item)" :key="item">{{item}}</el-check-tag>
+        </el-drawer>
     </div>
 </template>
 
@@ -56,6 +62,7 @@ export default {
         const date = new Date()
         const store = new useStore()
         const ruleFormRef = ref()
+        const showOrderNameDrawer = ref(false)
         const formData = reactive({
             date,
             name: '',
@@ -86,6 +93,7 @@ export default {
 
         const futuresList = computed(() => store.getters['order/futuresList'])
         const isLogin = computed(() => store.getters['app/isLogin'])
+        const overMediaCritical = computed(() => store.getters['app/overMediaCritical'])
         const openingOrderList = computed(() => store.state.order.openingOrderList)
         const activeOrderTab = computed(() => store.state.app.activeOrderTab)
         const setLoginDrawerStatus = (status) => store.commit('app/setLoginDrawerStatus', status)
@@ -100,16 +108,16 @@ export default {
             let year = Number(dateFormat(date, 'yy'))
             let month = Number(dateFormat(date, 'MM'))
             
-            for (let i = 0; i < 6; i++) {
-                if (month < 10) {
-                    dateList.push(`${year}0${month}`)
-                } else {
-                    dateList.push(`${year}${month}`)
-                }
+            for (let i = 0; i < 5; i++) {
                 month ++
                 if (month > 12) {
                     year ++
                     month = 1
+                }
+                if (month < 10) {
+                    dateList.push(`${year}0${month}`)
+                } else {
+                    dateList.push(`${year}${month}`)
                 }
             }
 
@@ -163,6 +171,15 @@ export default {
             formData.hands = row.hands
         }
 
+        const popOrderNameDrawer = () => {
+            showOrderNameDrawer.value = true
+        }
+
+        const selectOrderName = (name) => {
+            showOrderNameDrawer.value = false
+            formData.name = name
+        }
+
         watch(activeOrderTab, (value) => {
             if (value === 'order' && isLogin.value) {
                 getOpeningOrderData()
@@ -189,15 +206,19 @@ export default {
         })
 
         return {
+            overMediaCritical,
             futuresConfigList,
             formData,
             rules,
             openingOrderList,
             ruleFormRef,
             buySaleListNum,
+            showOrderNameDrawer,
             submitHandle,
             changeOrderName,
             orderRowClick,
+            popOrderNameDrawer,
+            selectOrderName,
         }
     },
 }
@@ -213,11 +234,57 @@ export default {
     font-size: 12px;
     margin: 16px 24px;
 }
+.drawer-input {
+    background-color: var(--el-input-bg-color,var(--el-color-white));
+    border-radius: var(--el-input-border-radius,var(--el-border-radius-base));
+    box-sizing: border-box;
+    color: var(--el-input-text-color,var(--el-text-color-regular));
+    display: inline-block;
+    font-size: inherit;
+    width: 180px;
+    height: 32px;
+    line-height: 32px;
+    outline: 0;
+    padding: 0 11px;
+    transition: var(--el-transition-box-shadow);
+    box-shadow: 0 0 0 1px var(--el-input-border-color,var(--el-border-color-base)) inset;
+    cursor: pointer;
+    transition: all .3s;
+}
+.drawer-input:hover {
+    box-shadow: 0 0 0 1px #c0c4cc inset;
+}
+.drawer-input:active {
+    outline: 0;
+    box-shadow: 0 0 0 1px #409eff inset;
+}
+.order-name-label.is-checked {
+    background-color: white;
+    border: 1px solid var(--el-input-border-color,var(--el-border-color-base));
+    padding: 4px 12px;
+    font-weight: normal;
+    color: #606266;
+    margin: 0 4px 8px 0;
+    transition: all .3s;
+    width: 78px;
+}
+.order-name-label.is-checked:hover {
+    border: 1px solid #c0c4cc;
+}
+.order-name-label.is-checked:active {
+    border: 1px solid #409eff;
+}
 </style>
 
 <style>
 .order-date-input .el-input__inner {
     padding-right: 12px;
     width: 180px;
+}
+.order-name-drawer .el-drawer__header{
+    display: none;
+}
+.order-name-drawer .el-drawer__body {
+
 }
 </style>
