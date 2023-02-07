@@ -173,7 +173,7 @@
 </template>
 
 <script>
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { formatNumUnit, parseDateParams, getGapDate, getMonthShortcuts } from '@/libs/util'
 
@@ -303,17 +303,23 @@ export default {
             analyseAccount()
         }
 
+        watch(isLogin, (value) => {
+            if (value) {
+                analyseAccount()
+            } else {
+                setAnalyseList([]) // 清空数据
+                analyseAccount()
+            }
+        })
+
         watch(activeOrderTab, async (value) => {
             if (value === 'analyse') {
                 analyseAccount()
             }
         })
 
-        watch(isLogin, (value) => {
-            if (value) {
-                analyseAccount()
-            } else {
-                setAnalyseList([]) // 清空数据
+        onMounted(() => {
+            if (activeOrderTab.value === 'analyse') {
                 analyseAccount()
             }
         })

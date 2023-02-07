@@ -30,9 +30,6 @@ export default {
     },
     setup() {
         const store = new useStore()
-
-        const isLogin = computed(() => store.getters['app/isLogin'])
-        const getOpeningOrderData = () => store.dispatch('order/getOpeningOrderData')
         const setActiveOrderTab = (value) => store.commit('app/setActiveOrderTab', value)
 
         const activeName = computed({
@@ -42,12 +39,6 @@ export default {
             set(value) {
                 setActiveOrderTab(value)
             },
-        })
-
-        onMounted(async () => {
-            if (isLogin.value) {
-                getOpeningOrderData()
-            }
         })
 
         return {

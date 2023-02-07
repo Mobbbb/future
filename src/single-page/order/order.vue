@@ -195,6 +195,9 @@ export default {
         })
 
         onMounted(async () => {
+            if (isLogin.value) {
+                getOpeningOrderData()
+            }
             await getFutureConfigInfo()
             // 设置默认选中的合约
             const defaultOrderName = localStorage.getItem('default-order-name')

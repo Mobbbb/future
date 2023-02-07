@@ -119,7 +119,7 @@
 </template>
 
 <script>
-import { ref, reactive, computed, watch, nextTick } from 'vue'
+import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { fetchDeleteOrder } from '@/api'
 import { parseDateParams, getGapDate, getMonthShortcuts } from '@/libs/util'
@@ -259,6 +259,14 @@ export default {
             getTableData()
         }
 
+        watch(isLogin, (value) => {
+            if (value) {
+                getTableData()
+            } else {
+                setOrderList([]) // 清空数据
+            }
+        })
+
         watch(activeOrderTab, (value) => {
             if (value === 'table') {
                 getTableData()
@@ -270,11 +278,14 @@ export default {
             }
         })
 
-        watch(isLogin, (value) => {
-            if (value) {
+        onMounted(() => {
+            if (activeOrderTab.value === 'table') {
                 getTableData()
-            } else {
-                setOrderList([]) // 清空数据
+                nextTick(() => {
+                    if (!orderTableHeight.value) {
+                        orderTableHeight.value = tableTabWrap.value.getBoundingClientRect().height - searchInputWrap.value.getBoundingClientRect().height
+                    }
+                })
             }
         })
 
