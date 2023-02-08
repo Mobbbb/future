@@ -42,7 +42,7 @@
             <el-table-column prop="commission" width="120" label="开仓总手续费" />
         </el-table>
         <el-drawer v-model="showOrderNameDrawer" 
-            :direction="overMediaCritical ? 'btt' : 'rtl'" 
+            :direction="overMediaCritical ? 'btt' : 'ltr'" 
             :size="overMediaCritical ? 250 : 483" custom-class="order-name-drawer">
             <div :style="overMediaCritical ? { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around' } : {}">
                 <el-check-tag class="order-name-label" checked v-for="item in futuresConfigList" @click="selectOrderName(item)" :key="item">{{item}}</el-check-tag>
