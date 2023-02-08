@@ -43,8 +43,10 @@
         </el-table>
         <el-drawer v-model="showOrderNameDrawer" 
             :direction="overMediaCritical ? 'btt' : 'rtl'" 
-            :size="overMediaCritical ? 250 : 450" custom-class="order-name-drawer">
-            <el-check-tag class="order-name-label" checked v-for="item in futuresConfigList" @click="selectOrderName(item)" :key="item">{{item}}</el-check-tag>
+            :size="overMediaCritical ? 250 : 483" custom-class="order-name-drawer">
+            <div :style="overMediaCritical ? { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around' } : {}">
+                <el-check-tag class="order-name-label" checked v-for="item in futuresConfigList" @click="selectOrderName(item)" :key="item">{{item}}</el-check-tag>
+            </div>
         </el-drawer>
     </div>
 </template>
@@ -267,9 +269,12 @@ export default {
     padding: 4px 12px;
     font-weight: normal;
     color: #606266;
-    margin: 0 4px 8px 0;
+    margin: 0 8px 12px 0;
     transition: all .3s;
-    width: 78px;
+    width: 82px;
+    text-align: center;
+    padding-top: 5px;
+    box-sizing: border-box;
 }
 .order-name-label.is-checked:hover {
     border: 1px solid #c0c4cc;
@@ -281,13 +286,14 @@ export default {
 
 <style>
 .order-date-input .el-input__inner {
-    padding-right: 12px;
+    padding-right: 12px!important;
     width: 180px;
 }
 .order-name-drawer .el-drawer__header{
     display: none;
 }
 .order-name-drawer .el-drawer__body {
-
+    padding-right: 12px;
+    padding-bottom: 8px;
 }
 </style>

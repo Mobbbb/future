@@ -13,7 +13,7 @@
                 </template>
             </el-menu>
 
-            <div class="search-input-wrap">
+            <div class="search-input-wrap" v-show="isHomeRoute">
                 <el-input v-model="searchText" 
                     @keydown.enter="searchHandle" 
                     @clear="searchHandle"
@@ -43,7 +43,7 @@
 
 <script>
 import { mapState, mapGetters, mapMutations, mapActions } from 'vuex'
-import { routes, privateRoute, whiteUserList } from '@/router'
+import { routes, privateRoute, homeRoute } from '@/router'
 import LoginDrawer from './login-drawer.vue'
 import { Avatar } from '@element-plus/icons-vue'
 
@@ -81,6 +81,9 @@ export default {
             } else {
                 return routes
             }
+        },
+        isHomeRoute() {
+            return this.$route.name === homeRoute.name
         },
     },
     methods: {
