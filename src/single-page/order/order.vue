@@ -117,9 +117,9 @@ export default {
                     month = 1
                 }
                 if (month < 10) {
-                    dateList.push(`${year}0${month}`)
+                    dateList.unshift(`${year}0${month}`)
                 } else {
-                    dateList.push(`${year}${month}`)
+                    dateList.unshift(`${year}${month}`)
                 }
             }
 
