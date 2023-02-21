@@ -171,6 +171,7 @@ export default {
         const orderRowClick = (row) => {
             formData.name = row.name
             formData.hands = row.hands
+            localStorage.setItem('default-order-name', formData.name)
         }
 
         const popOrderNameDrawer = () => {

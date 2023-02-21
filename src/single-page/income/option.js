@@ -43,7 +43,7 @@ const fontSize = genVH(8)
  * @param {*} onlyShowLast 
  * @returns 
  */
-export const getOption = (dim = [], onlyShowLast = false) => {
+export const getOption = (dim = [], onlyShowLast = 0) => {
     let dataAll = []
     dim.forEach(item => {
         dataAll = dataAll.concat(item.data)
@@ -157,8 +157,26 @@ export const getOption = (dim = [], onlyShowLast = false) => {
     }
 }
 
-const formatLabel = (data, item, index, onlyShowLast) => {
-    if (onlyShowLast) {
+/**
+ * 
+ * @param {*} data 
+ * @param {*} item 
+ * @param {*} index 
+ * @param {*} showType 1: show last one, 0: show all, 1: hide all
+ * @returns 
+ */
+const formatLabel = (data, item, index, showType = 0) => {
+    if (item.num === 0) {
+        return {
+            value: item.num,
+            symbol: 'none',
+            label: {
+                show: false,
+            },
+        }
+    }
+
+    if (showType === 1) {
         if (index === data.length - 1) {
             return {
                 value: item.num,
@@ -172,9 +190,11 @@ const formatLabel = (data, item, index, onlyShowLast) => {
                 },
             }
         }
-    }
-    
-    if (item.num === 0) {
+    } else if (showType === 0) {
+        return {
+            value: item.num,
+        }
+    } else {
         return {
             value: item.num,
             symbol: 'none',
@@ -182,8 +202,5 @@ const formatLabel = (data, item, index, onlyShowLast) => {
                 show: false,
             },
         }
-    }
-    return {
-        value: item.num,
     }
 }

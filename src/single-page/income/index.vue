@@ -162,7 +162,7 @@ export default {
             nextTick(() => {
                 document.getElementById('incomeChart1').removeAttribute('_echarts_instance_')
                 myChart1 = echarts.init(document.getElementById('incomeChart1'))
-                myChart1.setOption(getOption(chartDataArr.value))
+                myChart1.setOption(getOption(chartDataArr.value, 2))
             })
         }
 
@@ -171,7 +171,7 @@ export default {
             nextTick(() => {
                 document.getElementById('incomeChart2').removeAttribute('_echarts_instance_')
                 myChart2 = echarts.init(document.getElementById('incomeChart2'))
-                myChart2.setOption(getOption(chartDataTotalArr.value, true))
+                myChart2.setOption(getOption(chartDataTotalArr.value, 1))
             })
         }
 
