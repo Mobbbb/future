@@ -1,6 +1,6 @@
 <template>
-    <div class="order-wrap">
-        <div class="table-wrap">
+    <div class="order-wrap" ref="tableTabWrap">
+        <div class="form-wrap" ref="formWrap">
             <el-form 
                 :model="formData"
                 :rules="rules" 
@@ -28,7 +28,7 @@
                 <el-button type="primary" :disabled="!buySaleListNum.saleListNum" @click="submitHandle(1, 0)">平空</el-button>
             </div>
         </div>
-        <el-table class="opening-order-table" :data="openingOrderList" border @row-click="orderRowClick">
+        <el-table class="opening-order-table" :height="openingOrderTableHeight" :data="openingOrderList" border @row-click="orderRowClick">
             <el-table-column prop="name" label="合约" width="70" fixed="left" />
             <el-table-column prop="buyOrSale" width="60" label="多/空">
                 <template #default="scope">
@@ -52,7 +52,7 @@
 </template>
 
 <script>
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
 import { useStore } from 'vuex'
 import { fetchInsertOrder } from '@/api'
 import { dateFormat } from '@/libs/util'
@@ -64,6 +64,9 @@ export default {
         const date = new Date()
         const store = new useStore()
         const ruleFormRef = ref()
+        const tableTabWrap = ref()
+        const formWrap = ref()
+        const openingOrderTableHeight = ref(115)
         const showOrderNameDrawer = ref(false)
         const formData = reactive({
             date,
@@ -158,7 +161,7 @@ export default {
                 const { success } = data
                 if (success) {
                     ElMessage.success('操作成功')
-                    getOpeningOrderData()
+                    rerenderTable()
                     formData.hands = NaN
                 }
             }
@@ -182,24 +185,38 @@ export default {
             showOrderNameDrawer.value = false
             formData.name = name
         }
+        
+        const rerenderTable = async () => {
+            await getOpeningOrderData()
+            nextTick(() => {
+                const bottomRestHeight = tableTabWrap.value.getBoundingClientRect().height - formWrap.value.getBoundingClientRect().height - 16
+                const tableTotalHeight = (openingOrderList.value.length + 1) * 40
+                if (bottomRestHeight < tableTotalHeight) {
+                    openingOrderTableHeight.value = bottomRestHeight
+                } else {
+                    openingOrderTableHeight.value = tableTotalHeight
+                }
+            })
+        }
 
-        watch(activeOrderTab, (value) => {
-            if (value === 'order' && isLogin.value) {
-                getOpeningOrderData()
+        watch(isLogin, async (value) => {
+            if (value) {
+                rerenderTable()
+            } else {
+                setOpeningOrderList([]) // 清空数据
+                openingOrderTableHeight.value = 115
             }
         })
 
-        watch(isLogin, (value) => {
-            if (value) {
-                getOpeningOrderData()
-            } else {
-                setOpeningOrderList([]) // 清空数据
+        watch(activeOrderTab, async (value) => {
+            if (value === 'order' && isLogin.value) {
+                rerenderTable()
             }
         })
 
         onMounted(async () => {
             if (isLogin.value) {
-                getOpeningOrderData()
+                rerenderTable()
             }
             await getFutureConfigInfo()
             // 设置默认选中的合约
@@ -220,6 +237,9 @@ export default {
             ruleFormRef,
             buySaleListNum,
             showOrderNameDrawer,
+            openingOrderTableHeight,
+            tableTabWrap,
+            formWrap,
             submitHandle,
             changeOrderName,
             orderRowClick,
@@ -232,11 +252,11 @@ export default {
 
 <style scoped>
 .order-wrap {
+    height: 100%;
     width: calc(100% - 48px);
 }
 .opening-order-table {
     width: 100%;
-    max-height: 200px;
     font-size: 12px;
     margin: 16px 24px;
 }

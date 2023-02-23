@@ -269,23 +269,27 @@ export default {
 
         watch(activeOrderTab, (value) => {
             if (value === 'table') {
-                getTableData()
                 nextTick(() => {
                     if (!orderTableHeight.value) {
                         orderTableHeight.value = tableTabWrap.value.getBoundingClientRect().height - searchInputWrap.value.getBoundingClientRect().height
                     }
                 })
             }
+            if (value === 'table' && isLogin.value) {
+                getTableData()
+            }
         })
 
         onMounted(() => {
             if (activeOrderTab.value === 'table') {
-                getTableData()
                 nextTick(() => {
                     if (!orderTableHeight.value) {
                         orderTableHeight.value = tableTabWrap.value.getBoundingClientRect().height - searchInputWrap.value.getBoundingClientRect().height
                     }
                 })
+            }
+            if (activeOrderTab.value === 'table' && isLogin.value) {
+                getTableData()
             }
         })
 
