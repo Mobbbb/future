@@ -259,6 +259,10 @@ export default {
             getTableData()
         }
 
+        window._rerenderRecordTable_ = () => {
+            getTableData()
+        }
+
         watch(isLogin, (value) => {
             if (value) {
                 getTableData()

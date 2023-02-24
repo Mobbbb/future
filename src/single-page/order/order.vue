@@ -134,6 +134,14 @@ export default {
             return list
         })
 
+        const futuresConfigListMap = computed(() => {
+            const obj = {}
+            futuresConfigList.value.forEach(item => {
+                obj[item.toLowerCase()] = item
+            })
+            return obj
+        })
+
         const buySaleListNum = computed(() => {
             const buyList = openingOrderList.value.filter(item => item.buyOrSale === 1 && formData.name === item.name) // 多单列表
             const saleList = openingOrderList.value.filter(item => item.buyOrSale === 0 && formData.name === item.name) // 空单列表
@@ -167,6 +175,18 @@ export default {
             }
         }
 
+        window._importOrder_ = async (params) => {
+            params.name = futuresConfigListMap.value[params.name]
+            const data = await fetchInsertOrder(params) || {}
+            const { success } = data
+            if (success) {
+                ElMessage.success('操作成功')
+            }
+        }
+        window._rerenderTable_ = () => {
+            rerenderTable()
+        }
+
         const changeOrderName = () => { // 切换合约
             localStorage.setItem('default-order-name', formData.name)
         }
@@ -189,12 +209,14 @@ export default {
         const rerenderTable = async () => {
             await getOpeningOrderData()
             nextTick(() => {
-                const bottomRestHeight = tableTabWrap.value.getBoundingClientRect().height - formWrap.value.getBoundingClientRect().height - 16
-                const tableTotalHeight = (openingOrderList.value.length + 1) * 40
-                if (bottomRestHeight < tableTotalHeight) {
-                    openingOrderTableHeight.value = bottomRestHeight
-                } else {
-                    openingOrderTableHeight.value = tableTotalHeight
+                if (openingOrderList.value.length) {
+                    const bottomRestHeight = tableTabWrap.value.getBoundingClientRect().height - formWrap.value.getBoundingClientRect().height - 16
+                    const tableTotalHeight = (openingOrderList.value.length + 1) * 40
+                    if (bottomRestHeight < tableTotalHeight) {
+                        openingOrderTableHeight.value = bottomRestHeight
+                    } else {
+                        openingOrderTableHeight.value = tableTotalHeight
+                    }
                 }
             })
         }
