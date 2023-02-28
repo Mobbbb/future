@@ -91,6 +91,14 @@ export const fetchDeleteOrder = (id) => {
     })
 }
 
+export const fetchCancelOrder = (params) => {
+    return axios.request({
+        url: prefixApi + '/other/cancelOrder',
+        method: 'post',
+        data: params,
+    })
+}
+
 export const fetchFutureConfigInfo = () => {
     return axios.request({
         url: prefixApi + '/other/futureConfigInfo',

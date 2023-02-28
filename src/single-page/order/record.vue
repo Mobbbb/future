@@ -93,8 +93,15 @@
                     <div v-else class="talbe-block-cell">--</div>
                 </template>
             </el-table-column>
-            <el-table-column label="操作" align="center" width="72">
+            <el-table-column label="操作" align="right" width="142">
                 <template #default="scope">
+                    <el-button link
+                        type="warning"
+                        size="small"
+                        v-if="!scope.row.openOrClose"
+                        @click.prevent="cancelRow(scope)">
+                        撤銷
+                    </el-button>
                     <el-button link
                         type="danger"
                         size="small"
@@ -121,7 +128,7 @@
 <script>
 import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
 import { useStore } from 'vuex'
-import { fetchDeleteOrder } from '@/api'
+import { fetchDeleteOrder, fetchCancelOrder } from '@/api'
 import { parseDateParams, getGapDate, getMonthShortcuts } from '@/libs/util'
 
 export default {
@@ -202,8 +209,15 @@ export default {
             centerDialogVisible.value = true
         }
 
+        const cancelRow = async (data) => {
+            loading.value = true
+            await fetchCancelOrder(data.row) // 回退开仓单
+            getTableData()
+        }
+
         const confirmDelete = async () => {
             if (currentDeleteItem) {
+                loading.value = true
                 await fetchDeleteOrder(currentDeleteItem.row.id)
                 getTableData()
             }
@@ -252,7 +266,7 @@ export default {
         const resetHandle = () => {
             searchParams.name = ''
             searchParams.openOrClose = ''
-            searchParams.date = monthShortcuts[0].value
+            searchParams.date = getGapDate()
             searchParams.startDate = ''
             searchParams.endDate = ''
             searchParams.status = 0
@@ -308,6 +322,7 @@ export default {
             searchParams,
             tableRowClassName,
             deleteRow,
+            cancelRow,
             getSummaries,
             searchHandle,
             resetHandle,

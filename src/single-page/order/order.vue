@@ -136,7 +136,7 @@ export default {
 
         const futuresConfigListMap = computed(() => {
             const obj = {}
-            futuresConfigList.value.forEach(item => {
+            futuresList.value.forEach(item => {
                 obj[item.toLowerCase()] = item
             })
             return obj
@@ -176,12 +176,14 @@ export default {
         }
 
         window._importOrder_ = async (params) => {
-            params.name = futuresConfigListMap.value[params.name]
+            const enName = futuresConfigListMap.value[params.enName]
+            params.name = enName + params.numName
             const data = await fetchInsertOrder(params) || {}
-            const { success } = data
+            const { success = false } = data
             if (success) {
                 ElMessage.success('操作成功')
             }
+            return success
         }
         window._rerenderTable_ = () => {
             rerenderTable()
@@ -217,6 +219,8 @@ export default {
                     } else {
                         openingOrderTableHeight.value = tableTotalHeight
                     }
+                } else {
+                    openingOrderTableHeight.value = 115
                 }
             })
         }
