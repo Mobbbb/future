@@ -51,6 +51,13 @@ export const fetchIncomeInfo = () => {
     })
 }
 
+export const fetchRecentlyFeature = () => {
+    return axios.request({
+        url: prefixApi + '/other/recentlyFeature',
+        method: 'get',
+    })
+}
+
 export const fetchInsertIncome = (params) => {
     return axios.request({
         url: prefixApi + '/other/insertIncome',

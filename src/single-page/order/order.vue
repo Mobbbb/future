@@ -21,11 +21,15 @@
                     <el-input-number v-model="formData.hands" style="width: 180px;" placeholder="请输入手数" />
                 </el-form-item>
             </el-form>
-            <div style="padding-left: 24px;">
+            <div style="padding-left: 24px;padding-bottom: 12px;">
                 <el-button color="#eb4436" type="primary" @click="submitHandle(1, 1)">买入</el-button>
                 <el-button color="#21a67a" type="primary" @click="submitHandle(0, 1)">卖出</el-button>
                 <el-button type="primary" :disabled="!buySaleListNum.buyListNum" @click="submitHandle(0, 0)">平多</el-button>
                 <el-button type="primary" :disabled="!buySaleListNum.saleListNum" @click="submitHandle(1, 0)">平空</el-button>
+            </div>
+            <div class="recently-tag-wrap" v-if="recentlyFeatureNames.length">
+                <span>合约记录：</span>
+                <el-check-tag class="order-name-label" checked v-for="item in recentlyFeatureNames" @click="selectOrderName(item)" :key="item">{{item}}</el-check-tag>
             </div>
         </div>
         <el-table class="opening-order-table" :height="openingOrderTableHeight" :data="openingOrderList" border @row-click="orderRowClick">
@@ -54,7 +58,7 @@
 <script>
 import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
 import { useStore } from 'vuex'
-import { fetchInsertOrder } from '@/api'
+import { fetchInsertOrder, fetchRecentlyFeature } from '@/api'
 import { dateFormat } from '@/libs/util'
 import { ElMessage } from 'element-plus'
 
@@ -66,6 +70,7 @@ export default {
         const ruleFormRef = ref()
         const tableTabWrap = ref()
         const formWrap = ref()
+        const recentlyFeatureNames = ref([])
         const openingOrderTableHeight = ref(115)
         const showOrderNameDrawer = ref(false)
         const formData = reactive({
@@ -175,6 +180,12 @@ export default {
             }
         }
 
+        const getRecentlyFeature = async () => {
+            const res = await fetchRecentlyFeature()
+            recentlyFeatureNames.value = res.data || []
+            recentlyFeatureNames.value = recentlyFeatureNames.value.slice(0, 6)
+        }
+
         window._importOrder_ = async (params) => {
             const enName = futuresConfigListMap.value[params.enName]
             params.name = enName + params.numName
@@ -228,8 +239,10 @@ export default {
         watch(isLogin, async (value) => {
             if (value) {
                 rerenderTable()
+                getRecentlyFeature()
             } else {
                 setOpeningOrderList([]) // 清空数据
+                recentlyFeatureNames.value = []
                 openingOrderTableHeight.value = 115
             }
         })
@@ -243,6 +256,7 @@ export default {
         onMounted(async () => {
             if (isLogin.value) {
                 rerenderTable()
+                getRecentlyFeature()
             }
             await getFutureConfigInfo()
             // 设置默认选中的合约
@@ -266,6 +280,7 @@ export default {
             openingOrderTableHeight,
             tableTabWrap,
             formWrap,
+            recentlyFeatureNames,
             submitHandle,
             changeOrderName,
             orderRowClick,
@@ -279,12 +294,12 @@ export default {
 <style scoped>
 .order-wrap {
     height: 100%;
-    width: calc(100% - 48px);
+    width: 100%;
 }
 .opening-order-table {
-    width: 100%;
+    width: calc(100% - 48px);
     font-size: 12px;
-    margin: 16px 24px;
+    margin: 0 24px;
 }
 .drawer-input {
     background-color: var(--el-input-bg-color,var(--el-color-white));
@@ -328,6 +343,14 @@ export default {
 }
 .order-name-label.is-checked:active {
     border: 1px solid #409eff;
+}
+.recently-tag-wrap .order-name-label.is-checked {
+    margin: 0 8px 8px 0;
+    width: 70px;
+    padding: 4px 0px;
+}
+.recently-tag-wrap {
+    padding: 0 16px 4px 24px;
 }
 </style>
 
