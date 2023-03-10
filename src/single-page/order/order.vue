@@ -200,16 +200,6 @@ export default {
             rerenderTable()
         }
 
-        const changeOrderName = () => { // 切换合约
-            localStorage.setItem('default-order-name', formData.name)
-        }
-
-        const orderRowClick = (row) => {
-            formData.name = row.name
-            formData.hands = row.hands
-            localStorage.setItem('default-order-name', formData.name)
-        }
-
         const popOrderNameDrawer = () => {
             showOrderNameDrawer.value = true
         }
@@ -217,6 +207,13 @@ export default {
         const selectOrderName = (name) => {
             showOrderNameDrawer.value = false
             formData.name = name
+            localStorage.setItem('default-order-name', formData.name)
+        }
+
+        const orderRowClick = (row) => {
+            formData.name = row.name
+            formData.hands = row.hands
+            localStorage.setItem('default-order-name', formData.name)
         }
         
         const rerenderTable = async () => {
@@ -282,7 +279,6 @@ export default {
             formWrap,
             recentlyFeatureNames,
             submitHandle,
-            changeOrderName,
             orderRowClick,
             popOrderNameDrawer,
             selectOrderName,

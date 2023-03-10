@@ -92,7 +92,7 @@ const app = {
     },
     actions: {
         async INIT_USER({ commit }) {
-            const userId = getCookie('uid')
+            const userId = getCookie('blog-uid')
             if (userId) { // 获取用户相关信息
                 commit('SET_USER_INFO', { userId })
                 const res = await fetchUserInfo()
@@ -118,8 +118,8 @@ const app = {
         },
         logoutAction({ commit }) {
             commit('SET_USER_INFO', {})
-            delCookie('uid')
-            delCookie('token')
+            delCookie('blog-uid')
+            delCookie('blog-token')
             clearPrivateRoute()
         },
         async requestHomeList({ commit }) {
