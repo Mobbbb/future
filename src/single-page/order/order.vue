@@ -62,6 +62,8 @@ import { fetchInsertOrder, fetchRecentlyFeature } from '@/api'
 import { dateFormat } from '@/libs/util'
 import { ElMessage } from 'element-plus'
 
+const futuresNum = 6
+
 export default {
     name: 'order',
     setup() {
@@ -118,7 +120,7 @@ export default {
             let year = Number(dateFormat(date, 'yy'))
             let month = Number(dateFormat(date, 'MM'))
             
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < futuresNum; i++) {
                 month ++
                 if (month > 12) {
                     year ++
