@@ -1,6 +1,6 @@
 import { fetchInsertLog, fetchUserInfo, fetchListData } from '@/api'
 import { getCurrentTime, getQueryVariable, getCookie, delCookie } from '@/libs/util'
-import router, { clearPrivateRoute, whiteUserList } from '@/router'
+import router, { clearPrivateRoute, whiteUserList, administrator } from '@/router'
 
 const app = {
     namespaced: true,
@@ -50,6 +50,9 @@ const app = {
         },
         isWhiteUser(state) {
             return whiteUserList.includes(state.USER_INFO.userId)
+        },
+        isAdministrator(state) {
+            return administrator === state.USER_INFO.userId
         },
     },
     mutations: {

@@ -58,7 +58,8 @@ export const routes = [
 
 export const privateRoute = [homeRoute]
 export const privateRouteName = privateRoute.map(item => item.name)
-export const whiteUserList = ['654321', '123456']
+export const administrator = '123456'
+export const whiteUserList = ['654321', administrator]
 
 const router = createRouter({
     history: createWebHashHistory(),

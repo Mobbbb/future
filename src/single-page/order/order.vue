@@ -47,9 +47,11 @@
         </el-table>
         <el-drawer v-model="showOrderNameDrawer" 
             :direction="overMediaCritical ? 'btt' : 'ltr'" 
-            :size="overMediaCritical ? 250 : 483" custom-class="order-name-drawer">
+            :size="overMediaCritical ? 250 : 400" custom-class="order-name-drawer">
             <div :style="overMediaCritical ? { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around' } : {}">
-                <el-check-tag class="order-name-label" checked v-for="item in futuresConfigList" @click="selectOrderName(item)" :key="item">{{item}}</el-check-tag>
+                <div v-for="(item, index) in futuresConfigList" :key="index">
+                    <el-check-tag class="order-name-label" checked v-for="cell in item" @click="selectOrderName(item)" :key="cell">{{cell}}</el-check-tag>
+                </div>
             </div>
         </el-drawer>
     </div>
@@ -134,8 +136,9 @@ export default {
             }
 
             futuresList.value.forEach(item => {
+                list.push([])
                 dateList.forEach(cell => {
-                    list.push(`${item}${cell}`)
+                    list[list.length - 1].unshift(`${item}${cell}`)
                 })
             })
             return list

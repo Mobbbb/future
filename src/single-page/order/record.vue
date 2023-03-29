@@ -37,6 +37,7 @@
                 </el-select>
             </div>
             <div class="search-item-wrap">
+                <el-button type="primary" @click="showSubmitViewHandle">收益录入</el-button>
                 <el-button type="primary" @click="searchHandle">搜索</el-button>
                 <el-button @click="resetHandle">重置</el-button>
             </div>
@@ -122,29 +123,62 @@
                 </span>
             </template>
         </el-dialog>
+        <el-dialog v-model="importDialogVisible" title="收益录入" width="320px" :close-on-click-modal="false">
+            <div class="table-input-wrap">
+                <div class="table-input-item-wrap">
+                    <span>日期：</span>
+                    <el-date-picker v-model="submitData.date" type="date" placeholder="请选择日期" :editable="false" :clearable="false" />
+                </div>
+                <div class="table-input-item-wrap">
+                    <span>收益：</span>
+                    <el-input-number v-model="submitData.num" :controls="false" style="width: 80px;" />
+                    <el-tag effect="plain" round v-if="isAdministrator" class="is-round" @click="formatSubmitNum">rate</el-tag>
+                    <el-tag type="warning" effect="plain" round v-if="isAdministrator" class="is-round" @click="formatSubmitRestNum">rest</el-tag>
+                    <el-input-number v-model="submitData.subNum" @input="inputSubNumHandle" v-if="isAdministrator || submitData.subNum" :controls="false" style="width: 70px;" />
+                </div>
+                <div class="table-input-item-wrap">
+                    <span>角色：</span>
+                    <el-select v-model="submitData.name" multiple placeholder="请选择角色" style="width: 240px;">
+                        <el-option :label="item" :value="item" v-for="item in accountName" :key="item"></el-option>
+                    </el-select>
+                </div>
+                <div class="table-input-item-wrap">
+                    <span>备注：</span>
+                    <el-input v-model="submitData.remark" class="ios-textarea" type="textarea" />
+                </div>
+            </div>
+            <template #footer>
+                <el-button type="primary" @click="submitHandle">录入</el-button>
+            </template>
+        </el-dialog>
     </div>
 </template>
 
 <script>
 import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
 import { useStore } from 'vuex'
-import { fetchDeleteOrder, fetchCancelOrder } from '@/api'
-import { parseDateParams, getGapDate, getMonthShortcuts } from '@/libs/util'
+import { fetchDeleteOrder, fetchCancelOrder, fetchInsertIncome } from '@/api'
+import { parseDateParams, getGapDate, getMonthShortcuts, dateFormat } from '@/libs/util'
+import { ElMessage } from 'element-plus'
 
 export default {
     name: 'record',
     setup() {
         const monthShortcuts = getMonthShortcuts()
         const store = new useStore()
-        const orderList = computed(() => store.state.order.orderList)
-        const activeOrderTab = computed(() => store.state.app.activeOrderTab)
-        const isLogin = computed(() => store.getters['app/isLogin'])
         const searchInputWrap = ref()
         const tableTabWrap = ref()
         const orderTableHeight = ref(0)
         const loading = ref(false)
         const centerDialogVisible = ref(false)
-
+        const importDialogVisible = ref(false)
+        const submitData = reactive({
+            date: new Date(),
+            num: 0,
+            subNum: 0,
+            name: '',
+            remark: '',
+        })
         const searchParams = reactive({
             date: getGapDate(),
             name: '',
@@ -182,6 +216,36 @@ export default {
             ...monthShortcuts,
         ]
 
+        const orderList = computed(() => store.state.order.orderList)
+        const activeOrderTab = computed(() => store.state.app.activeOrderTab)
+        const isLogin = computed(() => store.getters['app/isLogin'])
+        const isAdministrator = computed(() => store.getters['app/isAdministrator'])
+
+        const accountName = computed(() => {
+            const { account = '' } = store.state.app.USER_INFO
+            if (account) {
+                submitData.name = [...account.split(',').slice(0, 2)]
+                return account.split(',')
+            }
+            return []
+        })
+
+        const allLineProfit = computed(() => {
+            let sums = 0
+            const values = orderList.value.map(item => Number(item.totalProfit))
+            if (!values.every(value => Number.isNaN(value))) {
+                sums = values.reduce((prev, curr) => {
+                    const value = Number(curr)
+                    if (!Number.isNaN(value)) {
+                        return prev + curr
+                    } else {
+                        return prev
+                    }
+                }, 0)
+            }
+            return parseFloat(sums.toFixed(2))
+        })
+
         const getOrderData = (params) => store.dispatch('order/getOrderData', params)
         const setOrderList = (value) => store.commit('order/setOrderList', value)
 
@@ -201,6 +265,7 @@ export default {
             loading.value = true
             await getOrderData(searchParams)
             loading.value = false
+            submitData.num = allLineProfit.value
         }
 
         let currentDeleteItem = null
@@ -273,6 +338,52 @@ export default {
             getTableData()
         }
 
+        const submitHandle = async () => {
+            if (!submitData.name.length) {
+                ElMessage.error('请选择角色')
+                return
+            }
+            const params = {
+                date: dateFormat(new Date(submitData.date), 'yyyy-MM-dd'),
+                num: (submitData.num + submitData.subNum) || 0,
+                name: submitData.name.join(','),
+                remark: submitData.remark,
+            }
+            const res = await fetchInsertIncome(params)
+            if (res.success) {
+                submitData.name = [...accountName.value]
+                submitData.num = 0
+                submitData.subNum = 0
+                submitData.remark = ''
+                ElMessage.success('录入成功')
+            }
+        }
+
+        const _rate_ = 11 / 26
+        const formatSubmitNum = () => {
+            const { account = '' } = store.state.app.USER_INFO
+            if (account) submitData.name = [...account.split(',').slice(0, 2)]
+            submitData.num = Math.round(allLineProfit.value * _rate_)
+            submitData.remark = `大号${submitData.num}，小号${submitData.subNum}`
+        }
+        const formatSubmitRestNum = () => {
+            const { account = '' } = store.state.app.USER_INFO
+            if (account) submitData.name = [account.split(',').reverse()[0]]
+            submitData.num = Math.floor(allLineProfit.value - Math.round(allLineProfit.value * _rate_) * 2)
+            submitData.subNum = 0
+            submitData.remark = ''
+        }
+        const inputSubNumHandle = () => {
+            if (submitData.name.length > 1) {
+                submitData.remark = `大号${submitData.num}，小号${submitData.subNum}`
+            }
+        }
+
+        const showSubmitViewHandle = () => {
+            importDialogVisible.value = true
+            submitData.date = Date.parse(searchParams.date[0]) === Date.parse(searchParams.date[1]) ? searchParams.date[0] : new Date()
+        }
+
         window._rerenderRecordTable_ = () => {
             getTableData()
         }
@@ -320,6 +431,11 @@ export default {
             orderTableHeight,
             shortcuts,
             searchParams,
+            importDialogVisible,
+            submitData,
+            accountName,
+            isAdministrator,
+            submitHandle,
             tableRowClassName,
             deleteRow,
             cancelRow,
@@ -328,6 +444,10 @@ export default {
             resetHandle,
             changeInputHandle,
             confirmDelete,
+            formatSubmitNum,
+            formatSubmitRestNum,
+            inputSubNumHandle,
+            showSubmitViewHandle,
         }
     },
 }
@@ -359,6 +479,32 @@ export default {
 .search-item-wrap span {
     flex-shrink: 0;
 }
+.table-input-wrap {
+    background: #fff;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+.table-input-item-wrap {
+    display: flex;
+    align-items: center;
+    padding-top: 16px;
+    font-size: 12px;
+    color: #606266;
+}
+.table-input-item-wrap:first-of-type {
+    padding-top: 0;
+}
+.table-input-item-wrap span {
+    flex-shrink: 0;
+}
+.el-tag--default.is-round {
+    border-radius: 9999px;
+    height: 20px;
+    padding: 0 6px;
+    margin: 0 4px;
+    cursor: pointer;
+}
 </style>
 
 <style>
@@ -375,5 +521,8 @@ export default {
 }
 .order-table.el-table.has-footer .el-table__inner-wrapper::before {
     bottom: 0;
+}
+.table-input-item-wrap .el-input-number.is-without-controls .el-input__inner {
+    padding: 0 6px;
 }
 </style>

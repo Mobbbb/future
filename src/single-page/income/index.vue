@@ -38,31 +38,6 @@
                     :total="tableData.length"
                     class="income-pagination" />
             </el-tab-pane>
-            <el-tab-pane label="收益录入" name="submit">
-                <div class="table-input-wrap">
-                    <div class="table-input-item-wrap">
-                        <span>日期：</span>
-                        <el-date-picker v-model="date" type="date" placeholder="请选择日期" :editable="false" :clearable="false" />
-                    </div>
-                    <div class="table-input-item-wrap">
-                        <span>收益：</span>
-                        <el-input-number v-model="num" :controls="false" style="width: 80px;" />
-                    </div>
-                    <div class="table-input-item-wrap">
-                        <span>角色：</span>
-                        <el-select v-model="name" multiple placeholder="请选择角色" style="width: 240px;">
-                            <el-option :label="item" :value="item" v-for="item in accountName" :key="item"></el-option>
-                        </el-select>
-                    </div>
-                    <div class="table-input-item-wrap">
-                        <span>备注：</span>
-                        <el-input v-model="remark" class="ios-textarea" type="textarea" />
-                    </div>
-                    <div style="margin: 16px 0 0 36px;">
-                        <el-button type="primary" @click="submitHandle">录入</el-button>
-                    </div>
-                </div>
-            </el-tab-pane>
         </el-tabs>
         <div class="no-data-class login-wrap" v-else>
             <div>
@@ -88,9 +63,8 @@
 import { ref, nextTick, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { useStore } from 'vuex'
 import { getOption } from './option'
-import { fetchIncomeInfo, fetchInsertIncome, fetchDeleteIncome } from '@/api'
+import { fetchIncomeInfo, fetchDeleteIncome } from '@/api'
 import { getDateBetween, dateFormat } from '@/libs/util'
-import { ElMessage } from 'element-plus'
 import { festivalList } from '@/config'
 
 export default {
@@ -100,10 +74,6 @@ export default {
         const tableData = ref([])
         const chartDataArr = ref([])
         const chartDataTotalArr = ref([])
-        const date = ref(new Date())
-        const num = ref(0)
-        const name = ref([])
-        const remark = ref('')
         const currentPage = ref(1)
         const centerDialogVisible = ref(false)
 
@@ -111,16 +81,8 @@ export default {
         let myChart1 = null
         let myChart2 = null
 
-        const isLogin = computed(() => store.getters['app/isLogin'])
         const setActiveIncomeTab = (value) => store.commit('app/setActiveIncomeTab', value)
-        const accountName = computed(() => {
-            const { account = '' } = store.state.app.USER_INFO
-            if (account) {
-                name.value = [...account.split(',')]
-                return account.split(',')
-            }
-            return []
-        })
+        const isLogin = computed(() => store.getters['app/isLogin'])
         const activeName = computed({
             get() {
                 return store.state.app.activeIncomeTab
@@ -258,27 +220,6 @@ export default {
             tableData.value = data
         }
 
-        const submitHandle = async () => {
-            if (!name.value.length) {
-                ElMessage.error('请选择角色')
-                return
-            }
-            const params = {
-                date: dateFormat(new Date(date.value), 'yyyy-MM-dd'),
-                num: num.value || 0,
-                name: name.value.join(','),
-                remark: remark.value,
-            }
-            const res = await fetchInsertIncome(params)
-            if (res.success) {
-                getTableData()
-                name.value = [...accountName.value]
-                num.value = 0
-                remark.value = ''
-                ElMessage.success('录入成功')
-            }
-        }
-
         let currentDeleteItem = null
         const deleteRow = async (data) => {
             currentDeleteItem = data
@@ -315,15 +256,9 @@ export default {
             tableData,
             showListData,
             activeName,
-            date,
-            num,
-            name,
-            accountName,
-            remark,
             pageSize,
             currentPage,
             isShowChart,
-            submitHandle,
             deleteRow,
             handleClick,
             showLoginHandle,
@@ -351,23 +286,6 @@ export default {
     height: calc(100% - 48px);
     margin-bottom: 12px;
     box-shadow: 0 2px 12px 0 rgb(0 0 0 / 10%);
-}
-.table-input-wrap {
-    background: #fff;
-    width: 100%;
-    height: 100%;
-    padding: 0 12px;
-    box-sizing: border-box;
-}
-.table-input-item-wrap {
-    display: flex;
-    align-items: center;
-    padding-top: 16px;
-    font-size: 12px;
-    color: #606266;
-}
-.table-input-item-wrap span {
-    flex-shrink: 0;
 }
 .no-data-class {
     height: calc(100% - 36px);
