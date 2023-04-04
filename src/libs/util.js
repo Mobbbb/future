@@ -148,7 +148,9 @@ export function getDateBetween(startTime, endTime) {
 }
 
 export const dateFormat = (date, fmt = 'yyyy-MM-dd') => {
-    date = new Date(date)
+    if (!(date instanceof Date)) {
+        date = new Date(date)
+    }
     var a = ['日', '一', '二', '三', '四', '五', '六']
     var o = {
         'M+': date.getMonth() + 1, // 月份
@@ -296,3 +298,34 @@ export const getMonthShortcuts = () => {
     }
     return monthShortcuts
 }
+
+export const getMonth = (date, direction) => {
+    // 将输入的日期字符串转换为日期对象
+    let currentDate = date
+
+    if (!(date instanceof Date)) {
+        currentDate = new Date(date)
+    }
+  
+    // 获取目标月份的年份和月份
+    let year, month
+    if (direction === 'prev') {
+      year = currentDate.getMonth() === 0 ? currentDate.getFullYear() - 1 : currentDate.getFullYear()
+      month = currentDate.getMonth() === 0 ? 11 : currentDate.getMonth() - 1
+    } else if (direction === 'next') {
+      year = currentDate.getMonth() === 11 ? currentDate.getFullYear() + 1 : currentDate.getFullYear()
+      month = currentDate.getMonth() === 11 ? 0 : currentDate.getMonth() + 1
+    } else {
+      throw new Error('Direction argument must be either "prev" or "next"')
+    }
+  
+    // 创建一个新的日期对象，表示目标月份的同一天
+    const targetMonthDate = new Date(year, month, currentDate.getDate())
+  
+    // 将新日期对象转换为字符串，格式为yyyy-mm-dd
+    const formattedDate = targetMonthDate.toISOString().slice(0, 10)
+  
+    // 返回目标月份的日期字符串
+    return formattedDate
+  }
+  

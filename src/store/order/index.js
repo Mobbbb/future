@@ -8,6 +8,7 @@ const order = {
             openingOrderList: [],
             analyseList: [],
             futureConfigInfo: [],
+            analyseCalendarData: {},
         }
     },
     getters: {
@@ -28,6 +29,9 @@ const order = {
         setAnalyseList(state, value) {
             state.analyseList = value
         },
+        setAnalyseCalendarData(state, value) {
+            state.analyseCalendarData = value
+        },
     },
     actions: {
         async getFutureConfigInfo({ commit }) {
@@ -44,6 +48,21 @@ const order = {
             const res = await fetchOrderInfo(params)
             const data = res.data || []
             commit('setAnalyseList', data || [])
+        },
+        async getAnalyseCalendar({ commit }, params) {
+            const res = await fetchOrderInfo(params)
+            const data = res.data || []
+            const dateMap = {}
+            data.forEach(item => {
+                if (!dateMap[item.date.slice(0, 10)]) {
+                    dateMap[item.date.slice(0, 10)] = []
+                }
+                dateMap[item.date.slice(0, 10)].push(item.totalProfit)
+            })
+            Object.keys(dateMap).forEach(date => {
+                dateMap[date] = dateMap[date].reduce((a, b) => a + b, 0)
+            })
+            commit('setAnalyseCalendarData', dateMap)
         },
         async getOpeningOrderData({ commit }) {
             const res = await fetchOpeningOrderInfo()
