@@ -15,7 +15,7 @@
 </template>
 
 <script>
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useStore } from 'vuex'
 import Order from './order.vue'
 import Analyse from './analyse.vue'
@@ -160,11 +160,6 @@ export default {
 }
 .order-table.el-table.has-footer .el-table__inner-wrapper::before {
     bottom: 0;
-}
-.analyse-card .el-card__body {
-    padding-right: 0;
-    padding-bottom: 8px;
-    overflow: hidden;
 }
 .order-date-input .el-input__inner {
     padding-right: 12px;

@@ -53,11 +53,34 @@ const order = {
             const res = await fetchOrderInfo(params)
             const data = res.data || []
             const dateMap = {}
+            let { endDate } = params
+            let month = endDate.slice(5, 7)
             data.forEach(item => {
-                if (!dateMap[item.date.slice(0, 10)]) {
-                    dateMap[item.date.slice(0, 10)] = []
+                let day = Number(item.date.slice(8, 10))
+                let hours = Number(item.date.slice(11, 13))
+                
+                if (month !== item.date.slice(5, 7)) {
+                    const date = new Date(item.date)
+                    if (date.getHours() >= 21) { // 9点之后，区间往后延一天
+                        date.setTime(date.getTime() + 3600 * 1000 * 24 * 1)
+                    }
+                    if (new Date(date).getDay() === 6) { // 明天是周六
+                        date.setTime(date.getTime() + 3600 * 1000 * 24 * 2)
+                    }
+                    day = date.getDate()
+                } else {
+                    if (hours >= 21) { // 9点之后，区间往后延一天
+                        day ++
+                    }
+                    if (new Date(`${item.date.slice(0, 8)}${day}`).getDay() === 6) { // 明天是周六
+                        day = day + 2
+                    }
                 }
-                dateMap[item.date.slice(0, 10)].push(item.totalProfit)
+                
+                if (!dateMap[day]) {
+                    dateMap[day] = []
+                }
+                dateMap[day].push(item.totalProfit)
             })
             Object.keys(dateMap).forEach(date => {
                 dateMap[date] = dateMap[date].reduce((a, b) => a + b, 0)

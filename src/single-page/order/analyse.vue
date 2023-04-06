@@ -36,37 +36,6 @@
             </div>
         </el-card>
         <el-card class="analyse-card" style="margin: 12px;">
-            <el-calendar class="analyse-calendar" ref="calendarRef">
-                <template #header>
-                    <div class="date-picker-wrap">
-                        <el-button  type="text" 
-                                    :icon="DArrowLeft" 
-                                    class="header-icon-btn change-date-icon" 
-                                    @click="selectDate('prev')">
-                        </el-button>
-                        <el-date-picker v-model="calendarDate" 
-                                        type="month"
-                                        placeholder="日期选择"
-                                        style="width: 120px;" 
-                                        :clearable="false" 
-                                        @change="selectDate('')">
-                        </el-date-picker>
-                        <el-button  type="text" 
-                                    :icon="DArrowRight" 
-                                    class="header-icon-btn change-date-icon" 
-                                    @click="selectDate('next')">
-                        </el-button>
-                    </div>
-                </template>
-                <template #dateCell="{ data }">
-                    <div class="date-cell" :class="getDateCellClass(data)">
-                        <p>{{ Number(data.day.slice(8, 10)) }}</p>
-                        <p>{{ fromatDateCellData(data) }}</p>
-                    </div>
-                </template>
-            </el-calendar>
-        </el-card>
-        <el-card class="analyse-card" style="margin: 12px;">
             <div class="card-title">多单统计</div>
             <div class="card-column-wrap">
                 <div class="card-item-wrap">
@@ -200,6 +169,37 @@
                 </div>
             </div>
         </el-card>
+        <el-card class="analyse-card" style="margin: 12px;">
+            <el-calendar class="analyse-calendar" ref="calendarRef">
+                <template #header>
+                    <div class="date-picker-wrap">
+                        <el-button  type="text" 
+                                    :icon="DArrowLeft" 
+                                    class="header-icon-btn change-date-icon" 
+                                    @click="selectDate('prev')">
+                        </el-button>
+                        <el-date-picker v-model="calendarDate" 
+                                        type="month"
+                                        placeholder="日期选择"
+                                        style="width: 120px;" 
+                                        :clearable="false" 
+                                        @change="selectDate('')">
+                        </el-date-picker>
+                        <el-button  type="text" 
+                                    :icon="DArrowRight" 
+                                    class="header-icon-btn change-date-icon" 
+                                    @click="selectDate('next')">
+                        </el-button>
+                    </div>
+                </template>
+                <template #dateCell="{ data }">
+                    <div class="date-cell" :class="getDateCellClass(data)">
+                        <p>{{ Number(data.day.slice(8, 10)) }}</p>
+                        <p>{{ fromatDateCellData(data) }}</p>
+                    </div>
+                </template>
+            </el-calendar>
+        </el-card>
     </div>
 </template>
 
@@ -219,7 +219,7 @@ export default {
         const calendarRef = ref()
         const calendarDate = ref(dateFormat(new Date(), 'yyyy-MM-dd'))
         const getAnalyseData = (params) => store.dispatch('order/getAnalyseData', params)
-        const getAnalyseCalendar = (date) => store.dispatch('order/getAnalyseCalendar', date)
+        const getAnalyseCalendar = (params) => store.dispatch('order/getAnalyseCalendar', params)
         const setAnalyseList = (value) => store.commit('order/setAnalyseList', value)
         const setAnalyseCalendarData = (value) => store.commit('order/setAnalyseCalendarData', value)
         const analyseList = computed(() => store.state.order.analyseList)
@@ -287,6 +287,7 @@ export default {
             if (!isLogin.value) return
             const day = new Date(calendarDate.value.slice(0, 4), calendarDate.value.slice(6, 7), 0).getDate()
             const params = parseDateParams([calendarDate.value.slice(0, 8) + '01', `${calendarDate.value.slice(0, 8)}${day}`])
+            params.openOrClose = 0 // 取所有平仓
             setAnalyseCalendarData({}) // 清空数据
             await getAnalyseCalendar(params)
         }
@@ -361,7 +362,7 @@ export default {
         const getDateCellClass = (data) => {
             let className = ''
             const cellDay = (new Date(data.day)).getDay()
-            const itemData = analyseCalendarData.value[data.day.slice(0, 10)]
+            const itemData = analyseCalendarData.value[Number(data.day.slice(8, 10))]
             if (cellDay === 0 || cellDay === 6) {
                 return 'weekend-day-cell'
             }
@@ -382,12 +383,12 @@ export default {
 
         const fromatDateCellData = (data) => {
             const cellDay = (new Date(data.day)).getDay()
-            const itemData = analyseCalendarData.value[data.day.slice(0, 10)]
+            const itemData = analyseCalendarData.value[Number(data.day.slice(8, 10))]
             if (data.day.slice(0, 7) !== calendarDate.value.slice(0, 7) || cellDay === 0 || cellDay === 6) {
                 return ''
             }
-            if (itemData) {
-                return Math.ceil(itemData)
+            if (typeof itemData !== 'undefined') {
+                return Math.round(itemData)
             } else {
                 return '--'
             }
@@ -543,7 +544,6 @@ export default {
 
 <style>
 .analyse-card .el-card__body {
-    padding-right: 0;
     padding-bottom: 8px;
     overflow: hidden;
 }
@@ -554,6 +554,7 @@ export default {
 .analyse-calendar .el-calendar__body {
     padding-left: 0;
     padding-right: 0;
+    padding-bottom: 0;
 }
 .analyse-calendar .el-calendar-table .el-calendar-day {
     padding: 0;
