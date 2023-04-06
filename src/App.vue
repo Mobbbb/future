@@ -15,6 +15,7 @@ import { filterDataByText } from '@/libs/data-processing'
 import { computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 
+const publicPath = require('@/config/resource').publicPath
 window.version = require('package').version
 
 export default {
@@ -34,7 +35,7 @@ export default {
             INIT_USER()
             window.addEventListener('load', function() {
                 if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.register('/sw.js')
+                    navigator.serviceWorker.register(publicPath + '/sw.js')
                 }
             })
         })

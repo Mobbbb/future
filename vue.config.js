@@ -35,7 +35,7 @@ module.exports = {
      * In most cases please use '/' !!!
      * Detail: https://cli.vuejs.org/config/#publicpath
      */
-    publicPath: process.env.NODE_ENV === 'production' ? '/feature' : '/',
+    publicPath: resourceConfig.publicPath || '/',
     outputDir,
     assetsDir,
     // filenameHashing: false, 文件不带hash

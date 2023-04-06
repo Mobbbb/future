@@ -555,7 +555,7 @@ export default {
     padding-left: 0;
     padding-right: 0;
 }
-.analyse-calendar .el-calendar-day {
+.analyse-calendar .el-calendar-table .el-calendar-day {
     padding: 0;
     text-align: center;
     height: 60px;
