@@ -101,7 +101,7 @@
                         size="small"
                         v-if="!scope.row.openOrClose"
                         @click.prevent="cancelRow(scope)">
-                        撤銷
+                        撤销
                     </el-button>
                     <el-button link
                         type="danger"

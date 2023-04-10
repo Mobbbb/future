@@ -28,7 +28,6 @@ const app = {
                 lot: 1,
                 pricePrev: 0,
                 priceNext: 0,
-                commissionType: 0,
             },
             USER_INFO: {}, // 用户信息
         }
@@ -73,9 +72,6 @@ const app = {
         },
         setGoodsPriceNext(state, value) {
             state.goods.priceNext = value
-        },
-        setCommissionType(state, value) {
-            state.goods.commissionType = value
         },
         setHomeListData(state, value) {
             state.homeListData = value

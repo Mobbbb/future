@@ -25,9 +25,6 @@
             <el-radio-group v-model="currentGoodsType" style="display: block;margin-bottom: 4px;">
                 <el-radio :label="item" v-for="item in futuresList" :key="item" style="height: 26px;">{{item}}</el-radio>
             </el-radio-group>
-            <el-radio-group v-model="currentCommissionType" style="display: block;margin-bottom: 8px;">
-                <el-radio :label="item.type" v-for="item in commissionList" :key="item.type" style="height: 26px;">{{numMap[item.type] + '倍基础手续费'}}</el-radio>
-            </el-radio-group>
             <template v-if="currentGoodsConfig.openCommissionType === 'percent'">
                 <div v-show="showNumber">
                     <div class="line-wrap">
@@ -264,7 +261,6 @@ export default {
         const setGoodsPricePrev = (value) => store.commit('app/setGoodsPricePrev', value)
         const setGoodsPriceNext = (value) => store.commit('app/setGoodsPriceNext', value)
         const setGoodsType = (value) => store.commit('app/setGoodsType', value)
-        const setCommissionType = (value) => store.commit('app/setCommissionType', value)
         const getFutureConfigInfo = () => store.dispatch('order/getFutureConfigInfo')
 
         const isInPc = computed(() => config.device === PC)
@@ -272,12 +268,6 @@ export default {
         const goods = computed(() => store.state.app.goods)
         const futureConfigInfo = computed(() => store.state.order.futureConfigInfo)
         const futuresList = computed(() => store.getters['order/futuresList'])
-
-        const commissionList = computed(() => {
-            const filterRes = futureConfigInfo.value.filter(item => item.name === currentGoodsType.value)
-            filterRes.sort((a, b) => a.type - b.type)
-            return filterRes
-        })
 
         const lot = computed({
             get() {
@@ -315,15 +305,6 @@ export default {
             },
         })
 
-        const currentCommissionType = computed({
-            get() {
-                return goods.value.commissionType
-            },
-            set(value) {
-                setCommissionType(value)
-            },
-        })
-
         const tableData = computed(() => {
             const obj = {}
             columns.forEach((item, index) => {
@@ -333,13 +314,7 @@ export default {
         })
 
         const currentGoodsConfig = computed(() => {
-            let obj = {}
-            commissionList.value.forEach(item => {
-                if (currentCommissionType.value === item.type) {
-                    obj = item
-                }
-            })
-            return obj
+            return futureConfigInfo.value.filter(item => item.activeName === currentGoodsType.value)[0] || {}
         })
         
         const goodsResult = computed(() => {
@@ -422,7 +397,6 @@ export default {
             await getFutureConfigInfo()
             if (futureConfigInfo.value.length) {
                 setGoodsType(futureConfigInfo.value[0].name)
-                setCommissionType(futureConfigInfo.value[0].type)
             }
         })
 
@@ -455,8 +429,6 @@ export default {
             columns,
             tableData,
             futuresList,
-            commissionList,
-            currentCommissionType,
             searchHandle,
             clickInput,
         }

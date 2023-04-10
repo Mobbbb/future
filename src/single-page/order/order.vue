@@ -50,7 +50,7 @@
             :size="overMediaCritical ? 250 : 400" custom-class="order-name-drawer">
             <div :style="overMediaCritical ? { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around' } : {}">
                 <div v-for="(item, index) in futuresConfigList" :key="index">
-                    <el-check-tag class="order-name-label" checked v-for="cell in item" @click="selectOrderName(item)" :key="cell">{{cell}}</el-check-tag>
+                    <el-check-tag class="order-name-label" checked v-for="cell in item" @click="selectOrderName(cell)" :key="cell">{{cell}}</el-check-tag>
                 </div>
             </div>
         </el-drawer>
