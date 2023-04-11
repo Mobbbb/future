@@ -15,6 +15,13 @@ const order = {
         futuresList(state) { // 合约列表
             return [...new Set(state.futureConfigInfo.map(item => item.name))]
         },
+        enFutureMap(state) {
+            const obj = {}
+            state.futureConfigInfo.forEach(item => {
+                obj[item.name] = item.chName
+            })
+            return obj
+        },
     },
     mutations: {
         setFutureConfigInfo(state, value) {

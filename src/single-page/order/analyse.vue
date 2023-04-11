@@ -36,6 +36,12 @@
             </div>
         </el-card>
         <el-card class="analyse-card" style="margin: 12px;">
+            <div class="card-title">品种盈亏及胜率</div>
+            <div class="card-row-wrap">
+                <div id="barChart"></div>
+            </div>
+        </el-card>
+        <el-card class="analyse-card" style="margin: 12px;">
             <div class="card-title">多单统计</div>
             <div class="card-column-wrap">
                 <div class="card-item-wrap">
@@ -206,27 +212,15 @@
 <script>
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useStore } from 'vuex'
-import { formatNumUnit, parseDateParams, getGapDate, getMonthShortcuts, dateFormat } from '@/libs/util'
+import { formatNumUnit, parseDateParams, getGapDate, getMonthShortcuts, dateFormat, getMonth } from '@/libs/util'
 import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
-import { getMonth } from '@/libs/util'
+import { getBarOption } from './option'
 
 export default {
     name: 'order',
     setup() {
-        var dayjs = require('dayjs')
+        const dayjs = require('dayjs')
         const store = new useStore()
-
-        const calendarRef = ref()
-        const calendarDate = ref(dateFormat(new Date(), 'yyyy-MM-dd'))
-        const getAnalyseData = (params) => store.dispatch('order/getAnalyseData', params)
-        const getAnalyseCalendar = (params) => store.dispatch('order/getAnalyseCalendar', params)
-        const setAnalyseList = (value) => store.commit('order/setAnalyseList', value)
-        const setAnalyseCalendarData = (value) => store.commit('order/setAnalyseCalendarData', value)
-        const analyseList = computed(() => store.state.order.analyseList)
-        const activeOrderTab = computed(() => store.state.app.activeOrderTab)
-        const analyseCalendarData = computed(() => store.state.order.analyseCalendarData)
-
-        const monthShortcuts = getMonthShortcuts()
 
         const analyseResult = reactive({
             buyRate: 0,
@@ -245,41 +239,33 @@ export default {
             preSaleProfitUp: 0,
             preSaleProfitDown: 0,
         })
-
+        const calendarRef = ref()
+        const calendarDate = ref(dateFormat(new Date(), 'yyyy-MM-dd'))
+        const monthShortcuts = getMonthShortcuts()
         const shortcuts = [
-            {
-                text: '今日',
-                value: () => {
-                    return getGapDate()
-                },
-            },
-            {
-                text: '近7天',
-                value: () => {
-                    return getGapDate(7)
-                },
-            },
-            {
-                text: '近30天',
-                value: () => {
-                    return getGapDate(30)
-                },
-            },
-            {
-                text: '近365天',
-                value: () => {
-                    return getGapDate(365)
-                },
-            },
+            { text: '今日', value: () => getGapDate() },
+            { text: '近7天', value: () => getGapDate(7) },
+            { text: '近30天', value: () => getGapDate(30) },
+            { text: '近365天', value: () => getGapDate(365) },
             ...monthShortcuts,
         ]
-
         const analyseDate = ref(monthShortcuts[0].value)
+        const barData = reactive({ xAxis: [], data1: [], data2: [] })
+
+        const getAnalyseData = (params) => store.dispatch('order/getAnalyseData', params)
+        const getAnalyseCalendar = (params) => store.dispatch('order/getAnalyseCalendar', params)
+        const setAnalyseList = (value) => store.commit('order/setAnalyseList', value)
+        const setAnalyseCalendarData = (value) => store.commit('order/setAnalyseCalendarData', value)
+        const analyseList = computed(() => store.state.order.analyseList)
+        const activeOrderTab = computed(() => store.state.app.activeOrderTab)
+        const analyseCalendarData = computed(() => store.state.order.analyseCalendarData)
+        const enFutureMap = computed(() => store.getters['order/enFutureMap'])
         const isLogin = computed(() => store.getters['app/isLogin'])
 
-        const getAnalyseDataHandle = async () => {
+        const getAnalyseDataHandle = async () => { // 所有平仓订单
             if (!isLogin.value) return
             const params = parseDateParams(analyseDate.value)
+            params.openOrClose = 0
             await getAnalyseData(params)
         }
 
@@ -305,30 +291,51 @@ export default {
             let buyProfit = 0
             let buyProfitUp = 0
             let buyProfitDown = 0
+
+            const chFutureMap = {}
             analyseList.value.forEach(item => {
-                if (!item.openOrClose) { // 平单
-                    if (item.buyOrSale === 1) { // 平空单
-                        saleNum ++
-                        if (item.totalProfit > 0) {
-                            saleWinNum ++
-                            saleProfitUp += item.totalProfit
-                        } else {
-                            saleProfitDown += item.totalProfit
-                        }
-                        saleProfit += item.totalProfit
-                    } else { // 平多单
-                        buyNum ++
-                        if (item.totalProfit > 0) { // 盈利
-                            buyWinNum ++
-                            buyProfitUp += item.totalProfit
-                        } else {
-                            buyProfitDown += item.totalProfit
-                        }
-                        buyProfit += item.totalProfit
+                if (!chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]]) {
+                    chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]] = {
+                        winNum: 0,
+                        totalNum: 0,
+                        totalProfit: 0,
                     }
+                }
+                if (item.totalProfit > 0) {
+                    chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]].winNum ++
+                } 
+                chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]].totalNum ++
+                chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]].totalProfit += item.totalProfit
+
+                if (item.buyOrSale === 1) { // 平空单
+                    saleNum ++
+                    if (item.totalProfit > 0) {
+                        saleWinNum ++
+                        saleProfitUp += item.totalProfit
+                    } else {
+                        saleProfitDown += item.totalProfit
+                    }
+                    saleProfit += item.totalProfit
+                } else { // 平多单
+                    buyNum ++
+                    if (item.totalProfit > 0) { // 盈利
+                        buyWinNum ++
+                        buyProfitUp += item.totalProfit
+                    } else {
+                        buyProfitDown += item.totalProfit
+                    }
+                    buyProfit += item.totalProfit
                 }
             })
 
+            const barOption = getBarOption(chFutureMap)
+            const barChart = echarts.init(document.getElementById('barChart'))
+            barChart.setOption(barOption)
+            barChart.dispatchAction({
+                type: 'showTip',
+                seriesIndex: 0,
+                dataIndex: 0,
+            })
             analyseResult.buyRate = (buyWinNum / buyNum * 100).toFixed(2) * 1 || 0
             analyseResult.saleRate = (saleWinNum / saleNum * 100).toFixed(2) * 1 || 0
             analyseResult.totalRate = ((saleWinNum + buyWinNum) / (buyNum + saleNum) * 100).toFixed(2) * 1 || 0
@@ -540,6 +547,12 @@ export default {
 .analyse-calendar {
     max-width: 500px;
 }
+#barChart {
+    width: 100%;
+    max-width: 500px;
+    height: 300px;
+    background: white;
+}
 </style>
 
 <style>
@@ -570,5 +583,9 @@ export default {
 }
 .analyse-calendar .el-calendar-table td.is-selected {
     background-color: white;
+}
+.analyse-bar-tooltip {
+    box-shadow: none!important;
+    border: 1px solid #333;
 }
 </style>
