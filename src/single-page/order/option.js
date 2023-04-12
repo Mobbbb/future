@@ -160,7 +160,7 @@ export const getBarOption = (data) => {
             className: 'analyse-bar-tooltip',
             formatter: function(data) {
                 const color = data[0].data[1] > 0 ? fillColor[0] : fillColor[1]
-                return `<div style="border: 1px solid #eeeeee;padding: 12px;border-radius: 4px;color: #000;display: flex;align-items: center;">
+                return `<div style="border: 1px solid #eeeeee;padding: 12px;border-radius: 4px;color: #000;display: flex;align-items: center;font-size: 14px;line-height: 14px;">
                             ${data[0].data[0]}
                             
                             <div style="width: 11px;margin: 0 4px 0 12px;">

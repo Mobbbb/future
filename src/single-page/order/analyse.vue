@@ -600,7 +600,7 @@ export default {
 #barChart {
     width: 100%;
     max-width: 500px;
-    height: 300px;
+    height: 37.5vh;
     background: white;
 }
 </style>
