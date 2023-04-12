@@ -1,8 +1,8 @@
 <template>
     <div class="analyse-wrap">
-        <div class="table-search-input-wrap">
+        <div class="search-input-wrap">
             <div class="search-item-wrap">
-                <span>起止日期：</span>
+                <span style="margin-right: 8px;">日期</span>
                 <el-date-picker
                     v-model="analyseDate"
                     type="daterange"
@@ -18,201 +18,216 @@
                     style="width: 260px;" />
             </div>
         </div>
-        <el-card class="analyse-card" style="margin: 0 12px;">
-            <div class="card-title">总览</div>
-            <div class="card-row-wrap">
-                <div class="card-item-wrap">
-                    <div class="card-item-title">多单胜率</div>
-                    <div class="card-item-value">{{analyseResult.buyRate}}%</div>
-                </div>
-                <div class="card-item-wrap">
-                    <div class="card-item-title">空单胜率</div>
-                    <div class="card-item-value">{{analyseResult.saleRate}}%</div>
-                </div>
-                <div class="card-item-wrap">
-                    <div class="card-item-title">总胜率</div>
-                    <div class="card-item-value">{{analyseResult.totalRate}}%</div>
-                </div>
-            </div>
-        </el-card>
-        <el-card class="analyse-card" style="margin: 12px;">
-            <div class="card-title">品种盈亏及胜率</div>
-            <div class="card-row-wrap">
-                <div id="barChart"></div>
-            </div>
-        </el-card>
-        <el-card class="analyse-card" style="margin: 12px;">
-            <div class="card-title">多单统计</div>
-            <div class="card-column-wrap">
-                <div class="card-item-wrap">
-                    <div class="card-item-title">总盈利</div>
-                    <div class="card-item-combine-value">
-                        <div class="card-item-value" style="color: rgb(235, 68, 54);">
-                            {{analyseResult.buyProfitUp.num}}
-                            <span class="card-item-unit">{{analyseResult.buyProfitUp.unit}}元</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-item-wrap">
-                    <div class="card-item-title">每手盈利</div>
-                    <div class="card-item-combine-value">
-                        <div class="card-item-value" style="color: rgb(235, 68, 54);">
-                            {{analyseResult.preBuyProfitUp}}
-                            <span class="card-item-unit">元/手</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card-column-wrap">
-                <div class="card-item-wrap">
-                    <div class="card-item-title">总亏损</div>
-                    <div class="card-item-combine-value">
-                        <div class="card-item-value" style="color: rgb(14, 157, 88);">
-                            {{analyseResult.buyProfitDown.num}}
-                            <span class="card-item-unit">{{analyseResult.buyProfitDown.unit}}元</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-item-wrap">
-                    <div class="card-item-title">每手亏损</div>
-                    <div class="card-item-combine-value">
-                        <div class="card-item-value" style="color: rgb(14, 157, 88);">
-                            {{analyseResult.preBuyProfitDown}}
-                            <span class="card-item-unit">元/手</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card-column-wrap">
-                <div class="card-item-wrap">
-                    <div class="card-item-title">净盈亏</div>
-                    <div class="card-item-combine-value">
-                        <div class="card-item-value" 
-                            :style="analyseResult.buyProfit.num >= 0 ?
-                            { color: 'rgb(235, 68, 54)' } :
-                            { color: 'rgb(14, 157, 88)' }">
-                            {{analyseResult.buyProfit.num}}
-                            <span class="card-item-unit">{{analyseResult.buyProfit.unit}}元</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-item-wrap">
-                    <div class="card-item-title">每手净盈亏</div>
-                    <div class="card-item-value"
-                        :style="analyseResult.preBuyProfit >= 0 ?
+        <div class="analyse-content-wrap">
+            <div :style="analyseResult.totalProfit >= 0 ?
+                { background: 'linear-gradient(#fff, rgba(243, 63, 109, 0.1) 120px, #fff 120px, #fff 100%)' } :
+                { background: 'linear-gradient(#fff, rgba(17, 166, 66, 0.1) 120px, #fff 120px, #fff 100%)' }">
+                <div class="total-analyse-wrap">
+                    <div class="total-analyse-title">盈亏</div>
+                    <div class="total-analyse-value" 
+                        :style="analyseResult.totalProfit >= 0 ?
                         { color: 'rgb(235, 68, 54)' } :
                         { color: 'rgb(14, 157, 88)' }">
-                        {{analyseResult.preBuyProfit}}
-                        <span class="card-item-unit">元/手</span>
+                        {{addCommas(analyseResult.totalProfit)}}
                     </div>
                 </div>
+                <el-card class="analyse-card" style="margin: 12px;">
+                    <div class="card-title">交易统计<span class="card-title-date">({{displayTime}})</span></div>
+                    <div class="card-row-wrap">
+                        <div class="card-item-wrap">
+                            <div class="card-item-title">多单胜率</div>
+                            <div class="card-item-value">{{analyseResult.buyRate}}%</div>
+                        </div>
+                        <div class="card-item-wrap">
+                            <div class="card-item-title">空单胜率</div>
+                            <div class="card-item-value">{{analyseResult.saleRate}}%</div>
+                        </div>
+                        <div class="card-item-wrap">
+                            <div class="card-item-title">总胜率</div>
+                            <div class="card-item-value">{{analyseResult.totalRate}}%</div>
+                        </div>
+                    </div>
+                </el-card>
             </div>
-        </el-card>
-        <el-card class="analyse-card" style="margin: 12px;">
-            <div class="card-title">空单统计</div>
-            <div class="card-column-wrap">
-                <div class="card-item-wrap">
-                    <div class="card-item-title">总盈利</div>
-                    <div class="card-item-combine-value">
-                        <div class="card-item-value" style="color: rgb(235, 68, 54);">
-                            {{analyseResult.saleProfitUp.num}}
-                            <span class="card-item-unit">{{analyseResult.saleProfitUp.unit}}元</span>
+            <el-card class="analyse-card" style="margin: 12px;">
+                <div class="card-title">品种盈亏及胜率<span class="card-title-date">({{displayTime}})</span></div>
+                <div class="card-row-wrap">
+                    <div id="barChart"></div>
+                </div>
+            </el-card>
+            <el-card class="analyse-card" style="margin: 12px;">
+                <div class="card-title">多单统计<span class="card-title-date">({{displayTime}})</span></div>
+                <div class="card-column-wrap">
+                    <div class="card-item-wrap">
+                        <div class="card-item-title">总盈利</div>
+                        <div class="card-item-combine-value">
+                            <div class="card-item-value" style="color: rgb(235, 68, 54);">
+                                {{analyseResult.buyProfitUp.num}}
+                                <span class="card-item-unit">{{analyseResult.buyProfitUp.unit}}元</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-item-wrap">
+                        <div class="card-item-title">每手盈利</div>
+                        <div class="card-item-combine-value">
+                            <div class="card-item-value" style="color: rgb(235, 68, 54);">
+                                {{analyseResult.preBuyProfitUp}}
+                                <span class="card-item-unit">元/手</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="card-item-wrap">
-                    <div class="card-item-title">每手盈利</div>
-                    <div class="card-item-combine-value">
-                        <div class="card-item-value" style="color: rgb(235, 68, 54);">
-                            {{analyseResult.preSaleProfitUp}}
-                            <span class="card-item-unit">元/手</span>
+                <div class="card-column-wrap">
+                    <div class="card-item-wrap">
+                        <div class="card-item-title">总亏损</div>
+                        <div class="card-item-combine-value">
+                            <div class="card-item-value" style="color: rgb(14, 157, 88);">
+                                {{analyseResult.buyProfitDown.num}}
+                                <span class="card-item-unit">{{analyseResult.buyProfitDown.unit}}元</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-item-wrap">
+                        <div class="card-item-title">每手亏损</div>
+                        <div class="card-item-combine-value">
+                            <div class="card-item-value" style="color: rgb(14, 157, 88);">
+                                {{analyseResult.preBuyProfitDown}}
+                                <span class="card-item-unit">元/手</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="card-column-wrap">
-                <div class="card-item-wrap">
-                    <div class="card-item-title">总亏损</div>
-                    <div class="card-item-combine-value">
-                        <div class="card-item-value" style="color: rgb(14, 157, 88);">
-                            {{analyseResult.saleProfitDown.num}}
-                            <span class="card-item-unit">{{analyseResult.saleProfitDown.unit}}元</span>
+                <div class="card-column-wrap">
+                    <div class="card-item-wrap">
+                        <div class="card-item-title">净盈亏</div>
+                        <div class="card-item-combine-value">
+                            <div class="card-item-value" 
+                                :style="analyseResult.buyProfit.num >= 0 ?
+                                { color: 'rgb(235, 68, 54)' } :
+                                { color: 'rgb(14, 157, 88)' }">
+                                {{analyseResult.buyProfit.num}}
+                                <span class="card-item-unit">{{analyseResult.buyProfit.unit}}元</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="card-item-wrap">
-                    <div class="card-item-title">每手亏损</div>
-                    <div class="card-item-combine-value">
-                        <div class="card-item-value" style="color: rgb(14, 157, 88);">
-                            {{analyseResult.preSaleProfitDown}}
-                            <span class="card-item-unit">元/手</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card-column-wrap">
-                <div class="card-item-wrap">
-                    <div class="card-item-title">净盈亏</div>
-                    <div class="card-item-combine-value">
-                        <div class="card-item-value" 
-                            :style="analyseResult.saleProfit.num >= 0 ?
+                    <div class="card-item-wrap">
+                        <div class="card-item-title">每手净盈亏</div>
+                        <div class="card-item-value"
+                            :style="analyseResult.preBuyProfit >= 0 ?
                             { color: 'rgb(235, 68, 54)' } :
                             { color: 'rgb(14, 157, 88)' }">
-                            {{analyseResult.saleProfit.num}}
-                            <span class="card-item-unit">{{analyseResult.saleProfit.unit}}元</span>
+                            {{analyseResult.preBuyProfit}}
+                            <span class="card-item-unit">元/手</span>
                         </div>
                     </div>
                 </div>
-                <div class="card-item-wrap">
-                    <div class="card-item-title">每手净盈亏</div>
-                    <div class="card-item-value"
-                        :style="analyseResult.preSaleProfit >= 0 ?
-                        { color: 'rgb(235, 68, 54)' } :
-                        { color: 'rgb(14, 157, 88)' }">
-                        {{analyseResult.preSaleProfit}}
-                        <span class="card-item-unit">元/手</span>
+            </el-card>
+            <el-card class="analyse-card" style="margin: 12px;">
+                <div class="card-title">空单统计<span class="card-title-date">({{displayTime}})</span></div>
+                <div class="card-column-wrap">
+                    <div class="card-item-wrap">
+                        <div class="card-item-title">总盈利</div>
+                        <div class="card-item-combine-value">
+                            <div class="card-item-value" style="color: rgb(235, 68, 54);">
+                                {{analyseResult.saleProfitUp.num}}
+                                <span class="card-item-unit">{{analyseResult.saleProfitUp.unit}}元</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-item-wrap">
+                        <div class="card-item-title">每手盈利</div>
+                        <div class="card-item-combine-value">
+                            <div class="card-item-value" style="color: rgb(235, 68, 54);">
+                                {{analyseResult.preSaleProfitUp}}
+                                <span class="card-item-unit">元/手</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </el-card>
-        <el-card class="analyse-card" style="margin: 12px;">
-            <el-calendar class="analyse-calendar" ref="calendarRef">
-                <template #header>
-                    <div class="date-picker-wrap">
-                        <el-button  type="text" 
-                                    :icon="DArrowLeft" 
-                                    class="header-icon-btn change-date-icon" 
-                                    @click="selectDate('prev')">
-                        </el-button>
-                        <el-date-picker v-model="calendarDate" 
-                                        type="month"
-                                        placeholder="日期选择"
-                                        style="width: 120px;" 
-                                        :clearable="false" 
-                                        @change="selectDate('')">
-                        </el-date-picker>
-                        <el-button  type="text" 
-                                    :icon="DArrowRight" 
-                                    class="header-icon-btn change-date-icon" 
-                                    @click="selectDate('next')">
-                        </el-button>
+                <div class="card-column-wrap">
+                    <div class="card-item-wrap">
+                        <div class="card-item-title">总亏损</div>
+                        <div class="card-item-combine-value">
+                            <div class="card-item-value" style="color: rgb(14, 157, 88);">
+                                {{analyseResult.saleProfitDown.num}}
+                                <span class="card-item-unit">{{analyseResult.saleProfitDown.unit}}元</span>
+                            </div>
+                        </div>
                     </div>
-                </template>
-                <template #dateCell="{ data }">
-                    <div class="date-cell" :class="getDateCellClass(data)">
-                        <p>{{ Number(data.day.slice(8, 10)) }}</p>
-                        <p>{{ fromatDateCellData(data) }}</p>
+                    <div class="card-item-wrap">
+                        <div class="card-item-title">每手亏损</div>
+                        <div class="card-item-combine-value">
+                            <div class="card-item-value" style="color: rgb(14, 157, 88);">
+                                {{analyseResult.preSaleProfitDown}}
+                                <span class="card-item-unit">元/手</span>
+                            </div>
+                        </div>
                     </div>
-                </template>
-            </el-calendar>
-        </el-card>
+                </div>
+                <div class="card-column-wrap">
+                    <div class="card-item-wrap">
+                        <div class="card-item-title">净盈亏</div>
+                        <div class="card-item-combine-value">
+                            <div class="card-item-value" 
+                                :style="analyseResult.saleProfit.num >= 0 ?
+                                { color: 'rgb(235, 68, 54)' } :
+                                { color: 'rgb(14, 157, 88)' }">
+                                {{analyseResult.saleProfit.num}}
+                                <span class="card-item-unit">{{analyseResult.saleProfit.unit}}元</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-item-wrap">
+                        <div class="card-item-title">每手净盈亏</div>
+                        <div class="card-item-value"
+                            :style="analyseResult.preSaleProfit >= 0 ?
+                            { color: 'rgb(235, 68, 54)' } :
+                            { color: 'rgb(14, 157, 88)' }">
+                            {{analyseResult.preSaleProfit}}
+                            <span class="card-item-unit">元/手</span>
+                        </div>
+                    </div>
+                </div>
+            </el-card>
+            <el-card class="analyse-card" style="margin: 12px;">
+                <el-calendar class="analyse-calendar" ref="calendarRef">
+                    <template #header>
+                        <div class="date-picker-wrap">
+                            <el-button  type="text" 
+                                        :icon="DArrowLeft" 
+                                        class="header-icon-btn change-date-icon" 
+                                        @click="selectDate('prev')">
+                            </el-button>
+                            <el-date-picker v-model="calendarDate" 
+                                            type="month"
+                                            placeholder="日期选择"
+                                            style="width: 120px;" 
+                                            :clearable="false" 
+                                            @change="selectDate('')">
+                            </el-date-picker>
+                            <el-button  type="text" 
+                                        :icon="DArrowRight" 
+                                        class="header-icon-btn change-date-icon" 
+                                        @click="selectDate('next')">
+                            </el-button>
+                        </div>
+                    </template>
+                    <template #dateCell="{ data }">
+                        <div class="date-cell" :class="getDateCellClass(data)">
+                            <p>{{ Number(data.day.slice(8, 10)) }}</p>
+                            <p>{{ fromatDateCellData(data) }}</p>
+                        </div>
+                    </template>
+                </el-calendar>
+            </el-card>
+        </div>
     </div>
 </template>
 
 <script>
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useStore } from 'vuex'
-import { formatNumUnit, parseDateParams, getGapDate, getMonthShortcuts, dateFormat, getMonth } from '@/libs/util'
+import { formatNumUnit, parseDateParams, getGapDate, getMonthShortcuts, dateFormat, getMonth, addCommas } from '@/libs/util'
 import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import { getBarOption } from './option'
 
@@ -226,6 +241,7 @@ export default {
             buyRate: 0,
             saleRate: 0,
             totalRate: 0,
+            totalProfit: 0,
             buyProfit: { num: 0, unit: '' },
             buyProfitUp: { num: 0, unit: '' },
             buyProfitDown: { num: 0, unit: '' },
@@ -240,7 +256,7 @@ export default {
             preSaleProfitDown: 0,
         })
         const calendarRef = ref()
-        const calendarDate = ref(dateFormat(new Date(), 'yyyy-MM-dd'))
+        const calendarDate = ref(dateFormat(new Date()))
         const monthShortcuts = getMonthShortcuts()
         const shortcuts = [
             { text: '今日', value: () => getGapDate() },
@@ -250,7 +266,6 @@ export default {
             ...monthShortcuts,
         ]
         const analyseDate = ref(monthShortcuts[0].value)
-        const barData = reactive({ xAxis: [], data1: [], data2: [] })
 
         const getAnalyseData = (params) => store.dispatch('order/getAnalyseData', params)
         const getAnalyseCalendar = (params) => store.dispatch('order/getAnalyseCalendar', params)
@@ -261,6 +276,10 @@ export default {
         const analyseCalendarData = computed(() => store.state.order.analyseCalendarData)
         const enFutureMap = computed(() => store.getters['order/enFutureMap'])
         const isLogin = computed(() => store.getters['app/isLogin'])
+
+        const displayTime = computed(() => {
+            return dateFormat(analyseDate.value[0]) + ' To ' + dateFormat(analyseDate.value[1])
+        })
 
         const getAnalyseDataHandle = async () => { // 所有平仓订单
             if (!isLogin.value) return
@@ -291,6 +310,7 @@ export default {
             let buyProfit = 0
             let buyProfitUp = 0
             let buyProfitDown = 0
+            let totalProfit = 0
 
             const chFutureMap = {}
             analyseList.value.forEach(item => {
@@ -326,6 +346,7 @@ export default {
                     }
                     buyProfit += item.totalProfit
                 }
+                totalProfit += item.totalProfit
             })
 
             const barOption = getBarOption(chFutureMap)
@@ -352,6 +373,7 @@ export default {
             analyseResult.buyProfit = formatNumUnit(buyProfit.toFixed(2) * 1 || 0)
             analyseResult.buyProfitUp = formatNumUnit(buyProfitUp.toFixed(2) * 1 || 0)
             analyseResult.buyProfitDown = formatNumUnit(buyProfitDown.toFixed(2) * 1 || 0)
+            analyseResult.totalProfit = totalProfit.toFixed(2) * 1 || 0
         }
 
         const changeAnalyseDateHandle = () => {
@@ -436,31 +458,51 @@ export default {
             calendarRef,
             calendarDate,
             analyseCalendarData,
+            displayTime,
             selectDate,
             changeAnalyseDateHandle,
             getDateCellClass,
             fromatDateCellData,
+            addCommas,
         }
     },
 }
 </script>
 
 <style scoped>
-.table-search-input-wrap {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    padding-left: 12px;
+.analyse-wrap {
+    height: 100%;
+}
+.search-input-wrap {
+    color: #606266;
+    padding: 0 0 0 12px;
     font-size: 12px;
+    border-bottom: 2px solid #e4e7ed;
+    box-sizing: border-box;
+    height: 42px;
 }
 .search-item-wrap {
     display: flex;
     align-items: center;
-    color: #606266;
-    margin: 0 24px 12px 0;
+}
+.analyse-content-wrap {
+    height: calc(100% - 42px);
+    overflow: auto;
 }
 .search-item-wrap span {
     flex-shrink: 0;
+}
+.total-analyse-wrap {
+    text-align: center;
+    padding: 16px 0 4px 0;
+}
+.total-analyse-title {
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+.total-analyse-value {
+    font-size: 24px;
+    font-weight: bold;
 }
 .card-title {
     font-size: 16px;
@@ -478,6 +520,9 @@ export default {
 .card-item-wrap {
     margin-right: 24px;
     margin-bottom: 12px;
+}
+.card-column-wrap:last-child .card-item-wrap {
+    margin-right: 0;
 }
 .card-item-title {
     font-size: 12px;
@@ -544,6 +589,11 @@ export default {
 .normal-calendar-cell {
     font-weight: bold;
 }
+.card-title-date {
+    font-weight: normal;
+    font-size: 12px;
+    margin-left: 4px;
+}
 .analyse-calendar {
     max-width: 500px;
 }
@@ -587,5 +637,6 @@ export default {
 .analyse-bar-tooltip {
     box-shadow: none!important;
     border: 1px solid #333;
+    z-index: 100!important;
 }
 </style>

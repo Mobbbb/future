@@ -1,5 +1,5 @@
 <template>
-    <el-drawer v-model="drawerShowStatus" direction="rtl" :size="250">
+    <el-drawer v-model="drawerShowStatus" :append-to-body="true" direction="rtl" :size="250">
         <template #title>
             <h4>登录</h4>
         </template>

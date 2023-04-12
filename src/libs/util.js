@@ -194,6 +194,43 @@ export const delCookie = (name) => {
     document.cookie = `${name}=${getCookie(name)};expires=${new Date(1)};max-age=0;domain=${domain};path=/`
 }
 
+export const addCommas = (num) => {
+    const parts = num.toString().split('.') // 将数字转换为字符串，并按小数点分割整数部分和小数部分
+    let intPart = parts[0] // 整数部分
+    let decimalPart = parts[1] || '' // 小数部分（如果没有小数部分，将为空字符串）
+    let result = ''
+    let count = 0
+
+    // 处理负数情况
+    const isNegative = intPart.startsWith('-') // 判断整数部分是否为负数
+    if (isNegative) {
+        intPart = intPart.slice(1) // 如果是负数，将负号从整数部分中删除
+    }
+
+    // 从整数部分的后面往前遍历字符串
+    for (let i = intPart.length - 1; i >= 0; i--) {
+        result = intPart.charAt(i) + result // 将字符添加到结果字符串的开头
+        count ++
+
+        // 如果当前字符是第三个字符，或者是最后一个字符且前面还有字符，就添加一个逗号
+        if ((count % 3 === 0) && (i > 0)) {
+            result = ',' + result
+        }
+    }
+
+    // 如果有小数部分，将其添加到结果字符串的末尾
+    if (decimalPart.length > 0) {
+        result += '.' + decimalPart
+    }
+
+    // 处理负数情况
+    if (isNegative) {
+        result = '-' + result
+    }
+
+    return result
+}
+
 export const formatNumUnit = (num, float = 2) => {
     let flag = false
     if (num === null || num === '' || typeof num === 'undefined') return {
@@ -247,10 +284,10 @@ export const parseDateParams = (dateParams) => {
         if (new Date(prevDay).getDay() === 6) { // 前一天是周六
             prevDay -= 1 * 24 * 60 * 60 * 1000
         }
-        params.startDate = dateFormat(prevDay, 'yyyy-MM-dd') + ' 21:00:00'
+        params.startDate = dateFormat(prevDay) + ' 21:00:00'
     }
     if (dateParams[1]) {
-        params.endDate = dateFormat(dateParams[1], 'yyyy-MM-dd') + ' 20:59:59'
+        params.endDate = dateFormat(dateParams[1]) + ' 20:59:59'
     }
     return params
 }
@@ -292,7 +329,7 @@ export const getMonthShortcuts = () => {
         
         monthShortcuts.push({
             text: month < 10 ? `${year}.${'0' + month}` : `${year}.${month}`,
-            value: [new Date(year, month - 1, 1), dateFormat(nPrevDay, 'yyyy-MM-dd')],
+            value: [new Date(year, month - 1, 1), dateFormat(nPrevDay)],
         })
         month--
     }

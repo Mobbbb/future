@@ -1,10 +1,12 @@
 import { genVH } from '@/libs/util'
 
+const fillColor = ['#e82b42', '#11a642', '#ffb347']
+
 const areaColorArr = [
     new echarts.graphic.LinearGradient(0, 0, 0, 1, [
         {
             offset: 0,
-            color: '#e82b42'
+            color: fillColor[0]
         },
         {
             offset: 1,
@@ -14,7 +16,7 @@ const areaColorArr = [
     new echarts.graphic.LinearGradient(0, 0, 0, 1, [
         {
             offset: 0,
-            color: '#11a642'
+            color: fillColor[1]
         },
         {
             offset: 1,
@@ -129,22 +131,23 @@ export const getBarOption = (data) => {
         ...sourceData,
     ]
 
+    if (sourceData.length <= 1) {
+        sourceData = [
+            ['product', '盈亏', '胜率'],
+            ['', 0, 0],
+        ]
+    }
+
     const option = {
         legend: {
             show: false,
         },
         grid: {
             top: 60,
-            bottom: '3%',
+            bottom: 35,
             left: 0,
             right: '3%',
             containLabel: true,
-        },
-        axisPointer: {
-            lineStyle: {
-                color: '#222',
-                type: 'solid',
-            },
         },
         tooltip: {
             trigger: 'axis',
@@ -156,19 +159,34 @@ export const getBarOption = (data) => {
             triggerOn: 'click',
             className: 'analyse-bar-tooltip',
             formatter: function(data) {
-                return `<div style="border: 1px solid #eeeeee;padding: 12px;border-radius: 4px;color: #222;">
+                const color = data[0].data[1] > 0 ? fillColor[0] : fillColor[1]
+                return `<div style="border: 1px solid #eeeeee;padding: 12px;border-radius: 4px;color: #000;display: flex;align-items: center;">
                             ${data[0].data[0]}
-                            ${data[0].dimensionNames[1]} ${data[0].data[1]}
-                            ${data[0].dimensionNames[2]} ${data[0].data[2]}
+                            
+                            <div style="width: 11px;margin: 0 4px 0 12px;">
+                                <div style="width: 100%;height: 3px;background: ${fillColor[0]};border-radius: 3px;margin-bottom: 2px;"></div>
+                                <div style="width: 100%;height: 3px;background: ${fillColor[1]};border-radius: 3px;margin-top: 2px;"></div>
+                            </div>
+                            ${data[0].dimensionNames[1]}
+                            <span style="color: ${color};font-weight: bold;margin-left: 4px;">${Math.round(data[0].data[1])}</span>
+
+                            <div style="width: 6px;height: 6px;border-radius: 10px;background: ${fillColor[2]};margin: 0 4px 0 12px;"></div>
+                            ${data[0].dimensionNames[2]}
+                            <span style="color: ${color};font-weight: bold;margin-left: 4px;">${data[0].data[2].toFixed(2)}%</span>
                         </div>`
             },
             position: [0, 0],
         },
         xAxis: {
             type: 'category',
+            interval: 0,
             axisPointer: {
                 show: true,
-                type: 'line',
+                type: 'line', 
+                lineStyle: {
+                    color: '#222',
+                    type: 'solid',
+                },
             },
             axisTick: {
                 show: false,
@@ -181,7 +199,7 @@ export const getBarOption = (data) => {
             },
             axisLabel: {
                 textStyle: {
-                    color: '#333',
+                    color: '#8e8e8e',
                     fontSize,
                 },
             },
@@ -207,7 +225,7 @@ export const getBarOption = (data) => {
                     textStyle: {
                         color: (value) => {
                             // *$隐藏0坐标
-                            return value !== '0' ? '#333' : 'rgba(0, 0, 0, 0)'
+                            return value !== '0' ? '#8e8e8e' : 'rgba(0, 0, 0, 0)'
                         },
                         fontSize,
                     },
@@ -234,17 +252,60 @@ export const getBarOption = (data) => {
                     textStyle: {
                         color: (value) => {
                             // *$隐藏0坐标
-                            return value !== '0' ? '#333' : 'rgba(0, 0, 0, 0)'
+                            return value !== '0' ? '#8e8e8e' : 'rgba(0, 0, 0, 0)'
                         },
                         fontSize,
                     },
                 },
             }
         ],
+        dataZoom: [{
+            type: 'slider',
+            brushSelect: false,
+            showDetail: false,
+            height: 12,
+            bottom: 10,
+            handleIcon: 'path://M512 512m-512 0a512 512 0 1 0 1024 0 512 512 0 1 0-1024 0Z,M663.703704 325.982363v371.734274a26.788948 26.788948 0 0 1-53.276896 0V325.982363a26.788948 26.788948 0 0 1 53.276896 0z m-132.740741 0v371.734274a26.788948 26.788948 0 0 1-53.276896 0V325.982363a26.788948 26.788948 0 0 1 53.276896 0z m-132.740741 0v371.734274a26.788948 26.788948 0 0 1-53.276896 0V325.982363a26.788948 26.788948 0 0 1 53.276896 0z',
+            handleSize: 24,
+            handleStyle: {
+                color: 'white',
+                borderWidth: 1,
+                borderColor: '#dedede',
+            },
+            textStyle: {
+                fontSize,
+            },
+            backgroundColor: "#f6f7f8",
+            dataBackground: {
+                lineStyle: {
+                    color: 'transparent',
+                },
+                areaStyle: {
+                    color: 'transparent',
+                },
+            },
+            selectedDataBackground: {
+                lineStyle: {
+                    color: 'transparent',
+                },
+                areaStyle: {
+                    color: 'transparent',
+                },
+            },
+            fillerColor: '#d5dee6',
+            borderColor: 'transparent',
+            emphasis: {
+                handleStyle: {
+                    color: 'white',
+                    borderColor: '#dedede',
+                },
+            },
+        }],
         series: [
             {
                 type: 'bar',
-                barWidth: '22%',
+                barWidth: '50%',
+                barMaxWidth: 40,
                 animationDuration: 500,
                 itemStyle: {
                     color: (params) => params.data[1] > 0 ? areaColorArr[0]: areaColorArr[1],
@@ -257,11 +318,8 @@ export const getBarOption = (data) => {
             {
                 type: 'scatter',
                 animationDuration: 500,
-                lineStyle: {
-                    color: '#ffb347',
-                },
                 itemStyle: {
-                    color: '#ffb347',
+                    color: fillColor[2],
                 },
                 label: {
                     show: false,
