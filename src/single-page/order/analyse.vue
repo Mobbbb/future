@@ -190,7 +190,7 @@
                 </div>
             </el-card>
             <el-card class="analyse-card" style="margin: 12px;">
-                <el-calendar class="analyse-calendar" ref="calendarRef">
+                <el-calendar class="analyse-calendar" ref="calendarRef" v-model="calendarInnerDate" @input="getAnalyseCalendarHandle">
                     <template #header>
                         <div class="date-picker-wrap">
                             <el-button  type="text" 
@@ -257,6 +257,15 @@ export default {
         })
         const calendarRef = ref()
         const calendarDate = ref(dateFormat(new Date()))
+        const calendarInnerDate = computed({
+            get() {
+                const date = new Date(calendarDate.value)
+                return date
+            },
+            set(value) {
+                calendarDate.value = dateFormat(value)
+            },
+        })
         const monthShortcuts = getMonthShortcuts()
         const shortcuts = [
             { text: '今日', value: () => getGapDate() },
@@ -288,12 +297,12 @@ export default {
             await getAnalyseData(params)
         }
 
-        const getAnalyseCalendarHandle = async () => {
+        const getAnalyseCalendarHandle = async (date) => {
             if (!isLogin.value) return
-            const day = new Date(calendarDate.value.slice(0, 4), calendarDate.value.slice(6, 7), 0).getDate()
-            const params = parseDateParams([calendarDate.value.slice(0, 8) + '01', `${calendarDate.value.slice(0, 8)}${day}`])
+            const dateParam = date && dateFormat(date) || calendarDate.value
+            const day = new Date(dateParam.slice(0, 4), dateParam.slice(6, 7), 0).getDate()
+            const params = parseDateParams([dateParam.slice(0, 8) + '01', `${dateParam.slice(0, 8)}${day}`])
             params.openOrClose = 0 // 取所有平仓
-            setAnalyseCalendarData({}) // 清空数据
             await getAnalyseCalendar(params)
         }
 
@@ -384,14 +393,13 @@ export default {
             if (type) {
                 calendarDate.value = getMonth(calendarDate.value, type)
             }
-            calendarRef.value.pickDay(dayjs(calendarDate.value))
-            getAnalyseCalendarHandle()
+            getAnalyseCalendarHandle(new Date(calendarDate.value))
         }
 
         const getDateCellClass = (data) => {
             let className = ''
             const cellDay = (new Date(data.day)).getDay()
-            const itemData = analyseCalendarData.value[Number(data.day.slice(8, 10))]
+            const itemData = analyseCalendarData.value[data.day]
             if (cellDay === 0 || cellDay === 6) {
                 return 'weekend-day-cell'
             }
@@ -412,7 +420,7 @@ export default {
 
         const fromatDateCellData = (data) => {
             const cellDay = (new Date(data.day)).getDay()
-            const itemData = analyseCalendarData.value[Number(data.day.slice(8, 10))]
+            const itemData = analyseCalendarData.value[data.day]
             if (data.day.slice(0, 7) !== calendarDate.value.slice(0, 7) || cellDay === 0 || cellDay === 6) {
                 return ''
             }
@@ -424,10 +432,12 @@ export default {
         }
 
         watch(isLogin, (value) => {
-            if (value) {
+            if (value && activeOrderTab.value === 'analyse') {
                 analyseAccount()
                 getAnalyseCalendarHandle()
-            } else {
+            }
+
+            if (!value) {
                 setAnalyseList([]) // 清空数据
                 setAnalyseCalendarData({}) // 清空数据
                 analyseAccount()
@@ -457,6 +467,7 @@ export default {
             analyseResult,
             calendarRef,
             calendarDate,
+            calendarInnerDate,
             analyseCalendarData,
             displayTime,
             selectDate,
@@ -464,6 +475,7 @@ export default {
             getDateCellClass,
             fromatDateCellData,
             addCommas,
+            getAnalyseCalendarHandle,
         }
     },
 }
