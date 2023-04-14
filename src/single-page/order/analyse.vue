@@ -190,28 +190,54 @@
                 </div>
             </el-card>
             <el-card class="analyse-card" style="margin: 12px;">
-                <el-calendar class="analyse-calendar" ref="calendarRef" v-model="calendarInnerDate" @input="getAnalyseCalendarHandle">
-                    <template #header>
-                        <div class="date-picker-wrap">
-                            <el-button  type="text" 
-                                        :icon="DArrowLeft" 
-                                        class="header-icon-btn change-date-icon" 
-                                        @click="selectDate('prev')">
-                            </el-button>
-                            <el-date-picker v-model="calendarDate" 
-                                            type="month"
-                                            placeholder="日期选择"
-                                            style="width: 120px;" 
-                                            :clearable="false" 
-                                            @change="selectDate('')">
-                            </el-date-picker>
-                            <el-button  type="text" 
-                                        :icon="DArrowRight" 
-                                        class="header-icon-btn change-date-icon" 
-                                        @click="selectDate('next')">
-                            </el-button>
-                        </div>
-                    </template>
+                <div class="analyse-calendar-header">
+                    <div class="date-picker-wrap" v-if="calendarType">
+                        <el-button  type="text" 
+                                    :icon="DArrowLeft" 
+                                    class="header-icon-btn change-date-icon" 
+                                    @click="selectDate('prev')">
+                        </el-button>
+                        <el-date-picker v-model="calendarDate" 
+                                        type="month"
+                                        placeholder="日期选择"
+                                        style="width: 120px;" 
+                                        :clearable="false" 
+                                        @change="selectDate('')">
+                        </el-date-picker>
+                        <el-button  type="text" 
+                                    :icon="DArrowRight" 
+                                    class="header-icon-btn change-date-icon" 
+                                    @click="selectDate('next')">
+                        </el-button>
+                    </div>
+                    <div class="date-picker-wrap" v-else>
+                        <el-button  type="text" 
+                                    :icon="DArrowLeft" 
+                                    class="header-icon-btn change-date-icon" 
+                                    @click="selectYear(-1)">
+                        </el-button>
+                        <el-date-picker v-model="calendarYear" 
+                                        type="year"
+                                        placeholder="日期选择"
+                                        style="width: 120px;" 
+                                        :clearable="false" 
+                                        @change="selectYear(0)">
+                        </el-date-picker>
+                        <el-button  type="text" 
+                                    :icon="DArrowRight" 
+                                    class="header-icon-btn change-date-icon" 
+                                    @click="selectYear(1)">
+                        </el-button>
+                    </div>
+                    <el-switch
+                        v-model="calendarType"
+                        inline-prompt
+                        style="--el-switch-on-color: #13ce66; --el-switch-off-color: var(--el-color-primary)"
+                        active-text="月"
+                        inactive-text="年"/>
+                </div>
+                <el-calendar v-if="calendarType" class="analyse-calendar" v-model="calendarInnerDate" @input="getAnalyseCalendarHandle">
+                    <template #header><div></div></template>
                     <template #dateCell="{ data }">
                         <div class="date-cell" :class="getDateCellClass(data)">
                             <p>{{ Number(data.day.slice(8, 10)) }}</p>
@@ -219,23 +245,35 @@
                         </div>
                     </template>
                 </el-calendar>
+                <monthly-calendar class="analyse-monthly-calendar" v-else>
+                    <template #dateCell="{ data, month }">
+                        <div class="date-cell">
+                            <p>{{ month }}</p>
+                            <p>{{ data }}</p>
+                        </div>
+                    </template>
+                </monthly-calendar>
             </el-card>
         </div>
     </div>
 </template>
 
 <script>
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useStore } from 'vuex'
 import { formatNumUnit, parseDateParams, getGapDate, getMonthShortcuts, dateFormat, getMonth, addCommas } from '@/libs/util'
 import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import { getBarOption } from './option'
+import MonthlyCalendar from '@/components/monthly-calendar.vue'
 
 export default {
     name: 'order',
+    components: {
+        MonthlyCalendar,
+    },
     setup() {
-        const dayjs = require('dayjs')
         const store = new useStore()
+        let barChart = null
 
         const analyseResult = reactive({
             buyRate: 0,
@@ -255,8 +293,9 @@ export default {
             preSaleProfitUp: 0,
             preSaleProfitDown: 0,
         })
-        const calendarRef = ref()
+        const calendarType = ref(true)
         const calendarDate = ref(dateFormat(new Date()))
+        const calendarYear = ref(dateFormat(new Date()))
         const calendarInnerDate = computed({
             get() {
                 const date = new Date(calendarDate.value)
@@ -359,7 +398,9 @@ export default {
             })
 
             const barOption = getBarOption(chFutureMap)
-            const barChart = echarts.init(document.getElementById('barChart'))
+            
+            document.getElementById('barChart').removeAttribute('_echarts_instance_')
+            barChart = echarts.init(document.getElementById('barChart'))
             barChart.setOption(barOption)
             barChart.dispatchAction({
                 type: 'showTip',
@@ -394,6 +435,10 @@ export default {
                 calendarDate.value = getMonth(calendarDate.value, type)
             }
             getAnalyseCalendarHandle(new Date(calendarDate.value))
+        }
+
+        const selectYear = (value) => {
+            calendarYear.value = `${new Date(calendarYear.value).getFullYear() + value }-01-01`
         }
 
         const getDateCellClass = (data) => {
@@ -459,18 +504,28 @@ export default {
             }
         })
 
+        onBeforeUnmount(() => {
+            if (barChart) {
+                barChart.clear()
+                barChart.dispose()
+                barChart = null
+            }
+        })
+
         return {
             DArrowLeft,
             DArrowRight,
             shortcuts,
             analyseDate,
             analyseResult,
-            calendarRef,
             calendarDate,
+            calendarYear,
             calendarInnerDate,
             analyseCalendarData,
             displayTime,
+            calendarType,
             selectDate,
+            selectYear,
             changeAnalyseDateHandle,
             getDateCellClass,
             fromatDateCellData,
@@ -500,6 +555,12 @@ export default {
 .analyse-content-wrap {
     height: calc(100% - 42px);
     overflow: auto;
+}
+.analyse-calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 500px;
 }
 .search-item-wrap span {
     flex-shrink: 0;
@@ -606,7 +667,7 @@ export default {
     font-size: 12px;
     margin-left: 4px;
 }
-.analyse-calendar {
+.analyse-calendar, .analyse-monthly-calendar {
     max-width: 500px;
 }
 #barChart {
