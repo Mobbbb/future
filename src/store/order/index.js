@@ -1,4 +1,5 @@
 import { fetchOrderInfo, fetchOpeningOrderInfo, fetchFutureConfigInfo  } from '@/api'
+import { getBelongDealDate } from '@/libs/util'
 
 const order = {
     namespaced: true,
@@ -59,47 +60,36 @@ const order = {
             const data = res.data || []
             commit('setAnalyseList', data || [])
         },
-        async getAnalyseCalendar({ state, commit }, params) {
+        async getAnalyseCalendar({ state, commit }, { params, type }) {
             let { endDate } = params
-            let month = endDate.slice(5, 7)
             let yearMoth = endDate.slice(0, 7)
-            if (state.analyseCalendarData[yearMoth]) return // 如果该月份数据已获取，不再重新请求
+            let year = endDate.slice(0, 4)
+            if (state.analyseCalendarData[`${yearMoth}-status`] && type === 'M') return // 如果该月份数据已获取，不再重新请求
+            if (state.analyseCalendarData[`${year}-status`] && type === 'Y') return // 如果该年份数据已获取，不再重新请求
 
             const res = await fetchOrderInfo(params)
             const data = res.data || []
             let dateMap = {}
             data.forEach(item => {
-                let day = Number(item.date.slice(8, 10))
-                let hours = Number(item.date.slice(11, 13))
-                
-                if (month !== item.date.slice(5, 7)) {
-                    const date = new Date(item.date)
-                    if (date.getHours() >= 21) { // 9点之后，区间往后延一天
-                        date.setTime(date.getTime() + 3600 * 1000 * 24 * 1)
-                    }
-                    if (new Date(date).getDay() === 6) { // 明天是周六
-                        date.setTime(date.getTime() + 3600 * 1000 * 24 * 2)
-                    }
-                    day = date.getDate()
-                } else {
-                    if (hours >= 21) { // 9点之后，区间往后延一天
-                        day ++
-                    }
-                    if (new Date(`${item.date.slice(0, 8)}${day}`).getDay() === 6) { // 明天是周六
-                        day = day + 2
-                    }
+                const belongDate = getBelongDealDate(item.date)
+                const belongMonth = belongDate.slice(0, 7)
+                if (!dateMap[belongDate]) {
+                    dateMap[belongDate] = []
                 }
-                
-                day = day < 10 ? `0${day}` : day
-                if (!dateMap[`${yearMoth}-${day}`]) {
-                    dateMap[`${yearMoth}-${day}`] = []
+                if (!dateMap[belongMonth]) {
+                    dateMap[belongMonth] = []
                 }
-                dateMap[`${yearMoth}-${day}`].push(item.totalProfit)
+                dateMap[belongDate].push(item.totalProfit)
+                dateMap[belongMonth].push(item.totalProfit)
             })
             Object.keys(dateMap).forEach(date => {
                 dateMap[date] = dateMap[date].reduce((a, b) => a + b, 0)
             })
-            dateMap[yearMoth] = 1 // 表示月份数据已获取
+            if (type === 'M') dateMap[`${yearMoth}-status`] = 1 // 表示月份数据已获取
+            if (type === 'Y') {
+                dateMap[`${yearMoth}-status`] = 1 // 表示年和月份数据已获取
+                dateMap[`${year}-status`] = 1 // 表示年和月份数据已获取
+            }
             dateMap = Object.assign(state.analyseCalendarData, dateMap)
             commit('setAnalyseCalendarData', dateMap)
         },

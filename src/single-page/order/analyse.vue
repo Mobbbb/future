@@ -199,6 +199,7 @@
                         </el-button>
                         <el-date-picker v-model="calendarDate" 
                                         type="month"
+                                        value-format="YYYY-MM-DD"
                                         placeholder="日期选择"
                                         style="width: 120px;" 
                                         :clearable="false" 
@@ -218,10 +219,11 @@
                         </el-button>
                         <el-date-picker v-model="calendarYear" 
                                         type="year"
+                                        value-format="YYYY-MM-DD"
                                         placeholder="日期选择"
                                         style="width: 120px;" 
                                         :clearable="false" 
-                                        @change="selectYear(0)">
+                                        @change="selectYear">
                         </el-date-picker>
                         <el-button  type="text" 
                                     :icon="DArrowRight" 
@@ -230,6 +232,7 @@
                         </el-button>
                     </div>
                     <el-switch
+                        @change="changeSwitch"
                         v-model="calendarType"
                         inline-prompt
                         style="--el-switch-on-color: #13ce66; --el-switch-off-color: var(--el-color-primary)"
@@ -245,11 +248,11 @@
                         </div>
                     </template>
                 </el-calendar>
-                <monthly-calendar class="analyse-monthly-calendar" v-else>
-                    <template #dateCell="{ data, month }">
-                        <div class="date-cell">
-                            <p>{{ month }}</p>
-                            <p>{{ data }}</p>
+                <monthly-calendar class="analyse-monthly-calendar" v-else :year="calendarYear">
+                    <template #dateCell="{ data }">
+                        <div class="date-cell month-date-cell" :class="getDateCellClass(data)">
+                            <p>{{ data.label }}</p>
+                            <p>{{ fromatDateCellData(data) }}</p>
                         </div>
                     </template>
                 </monthly-calendar>
@@ -262,8 +265,9 @@
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useStore } from 'vuex'
 import { formatNumUnit, parseDateParams, getGapDate, getMonthShortcuts, dateFormat, getMonth, addCommas } from '@/libs/util'
-import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
+import festivalMap, { festivalList } from '@/config/festivalMap'
 import { getBarOption } from './option'
+import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import MonthlyCalendar from '@/components/monthly-calendar.vue'
 
 export default {
@@ -293,13 +297,13 @@ export default {
             preSaleProfitUp: 0,
             preSaleProfitDown: 0,
         })
+        const calendarIsLoading = ref(false)
         const calendarType = ref(true)
         const calendarDate = ref(dateFormat(new Date()))
         const calendarYear = ref(dateFormat(new Date()))
         const calendarInnerDate = computed({
             get() {
-                const date = new Date(calendarDate.value)
-                return date
+                return new Date(calendarDate.value)
             },
             set(value) {
                 calendarDate.value = dateFormat(value)
@@ -338,11 +342,19 @@ export default {
 
         const getAnalyseCalendarHandle = async (date) => {
             if (!isLogin.value) return
-            const dateParam = date && dateFormat(date) || calendarDate.value
-            const day = new Date(dateParam.slice(0, 4), dateParam.slice(6, 7), 0).getDate()
-            const params = parseDateParams([dateParam.slice(0, 8) + '01', `${dateParam.slice(0, 8)}${day}`])
+            let params = {}
+            if (calendarType.value) {
+                const dateParam = date && dateFormat(date) || calendarDate.value
+                const day = new Date(dateParam.slice(0, 4), dateParam.slice(6, 7), 0).getDate()
+                params = parseDateParams([dateParam.slice(0, 8) + '01', `${dateParam.slice(0, 8)}${day}`])
+            } else {
+                const year = date || new Date(calendarYear.value).getFullYear()
+                params = parseDateParams([`${year}-01-01`, `${year}-12-31`])
+            }
             params.openOrClose = 0 // 取所有平仓
-            await getAnalyseCalendar(params)
+            calendarIsLoading.value = true
+            await getAnalyseCalendar({ params, type: calendarType.value ? 'M' : 'Y' })
+            calendarIsLoading.value = false
         }
 
         const analyseAccount = async () => {
@@ -431,48 +443,77 @@ export default {
         }
 
         const selectDate = (type) => {
-            if (type) {
-                calendarDate.value = getMonth(calendarDate.value, type)
-            }
-            getAnalyseCalendarHandle(new Date(calendarDate.value))
+            calendarDate.value = getMonth(calendarDate.value, type)
+            getAnalyseCalendarHandle()
         }
 
         const selectYear = (value) => {
-            calendarYear.value = `${new Date(calendarYear.value).getFullYear() + value }-01-01`
+            if (typeof value === 'number') {
+                const year = new Date(calendarYear.value).getFullYear()
+                calendarYear.value = `${year + value}-01-01`
+            }
+            getAnalyseCalendarHandle()
         }
 
         const getDateCellClass = (data) => {
+            let itemData = analyseCalendarData.value[data.day.slice(0, 7)]
+            if (calendarType.value) {
+                itemData = analyseCalendarData.value[data.day]
+                const cellDay = (new Date(data.day)).getDay()
+                if (cellDay === 0 || cellDay === 6) { // 周末
+                    return 'weekend-day-cell'
+                }
+                if (festivalList.includes(data.day)) { // 节假日
+                    return 'festival-day-cell'
+                }
+                if (data.day.slice(0, 7) !== calendarDate.value.slice(0, 7)) { // 其他月份
+                    return ''
+                }
+            }
+
+            if (calendarIsLoading.value) return ''
+
             let className = ''
-            const cellDay = (new Date(data.day)).getDay()
-            const itemData = analyseCalendarData.value[data.day]
-            if (cellDay === 0 || cellDay === 6) {
-                return 'weekend-day-cell'
-            }
-            if (data.day.slice(0, 7) !== calendarDate.value.slice(0, 7) || cellDay === 0 || cellDay === 6) {
-                return ''
-            }
             if (itemData) {
                 if (itemData > 0) {
                     className = 'red-calendar-cell'
                 } else {
                     className = 'green-calendar-cell'
                 }
-            } else {
+            } else if (calendarType.value) {
                 className = 'normal-calendar-cell'
+            } else {
+                className = 'no-data-month-cell'
             }
             return className
         }
 
         const fromatDateCellData = (data) => {
-            const cellDay = (new Date(data.day)).getDay()
-            const itemData = analyseCalendarData.value[data.day]
-            if (data.day.slice(0, 7) !== calendarDate.value.slice(0, 7) || cellDay === 0 || cellDay === 6) {
-                return ''
+            if (calendarIsLoading.value) return ''
+
+            let itemData = analyseCalendarData.value[data.day.slice(0, 7)]
+            if (calendarType.value) {
+                itemData = analyseCalendarData.value[data.day]
+                const cellDay = (new Date(data.day)).getDay()
+                if (festivalList.includes(data.day) || festivalMap[data.day] || festivalMap[data.day.slice(5, 10)]) {
+                    return festivalMap[data.day] || festivalMap[data.day.slice(5, 10)] || '休'
+                }
+                // 周末、其他月份
+                if (data.day.slice(0, 7) !== calendarDate.value.slice(0, 7) || cellDay === 0 || cellDay === 6) {
+                    return ''
+                }
             }
+
             if (typeof itemData !== 'undefined') {
                 return Math.round(itemData)
             } else {
                 return '--'
+            }
+        }
+
+        const changeSwitch = () => {
+            if (!calendarType.value) { // 切换为年，立即请求数据
+                getAnalyseCalendarHandle()
             }
         }
 
@@ -531,6 +572,7 @@ export default {
             fromatDateCellData,
             addCommas,
             getAnalyseCalendarHandle,
+            changeSwitch,
         }
     },
 }
@@ -656,19 +698,34 @@ export default {
     color: rgb(14, 157, 88);
     font-weight: bold;
 }
+.month-date-cell p:first-of-type {
+    font-weight: normal;
+}
 .weekend-day-cell {
     color: #a8ade3;
 }
-.normal-calendar-cell {
+.festival-day-cell p:first-of-type {
     font-weight: bold;
+}
+.festival-day-cell p:last-of-type {
+    color: #a8ade3;
+}
+.normal-calendar-cell p:first-of-type {
+    font-weight: bold;
+}
+.no-data-month-cell {
+    color: #c0c4cc;
 }
 .card-title-date {
     font-weight: normal;
     font-size: 12px;
     margin-left: 4px;
 }
-.analyse-calendar, .analyse-monthly-calendar {
+.analyse-calendar {
     max-width: 500px;
+}
+.analyse-monthly-calendar {
+    max-width: 512px;
 }
 #barChart {
     width: 100%;

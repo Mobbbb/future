@@ -313,6 +313,27 @@ export const getGapDate = (gap = 1) => {
     return [start, end]
 }
 
+/**
+ * @description 获取归属的交易日期
+ * @param {String} time yyyy-MM-dd hh:mm:ss
+ * @returns date yyyy-MM-dd
+ */
+export const getBelongDealDate = (time) => {
+    const date = new Date(time)
+    const hours = Number(time.slice(11, 13))
+
+    if (hours >= 21) { // 9点之后，区间往后延一天
+        date.setTime(date.getTime() + 3600 * 1000 * 24 * 1)
+    }
+    if (new Date(date).getDay() === 0) { // 明天是周日
+        date.setTime(date.getTime() + 3600 * 1000 * 24 * 1)
+    } else if (new Date(date).getDay() === 6) { // 明天是周六
+        date.setTime(date.getTime() + 3600 * 1000 * 24 * 2)
+    }
+
+    return dateFormat(date)
+}
+
 export const getMonthShortcuts = () => {
     const date = new Date()
     let year = date.getFullYear()
@@ -353,14 +374,14 @@ export const getMonth = (date, direction) => {
       year = currentDate.getMonth() === 11 ? currentDate.getFullYear() + 1 : currentDate.getFullYear()
       month = currentDate.getMonth() === 11 ? 0 : currentDate.getMonth() + 1
     } else {
-      throw new Error('Direction argument must be either "prev" or "next"')
+      return dateFormat(currentDate)
     }
   
     // 创建一个新的日期对象，表示目标月份的同一天
     const targetMonthDate = new Date(year, month, currentDate.getDate())
   
     // 将新日期对象转换为字符串，格式为yyyy-mm-dd
-    const formattedDate = targetMonthDate.toISOString().slice(0, 10)
+    const formattedDate = dateFormat(targetMonthDate)
   
     // 返回目标月份的日期字符串
     return formattedDate

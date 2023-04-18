@@ -7,7 +7,11 @@
                     <tr class="el-calendar-table__row" v-for="item in monthArr" :key="item">
                         <td v-for="cell in item" :key="cell">
                             <div class="el-calendar-day" @click="clickHandle(monthMap[cell])">
-                                <slot name="dateCell" :data="monthMap[cell]" :month="cell"><p>{{ cell }}</p></slot>
+                                <slot name="dateCell" 
+                                    :data="{ month: monthMap[cell], label: cell, day: `${year_}-${monthMap[cell]}` }"
+                                    :month="cell">
+                                    <p>{{ cell }}</p>
+                                </slot>
                             </div>
                         </td>
                     </tr>
@@ -18,9 +22,19 @@
 </template>
 
 <script>
+import { computed, toRefs } from 'vue'
+
 export default {
     name: 'monthly-calendar',
+    props: {
+        year: {
+            default: '1970',
+            type: String,
+        },
+    },
     setup(props, { emit }) {
+        const { year } = toRefs(props)
+
         const monthArr = [
             ['一月', '二月', '三月', '四月'],
             ['五月', '六月', '七月', '八月'],
@@ -28,25 +42,28 @@ export default {
         ]
 
         const monthMap = {
-            '一月': 1,
-            '二月': 2,
-            '三月': 3,
-            '四月': 4,
-            '五月': 5,
-            '六月': 6,
-            '七月': 7,
-            '八月': 8,
-            '九月': 9,
-            '十月': 10,
-            '十一月': 11,
-            '十二月': 12,
+            '一月': '01',
+            '二月': '02',
+            '三月': '03',
+            '四月': '04',
+            '五月': '05',
+            '六月': '06',
+            '七月': '07',
+            '八月': '08',
+            '九月': '09',
+            '十月': '10',
+            '十一月': '11',
+            '十二月': '12',
         }
 
         const clickHandle = (value) => {
             emit('on-click', value)
         }
 
+        const year_ = computed(() => year.value.slice(0, 4))
+
         return {
+            year_,
             monthMap,
             monthArr,
             clickHandle,
@@ -56,13 +73,25 @@ export default {
 </script>
 
 <style scoped>
+.monthly-calendar  {
+    margin: 0 -6px;
+}
 .monthly-calendar-table {
     table-layout: fixed;
     width: 100%;
 }
+.monthly-calendar__header {
+    display: flex;
+    justify-content: space-between;
+    margin: 0 6px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #ebeef5;
+}
 .monthly-calendar-table td {
     vertical-align: top;
     transition: background-color var(--el-transition-duration-fast) ease;
+    padding: 0 6px;
+    box-sizing: border-box;
 }
 .monthly-calendar-table .el-calendar-day {
     box-sizing: border-box;
@@ -75,12 +104,6 @@ export default {
 }
 .monthly-calendar-table .el-calendar-day p:first-of-type {
     padding: 8px;
-}
-.monthly-calendar__header {
-    display: flex;
-    justify-content: space-between;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #ebeef5;
 }
 .monthly-calendar__body {
     padding-top: 20px;

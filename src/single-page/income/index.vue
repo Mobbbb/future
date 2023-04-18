@@ -65,7 +65,7 @@ import { useStore } from 'vuex'
 import { getOption } from './option'
 import { fetchIncomeInfo, fetchDeleteIncome } from '@/api'
 import { getDateBetween, dateFormat } from '@/libs/util'
-import { festivalList } from '@/config'
+import { festivalList } from '@/config/festivalMap'
 
 export default {
     name: 'income',
