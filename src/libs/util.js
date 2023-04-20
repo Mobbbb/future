@@ -334,12 +334,12 @@ export const getBelongDealDate = (time) => {
     return dateFormat(date)
 }
 
-export const getMonthShortcuts = () => {
+export const getMonthShortcuts = (num = 5) => {
     const date = new Date()
     let year = date.getFullYear()
     let month = date.getMonth() + 1
     const monthShortcuts = []
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < num; i++) {
         year = month < 1 ? year - 1 : year
         month = month < 1 ? month + 12 : month
         let nMonth = (month + 1) > 12 ? (month + 1) - 12 : (month + 1)

@@ -11,6 +11,7 @@
                     start-placeholder="开始日期"
                     end-placeholder="结束日期"
                     :clearable="false"
+                    :editable="false"
                     :shortcuts="shortcuts"
                     @change="changeInputHandle"
                     class="date-picker"
@@ -164,7 +165,7 @@ import { ElMessage } from 'element-plus'
 export default {
     name: 'record',
     setup() {
-        const monthShortcuts = getMonthShortcuts()
+        const monthShortcuts = getMonthShortcuts(4)
         const store = new useStore()
         const searchInputWrap = ref()
         const tableTabWrap = ref()
@@ -189,30 +190,10 @@ export default {
         })
 
         const shortcuts = [
-            {
-                text: '今日',
-                value: () => {
-                    return getGapDate()
-                },
-            },
-            {
-                text: '近7天',
-                value: () => {
-                    return getGapDate(7)
-                },
-            },
-            {
-                text: '近30天',
-                value: () => {
-                    return getGapDate(30)
-                },
-            },
-            {
-                text: '近365天',
-                value: () => {
-                    return getGapDate(365)
-                },
-            },
+            { text: '今日', value: () => getGapDate() },
+            { text: '近7天', value: () => getGapDate(7) },
+            { text: '近30天', value: () => getGapDate(30) },
+            { text: '近365天', value: () => getGapDate(365) },
             ...monthShortcuts,
         ]
 

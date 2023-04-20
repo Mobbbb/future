@@ -6,7 +6,7 @@ export const homeRoute = {
     name: 'home',
     meta: {
         level: 0,
-        name: '主页',
+        name: '留言',
     },
     component: () => import('@/single-page/home/index.vue'),
 }

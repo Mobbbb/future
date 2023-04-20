@@ -77,7 +77,7 @@ export default {
         },
         navMenus() {
             if (this.isLogin && this.isWhiteUser) {
-                return [...privateRoute, ...routes]
+                return [...routes, ...privateRoute]
             } else {
                 return routes
             }

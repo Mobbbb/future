@@ -11,6 +11,7 @@
                     start-placeholder="开始日期"
                     end-placeholder="结束日期"
                     :clearable="false"
+                    :editable="false"
                     :shortcuts="shortcuts"
                     @change="changeAnalyseDateHandle"
                     class="date-picker"
@@ -203,6 +204,7 @@
                                         placeholder="日期选择"
                                         style="width: 120px;" 
                                         :clearable="false" 
+                                        :editable="false"
                                         @change="selectDate('')">
                         </el-date-picker>
                         <el-button  type="text" 
@@ -223,6 +225,7 @@
                                         placeholder="日期选择"
                                         style="width: 120px;" 
                                         :clearable="false" 
+                                        :editable="false"
                                         @change="selectYear">
                         </el-date-picker>
                         <el-button  type="text" 
@@ -463,7 +466,7 @@ export default {
                 if (cellDay === 0 || cellDay === 6) { // 周末
                     return 'weekend-day-cell'
                 }
-                if (festivalList.includes(data.day)) { // 节假日
+                if (festivalList.includes(data.day) || festivalMap[data.day] || festivalMap[data.day.slice(5, 10)]) { // 节假日
                     return 'festival-day-cell'
                 }
                 if (data.day.slice(0, 7) !== calendarDate.value.slice(0, 7)) { // 其他月份
