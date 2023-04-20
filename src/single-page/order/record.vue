@@ -159,7 +159,7 @@
 import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { fetchDeleteOrder, fetchCancelOrder, fetchInsertIncome } from '@/api'
-import { parseDateParams, getGapDate, getMonthShortcuts, dateFormat } from '@/libs/util'
+import { parseDateParams, getGapDate, getMonthShortcuts, dateFormat, getLastDate } from '@/libs/util'
 import { ElMessage } from 'element-plus'
 
 export default {
@@ -240,9 +240,16 @@ export default {
 
         const getTableData = async () => {
             if (!isLogin.value) return
+            const startFormatDate = dateFormat(searchParams.date[0])
+            const endFormatDate = dateFormat(searchParams.date[1])
             const params = parseDateParams(searchParams.date)
             searchParams.startDate = params.startDate
             searchParams.endDate = params.endDate
+            if (startFormatDate === endFormatDate && startFormatDate === dateFormat(new Date())) {
+                // 当天的数据特殊处理
+                searchParams.startDate = `${dateFormat(getLastDate())} 21:00:00`
+                searchParams.endDate = `${endFormatDate} 20:59:59`
+            }
             loading.value = true
             await getOrderData(searchParams)
             loading.value = false

@@ -313,6 +313,10 @@ export const getGapDate = (gap = 1) => {
     return [start, end]
 }
 
+export const getLastDate = (N = 1) => {
+    return new Date(Date.now() - N * 24 * 60 * 60 * 1000)
+}
+
 /**
  * @description 获取归属的交易日期
  * @param {String} time yyyy-MM-dd hh:mm:ss
