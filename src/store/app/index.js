@@ -1,6 +1,7 @@
 import { fetchInsertLog, fetchUserInfo, fetchListData } from '@/api'
 import { getCurrentTime, getQueryVariable, getCookie, delCookie } from '@/libs/util'
-import router, { clearPrivateRoute, whiteUserList, administrator } from '@/router'
+import { whiteUserList, administrator, initPath } from '@/router/config'
+import router, { clearPrivateRoute } from '@/router'
 
 const app = {
     namespaced: true,
@@ -17,7 +18,7 @@ const app = {
             homeListData: [],
             homeTotalListData: [],
 
-            activeNavIndex: '/',
+            activeNavIndex: initPath,
             activeIncomeTab: 'day',
             activeOrderTab: 'order',
 

@@ -6,6 +6,7 @@ export const PC = 'PC'
 let env = ''
 
 if (process.env.NODE_ENV === 'production') env = ''
+
 export default {
     device: deviceMatch[0] || PC,
     env,
