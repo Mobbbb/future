@@ -28,7 +28,7 @@
                 <el-button type="primary" :disabled="!buySaleListNum.saleListNum" @click="submitHandle(1, 0)">平空</el-button>
             </div>
             <div class="recently-tag-wrap" v-if="recentlyFeatureNames.length">
-                <span>合约记录：</span>
+                <span>最近合约：</span>
                 <el-check-tag class="order-name-label" checked v-for="item in recentlyFeatureNames" @click="selectOrderName(item)" :key="item">{{item}}</el-check-tag>
             </div>
         </div>
@@ -75,7 +75,7 @@ export default {
         const tableTabWrap = ref()
         const formWrap = ref()
         const recentlyFeatureNames = ref([])
-        const openingOrderTableHeight = ref(115)
+        const openingOrderTableHeight = ref(40)
         const showOrderNameDrawer = ref(false)
         const formData = reactive({
             date,
@@ -114,7 +114,6 @@ export default {
         const setOpeningOrderList = (value) => store.commit('order/setOpeningOrderList', value)
         const emptyAnalyseCalendarDataByDate = (date) => store.commit('order/emptyAnalyseCalendarDataByDate', date)
         const getOpeningOrderData = () => store.dispatch('order/getOpeningOrderData')
-        const getFutureConfigInfo = () => store.dispatch('order/getFutureConfigInfo')
 
         // 合约列表
         const futuresConfigList = computed(() => {
@@ -139,7 +138,7 @@ export default {
             futuresList.value.forEach(item => {
                 list.push([])
                 dateList.forEach(cell => {
-                    list[list.length - 1].unshift(`${item}${cell}`)
+                    list[list.length - 1].unshift(`${item.name}${cell}`)
                 })
             })
             return list
@@ -148,7 +147,7 @@ export default {
         const futuresConfigListMap = computed(() => {
             const obj = {}
             futuresList.value.forEach(item => {
-                obj[item.toLowerCase()] = item
+                obj[item.name.toLowerCase()] = item.name
             })
             return obj
         })
@@ -244,8 +243,8 @@ export default {
 
         watch(isLogin, async (value) => {
             if (value) {
+                await getRecentlyFeature()
                 rerenderTable()
-                getRecentlyFeature()
             } else {
                 setOpeningOrderList([]) // 清空数据
                 recentlyFeatureNames.value = []
@@ -261,10 +260,9 @@ export default {
 
         onMounted(async () => {
             if (isLogin.value) {
+                await getRecentlyFeature()
                 rerenderTable()
-                getRecentlyFeature()
             }
-            await getFutureConfigInfo()
             // 设置默认选中的合约
             const defaultOrderName = localStorage.getItem('default-order-name')
             if (defaultOrderName) {

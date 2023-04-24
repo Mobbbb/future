@@ -30,6 +30,7 @@
                     <template #dropdown>
                         <el-dropdown-menu>
                             <el-dropdown-item>{{USER_INFO.userId}}</el-dropdown-item>
+                            <el-dropdown-item @click="showCloseSetting">优先平今</el-dropdown-item>
                             <el-dropdown-item @click="clickLogout">退出</el-dropdown-item>
                         </el-dropdown-menu>
                     </template>
@@ -38,6 +39,7 @@
             </div>
         </div>
         <LoginDrawer></LoginDrawer>
+        <CloseSettingDrawer></CloseSettingDrawer>
     </div>
 </template>
 
@@ -45,12 +47,14 @@
 import { mapState, mapGetters, mapMutations, mapActions } from 'vuex'
 import { routes, allRoutes, homeRoute } from '@/router/config'
 import LoginDrawer from './login-drawer.vue'
+import CloseSettingDrawer from './close-setting-drawer.vue'
 import { Avatar } from '@element-plus/icons-vue'
 
 export default {
     name: 'nav-menu',
     components: {
         LoginDrawer,
+        CloseSettingDrawer,
         Avatar,
     },
     data() {
@@ -89,12 +93,16 @@ export default {
     methods: {
         ...mapMutations('app', [
             'setLoginDrawerStatus',
+            'setCloseSettingShowStatus',
         ]),
         ...mapActions('app', [
             'logoutAction',
         ]),
         showLogin() {
             this.setLoginDrawerStatus(true)
+        },
+        showCloseSetting() {
+            this.setCloseSettingShowStatus(true)
         },
         clickLogout() {
             this.logoutAction()

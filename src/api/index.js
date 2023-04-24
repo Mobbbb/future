@@ -15,6 +15,14 @@ export const fetchUserInfo = () => {
     })
 }
 
+export const updateUserInDayFirstLists = (lists) => {
+    return axios.request({
+        url: prefixApi + '/user/updateUserInDayFirstLists',
+        method: 'post',
+        data: { lists, },
+    })
+}
+
 export const fetchListData = () => {
     return axios.request({
         url: '/resource/message-board/message.json',

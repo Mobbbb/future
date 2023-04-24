@@ -23,6 +23,7 @@ const app = {
             activeOrderTab: 'order',
 
             showLoginDrawerStatus: false,
+            closeSettingShowStatus: false,
 
             goods: {
                 type: '',
@@ -86,6 +87,12 @@ const app = {
         setLoginDrawerStatus(state, value) {
             state.showLoginDrawerStatus = value
         },
+        setCloseSettingShowStatus(state, value) {
+            state.closeSettingShowStatus = value
+        },
+        setInDayFirstLists(state, value) {
+            state.USER_INFO.inDayFirstLists = value
+        },
         SET_USER_INFO(state, value) {
             state.USER_INFO = value
         },
@@ -97,12 +104,13 @@ const app = {
                 commit('SET_USER_INFO', { userId })
                 const res = await fetchUserInfo()
                 const { data = {} } = res
-                const { uid, avatar, account } = data
+                const { uid, avatar, account, inDayFirstLists } = data
                 if (uid) {
                     commit('SET_USER_INFO', {
                         userId: uid,
                         avatar,
                         account,
+                        inDayFirstLists: inDayFirstLists.split(',')
                     })
                 }
             }

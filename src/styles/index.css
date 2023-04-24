@@ -220,3 +220,7 @@ input {
     box-shadow: none;
     border: 1px solid #409eff;
 }
+
+.gc-pagination .el-pagination__jump {
+    margin-left: 0!important;
+}

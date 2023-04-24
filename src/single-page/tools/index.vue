@@ -23,7 +23,7 @@
                         class="result-btn" />
             <span class="tips-text" v-if="isInPc">(按回车快速切换)</span>
             <el-radio-group v-model="currentGoodsType" style="display: block;margin-bottom: 4px;">
-                <el-radio :label="item" v-for="item in futuresList" :key="item" style="height: 26px;">{{item}}</el-radio>
+                <el-radio :label="item.name" v-for="item in futuresList" :key="item" style="height: 26px;">{{item.chName}}</el-radio>
             </el-radio-group>
             <template v-if="currentGoodsConfig.openCommissionType === 'percent'">
                 <div v-show="showNumber">
@@ -261,7 +261,6 @@ export default {
         const setGoodsPricePrev = (value) => store.commit('app/setGoodsPricePrev', value)
         const setGoodsPriceNext = (value) => store.commit('app/setGoodsPriceNext', value)
         const setGoodsType = (value) => store.commit('app/setGoodsType', value)
-        const getFutureConfigInfo = () => store.dispatch('order/getFutureConfigInfo')
 
         const isInPc = computed(() => config.device === PC)
         const spanNumberClass = computed(() => showNumber.value ? 'result-number' : '')
@@ -394,7 +393,6 @@ export default {
                 })
             } catch (error) {}
 
-            await getFutureConfigInfo()
             if (futureConfigInfo.value.length) {
                 setGoodsType(futureConfigInfo.value[0].name)
             }

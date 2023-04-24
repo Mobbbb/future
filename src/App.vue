@@ -30,9 +30,11 @@ export default {
 
         const setHomeListData = (value) => store.commit('app/setHomeListData', value)
         const INIT_USER = (value) => store.dispatch('app/INIT_USER', value)
+        const getFutureConfigInfo = () => store.dispatch('order/getFutureConfigInfo')
         
         onMounted(async () => {
             INIT_USER()
+            getFutureConfigInfo()
             window.addEventListener('load', function() {
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.register(publicPath + '/sw.js')

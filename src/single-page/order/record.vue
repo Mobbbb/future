@@ -51,7 +51,7 @@
             :summary-method="getSummaries"
             :row-class-name="tableRowClassName">
             <el-table-column prop="name" label="合约" width="70" fixed="left" />
-            <el-table-column prop="buyOrSale" label="买/卖" width="60" align="center">
+            <el-table-column prop="buyOrSale" label="买/卖" width="60">
                 <template #default="scope">
                     <span :style="scope.row.buyOrSale ? { color: '#eb4436' } : { color: '#0e9d58' }">
                         {{scope.row.buyOrSale ? '买' : '卖'}}
@@ -59,15 +59,17 @@
                 </template>
             </el-table-column>
             <el-table-column prop="price" label="成交价" />
-            <el-table-column prop="hands" label="手数" />
-            <el-table-column prop="commission" label="手续费" />
-            <el-table-column prop="openOrClose" label="开/平">
+            <el-table-column prop="hands" label="手数" width="60" />
+            <el-table-column prop="commission" label="手续费" width="60" />
+            <el-table-column prop="openOrClose" label="开/平" width="60">
                 <template #default="scope">
                     <span>{{scope.row.openOrClose ? '开' : '平'}}</span>
                 </template>
             </el-table-column>
-            <el-table-column prop="date" label="交易时间" width="180" />
-            <el-table-column prop="closeHands" label="状态">
+            <el-table-column prop="date" label="交易时间" width="140" />
+            <el-table-column prop="id" label="成交序号" width="90" />
+            <el-table-column prop="linkId" label="关联序号" :width="maxColunmWidth" />
+            <el-table-column prop="closeHands" label="状态" width="60">
                 <template #default="scope">
                     <span v-if="(scope.row.closeHands === null)">--</span>
                     <span v-else-if="scope.row.closeHands === 0">未平</span>
@@ -75,9 +77,7 @@
                     <span v-else>已平{{scope.row.closeHands}}手</span>
                 </template>
             </el-table-column>
-            <el-table-column prop="id" label="成交序号" width="90" />
-            <el-table-column prop="linkId" label="关联序号" />
-            <el-table-column prop="profit" label="平仓盈亏" width="90" align="center">
+            <el-table-column prop="profit" label="平仓盈亏" width="90" :fixed="overMediaCritical ? '' : 'right'" align="center">
                 <template #default="scope">
                     <div v-if="(scope.row.profit || scope.row.profit === 0)"
                         :style="scope.row.profit > 0 ? { color: '#eb4436' } : { color: '#0e9d58' }">
@@ -113,6 +113,13 @@
                 </template>
             </el-table-column>
         </el-table>
+        <el-pagination small background layout="prev, jumper, next, total" 
+            style="margin-top: 12px;"
+            @current-change="onPageChange"
+            :currentPage="searchParams.currentPage"
+            :page-size="searchParams.pageSize"
+            :total="orderTotalNum"
+            class="gc-pagination" />
         <el-dialog v-model="centerDialogVisible"
             title="警告"
             width="280px">
@@ -170,9 +177,11 @@ export default {
         const searchInputWrap = ref()
         const tableTabWrap = ref()
         const orderTableHeight = ref(0)
+        const orderTotalNum = ref(0)
         const loading = ref(false)
         const centerDialogVisible = ref(false)
         const importDialogVisible = ref(false)
+        const maxColunmWidth = ref(80)
         const submitData = reactive({
             date: new Date(),
             num: 0,
@@ -187,6 +196,8 @@ export default {
             startDate: '',
             endDate: '',
             status: 0,
+            pageSize: 10,
+            currentPage: 1,
         })
 
         const shortcuts = [
@@ -201,6 +212,7 @@ export default {
         const activeOrderTab = computed(() => store.state.app.activeOrderTab)
         const isLogin = computed(() => store.getters['app/isLogin'])
         const isAdministrator = computed(() => store.getters['app/isAdministrator'])
+        const overMediaCritical = computed(() => store.getters['app/overMediaCritical'])
 
         const accountName = computed(() => {
             const { account = '' } = store.state.app.USER_INFO
@@ -238,6 +250,11 @@ export default {
             }
         }
 
+        const onPageChange = (value) => {
+            searchParams.currentPage = value
+            getTableData()
+        }
+
         const getTableData = async () => {
             if (!isLogin.value) return
             const startFormatDate = dateFormat(searchParams.date[0])
@@ -251,7 +268,15 @@ export default {
                 searchParams.endDate = `${endFormatDate} 20:59:59`
             }
             loading.value = true
-            await getOrderData(searchParams)
+            orderTotalNum.value = await getOrderData(searchParams)
+            let strLength = 0
+            orderList.value.forEach(item => {
+                if (item.linkId.length > strLength) {
+                    strLength = item.linkId.length
+                }
+            })
+            console.log(strLength)
+            if (strLength) maxColunmWidth.value = strLength * 9
             loading.value = false
             submitData.num = allLineProfit.value
         }
@@ -388,7 +413,7 @@ export default {
             if (value === 'table') {
                 nextTick(() => {
                     if (!orderTableHeight.value) {
-                        orderTableHeight.value = tableTabWrap.value.getBoundingClientRect().height - searchInputWrap.value.getBoundingClientRect().height
+                        orderTableHeight.value = tableTabWrap.value.getBoundingClientRect().height - searchInputWrap.value.getBoundingClientRect().height - 48
                     }
                 })
             }
@@ -401,7 +426,7 @@ export default {
             if (activeOrderTab.value === 'table') {
                 nextTick(() => {
                     if (!orderTableHeight.value) {
-                        orderTableHeight.value = tableTabWrap.value.getBoundingClientRect().height - searchInputWrap.value.getBoundingClientRect().height
+                        orderTableHeight.value = tableTabWrap.value.getBoundingClientRect().height - searchInputWrap.value.getBoundingClientRect().height - 48
                     }
                 })
             }
@@ -423,6 +448,9 @@ export default {
             submitData,
             accountName,
             isAdministrator,
+            orderTotalNum,
+            maxColunmWidth,
+            overMediaCritical,
             submitHandle,
             tableRowClassName,
             deleteRow,
@@ -436,6 +464,7 @@ export default {
             formatSubmitRestNum,
             inputSubNumHandle,
             showSubmitViewHandle,
+            onPageChange,
         }
     },
 }
@@ -445,11 +474,13 @@ export default {
 .record-wrap {
     width: 100%;
     height: 100%;
+    background: #f5f5f5;
 }
 .order-table {
     width: 100%;
     background: white;
     font-size: 12px;
+    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 10%);
 }
 .table-search-input-wrap {
     display: flex;
@@ -457,6 +488,7 @@ export default {
     flex-wrap: wrap;
     padding-left: 12px;
     font-size: 12px;
+    background: white;
 }
 .search-item-wrap {
     display: flex;

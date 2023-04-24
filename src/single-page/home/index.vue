@@ -18,7 +18,7 @@
             v-model:currentPage="currentPage"
             :page-size="pageSize"
             :total="homeListData.length"
-            class="home-pagination" />
+            class="gc-pagination" />
         <Refresh @on-click="refreshHandle" :showRedPoint="showRedPoint"></Refresh>
     </div>
 </template>
@@ -215,8 +215,5 @@ export default {
 }
 .el-message-wrap {
     min-width: 260px;
-}
-.home-pagination .el-pagination__jump {
-    margin-left: 0;
 }
 </style>

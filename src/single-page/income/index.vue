@@ -36,7 +36,7 @@
                     v-model:currentPage="currentPage"
                     :page-size="pageSize"
                     :total="tableData.length"
-                    class="income-pagination" />
+                    class="gc-pagination" />
             </el-tab-pane>
         </el-tabs>
         <div class="no-data-class login-wrap" v-else>
@@ -95,13 +95,6 @@ export default {
         const showListData = computed(() => {
             const startNum = (currentPage.value - 1) * pageSize
             return tableData.value.slice(startNum, startNum + pageSize)
-        })
-
-        onMounted(async () => {
-            if (isLogin.value) {
-                await getTableData()
-                handleClick()
-            }
         })
 
         onBeforeUnmount(() => {
@@ -242,11 +235,26 @@ export default {
         watch(isLogin, async (value) => {
             if (value) {
                 await getTableData()
-                handleClick()
+                if (activeName.value === 'add') {
+                    getTotalIncome()
+                } else if (activeName.value === 'day') {
+                    getDayIncome()
+                }
             } else {
                 tableData.value = []
                 chartDataArr.value = []
                 chartDataTotalArr.value = []
+            }
+        })
+
+        onMounted(async () => {
+            if (isLogin.value) {
+                await getTableData()
+                if (activeName.value === 'add') {
+                    getTotalIncome()
+                } else if (activeName.value === 'day') {
+                    getDayIncome()
+                }
             }
         })
 
@@ -343,8 +351,5 @@ export default {
 .el-table-fixed-column--right .cell {
     padding-left: 0!important;
     padding-right: 0!important;
-}
-.income-pagination .el-pagination__jump {
-    margin-left: 0;
 }
 </style>

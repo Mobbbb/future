@@ -14,7 +14,10 @@ const order = {
     },
     getters: {
         futuresList(state) { // 合约列表
-            return [...new Set(state.futureConfigInfo.map(item => item.name))]
+            return state.futureConfigInfo.filter(item => item.name === item.activeName)
+        },
+        closeSettingfuturesList(state) { // 可平今的合约品种
+            return state.futureConfigInfo.filter(item => item.canCloseInDay)
         },
         enFutureMap(state) {
             const obj = {}
@@ -52,8 +55,10 @@ const order = {
         },
         async getOrderData({ commit }, params) {
             const res = await fetchOrderInfo(params)
-            const data = res.data || []
-            commit('setOrderList', data || [])
+            const data = res.data || {}
+            const { result = [], total = 0 } = data
+            commit('setOrderList', result)
+            return total
         },
         async getAnalyseData({ commit }, params) {
             const res = await fetchOrderInfo(params)
