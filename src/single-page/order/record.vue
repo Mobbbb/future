@@ -58,7 +58,7 @@
                     </span>
                 </template>
             </el-table-column>
-            <el-table-column prop="price" label="成交价" />
+            <el-table-column prop="price" label="成交价" width="90" />
             <el-table-column prop="hands" label="手数" width="60" />
             <el-table-column prop="commission" label="手续费" width="60" />
             <el-table-column prop="openOrClose" label="开/平" width="60">
@@ -66,7 +66,7 @@
                     <span>{{scope.row.openOrClose ? '开' : '平'}}</span>
                 </template>
             </el-table-column>
-            <el-table-column prop="date" label="交易时间" width="140" />
+            <el-table-column prop="date" label="交易时间" />
             <el-table-column prop="id" label="成交序号" width="90" />
             <el-table-column prop="linkId" label="关联序号" :width="maxColunmWidth" />
             <el-table-column prop="closeHands" label="状态" width="60">
@@ -190,18 +190,18 @@ export default {
             remark: '',
         })
         const searchParams = reactive({
-            date: getGapDate(),
+            date: [new Date(), new Date()],
             name: '',
             openOrClose: '',
             startDate: '',
             endDate: '',
             status: 0,
-            pageSize: 10,
+            pageSize: 30,
             currentPage: 1,
         })
 
         const shortcuts = [
-            { text: '今日', value: () => getGapDate() },
+            { text: '今日', value: () => [new Date(), new Date()] },
             { text: '近7天', value: () => getGapDate(7) },
             { text: '近30天', value: () => getGapDate(30) },
             { text: '近365天', value: () => getGapDate(365) },
@@ -257,16 +257,9 @@ export default {
 
         const getTableData = async () => {
             if (!isLogin.value) return
-            const startFormatDate = dateFormat(searchParams.date[0])
-            const endFormatDate = dateFormat(searchParams.date[1])
             const params = parseDateParams(searchParams.date)
             searchParams.startDate = params.startDate
             searchParams.endDate = params.endDate
-            if (startFormatDate === endFormatDate && startFormatDate === dateFormat(new Date())) {
-                // 当天的数据特殊处理
-                searchParams.startDate = `${dateFormat(getLastDate())} 21:00:00`
-                searchParams.endDate = `${endFormatDate} 20:59:59`
-            }
             loading.value = true
             orderTotalNum.value = await getOrderData(searchParams)
             let strLength = 0
@@ -275,8 +268,7 @@ export default {
                     strLength = item.linkId.length
                 }
             })
-            console.log(strLength)
-            if (strLength) maxColunmWidth.value = strLength * 9
+            if (strLength) maxColunmWidth.value = strLength * 9 < 80 ? 80 : strLength * 9
             loading.value = false
             submitData.num = allLineProfit.value
         }
@@ -344,7 +336,7 @@ export default {
         const resetHandle = () => {
             searchParams.name = ''
             searchParams.openOrClose = ''
-            searchParams.date = getGapDate()
+            searchParams.date = [new Date(), new Date()]
             searchParams.startDate = ''
             searchParams.endDate = ''
             searchParams.status = 0
