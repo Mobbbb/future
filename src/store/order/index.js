@@ -56,14 +56,21 @@ const order = {
         async getOrderData({ commit }, params) {
             const res = await fetchOrderInfo(params)
             const data = res.data || {}
-            const { result = [], total = 0 } = data
+            const { result = [], commission, profit, totalProfit, total } = data
+            
             commit('setOrderList', result)
-            return total
+            return {
+                commission: commission || '--',
+                profit: profit || '--',
+                totalProfit: totalProfit || '--',
+                total: total || 0,
+            }
         },
         async getAnalyseData({ commit }, params) {
             const res = await fetchOrderInfo(params)
-            const data = res.data || []
-            commit('setAnalyseList', data || [])
+            const data = res.data || {}
+            const { result = [] } = data
+            commit('setAnalyseList', result)
         },
         async getAnalyseCalendar({ state, commit }, { params, type }) {
             let { endDate } = params
@@ -73,9 +80,10 @@ const order = {
             if (state.analyseCalendarData[`${year}-status`] && type === 'Y') return // 如果该年份数据已获取，不再重新请求
 
             const res = await fetchOrderInfo(params)
-            const data = res.data || []
+            const data = res.data || {}
+            const { result = [] } = data
             let dateMap = {}
-            data.forEach(item => {
+            result.forEach(item => {
                 const belongDate = getBelongDealDate(item.date)
                 const belongMonth = belongDate.slice(0, 7)
                 if (!dateMap[belongDate]) {

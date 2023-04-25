@@ -24,14 +24,14 @@
             </div>
             <div class="search-item-wrap">
                 <span>开/平：</span>
-                <el-select v-model="searchParams.openOrClose" @change="changeInputHandle" clearable style="width: 120px;">
+                <el-select v-model="searchParams.openOrClose" @change="changeInputHandle" clearable style="width: 90px;">
                     <el-option label="平" :value="0"></el-option>
                     <el-option label="开" :value="1"></el-option>
                 </el-select>
             </div>
             <div class="search-item-wrap">
                 <span>状态：</span>
-                <el-select v-model="searchParams.status" @change="changeInputHandle" style="width: 120px;">
+                <el-select v-model="searchParams.status" @change="changeInputHandle" style="width: 80px;">
                     <el-option label="全部" :value="0"></el-option>
                     <el-option label="已平" :value="1"></el-option>
                     <el-option label="未平" :value="2"></el-option>
@@ -60,13 +60,13 @@
             </el-table-column>
             <el-table-column prop="price" label="成交价" width="90" />
             <el-table-column prop="hands" label="手数" width="60" />
-            <el-table-column prop="commission" label="手续费" width="60" />
+            <el-table-column prop="commission" label="手续费" width="90" />
             <el-table-column prop="openOrClose" label="开/平" width="60">
                 <template #default="scope">
                     <span>{{scope.row.openOrClose ? '开' : '平'}}</span>
                 </template>
             </el-table-column>
-            <el-table-column prop="date" label="交易时间" />
+            <el-table-column prop="date" label="交易时间" min-width="140" />
             <el-table-column prop="id" label="成交序号" width="90" />
             <el-table-column prop="linkId" label="关联序号" :width="maxColunmWidth" />
             <el-table-column prop="closeHands" label="状态" width="60">
@@ -77,7 +77,7 @@
                     <span v-else>已平{{scope.row.closeHands}}手</span>
                 </template>
             </el-table-column>
-            <el-table-column prop="profit" label="平仓盈亏" width="90" :fixed="overMediaCritical ? '' : 'right'" align="center">
+            <el-table-column prop="profit" label="平仓盈亏" width="90" :fixed="overMediaCritical ? 'normal' : 'right'" align="center">
                 <template #default="scope">
                     <div v-if="(scope.row.profit || scope.row.profit === 0)"
                         :style="scope.row.profit > 0 ? { color: '#eb4436' } : { color: '#0e9d58' }">
@@ -113,13 +113,15 @@
                 </template>
             </el-table-column>
         </el-table>
-        <el-pagination small background layout="prev, jumper, next, total" 
-            style="margin-top: 12px;"
-            @current-change="onPageChange"
-            :currentPage="searchParams.currentPage"
-            :page-size="searchParams.pageSize"
-            :total="orderTotalNum"
-            class="gc-pagination" />
+        <div class="pagination-wrap">
+            <el-pagination small background layout="total, prev, jumper, next"
+                @current-change="onPageChange"
+                :currentPage="searchParams.currentPage"
+                :page-size="searchParams.pageSize"
+                :total="orderCountNum.total"
+                class="gc-pagination" />
+            <div>{{ searchParams.pageSize }} 条/页</div>
+        </div>
         <el-dialog v-model="centerDialogVisible"
             title="警告"
             width="280px">
@@ -166,7 +168,7 @@
 import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { fetchDeleteOrder, fetchCancelOrder, fetchInsertIncome } from '@/api'
-import { parseDateParams, getGapDate, getMonthShortcuts, dateFormat, getLastDate } from '@/libs/util'
+import { parseDateParams, getGapDate, getMonthShortcuts, dateFormat } from '@/libs/util'
 import { ElMessage } from 'element-plus'
 
 export default {
@@ -177,11 +179,11 @@ export default {
         const searchInputWrap = ref()
         const tableTabWrap = ref()
         const orderTableHeight = ref(0)
-        const orderTotalNum = ref(0)
         const loading = ref(false)
         const centerDialogVisible = ref(false)
         const importDialogVisible = ref(false)
         const maxColunmWidth = ref(80)
+        const orderCountNum = ref({ total: 0 })
         const submitData = reactive({
             date: new Date(),
             num: 0,
@@ -261,7 +263,7 @@ export default {
             searchParams.startDate = params.startDate
             searchParams.endDate = params.endDate
             loading.value = true
-            orderTotalNum.value = await getOrderData(searchParams)
+            orderCountNum.value = await getOrderData(searchParams)
             let strLength = 0
             orderList.value.forEach(item => {
                 if (item.linkId.length > strLength) {
@@ -295,32 +297,31 @@ export default {
         }
 
         const getSummaries = (param) => {
-            const { columns, data } = param
+            const { columns } = param
             const sums = []
             const calcPropertyArr = ['totalProfit', 'commission', 'profit']
             columns.forEach((column, index) => {
                 if (index === 0) {
-                    sums[index] = '合计'
-                    return
-                }
-                if (!calcPropertyArr.includes(column.property)) {
+                    sums[index] = '总计'
+                } else if (!calcPropertyArr.includes(column.property)) {
                     sums[index] = '--'
-                    return
-                }
-                const values = data.map((item) => Number(item[column.property]))
-                if (!values.every((value) => Number.isNaN(value))) {
-                    sums[index] = values.reduce((prev, curr) => {
-                        const value = Number(curr)
-                        if (!Number.isNaN(value)) {
-                            return prev + curr
-                        } else {
-                            return prev
-                        }
-                    }, 0)
-                    sums[index] = sums[index].toFixed(2)
                 } else {
-                    sums[index] = '--'
+                    sums[index] = orderCountNum.value[column.property]
                 }
+                // const values = data.map((item) => Number(item[column.property]))
+                // if (!values.every((value) => Number.isNaN(value))) {
+                //     sums[index] = values.reduce((prev, curr) => {
+                //         const value = Number(curr)
+                //         if (!Number.isNaN(value)) {
+                //             return prev + curr
+                //         } else {
+                //             return prev
+                //         }
+                //     }, 0)
+                //     sums[index] = sums[index].toFixed(2)
+                // } else {
+                //     sums[index] = '--'
+                // }
             })
             return sums
         }
@@ -393,6 +394,23 @@ export default {
             getTableData()
         }
 
+        const initTable = (value) => {
+            if (value === 'table') {
+                nextTick(() => {
+                    if (!orderTableHeight.value) {
+                        orderTableHeight.value = tableTabWrap.value.getBoundingClientRect().height
+                            - searchInputWrap.value.getBoundingClientRect().height
+                            - 48
+                        searchParams.pageSize = Math.ceil((orderTableHeight.value - 80) / 40)
+                        searchParams.pageSize = searchParams.pageSize < 0 ? 10 : searchParams.pageSize
+                    }
+                    if (isLogin.value) {
+                        getTableData()
+                    }
+                })
+            }
+        }
+
         watch(isLogin, (value) => {
             if (value) {
                 getTableData()
@@ -402,29 +420,11 @@ export default {
         })
 
         watch(activeOrderTab, (value) => {
-            if (value === 'table') {
-                nextTick(() => {
-                    if (!orderTableHeight.value) {
-                        orderTableHeight.value = tableTabWrap.value.getBoundingClientRect().height - searchInputWrap.value.getBoundingClientRect().height - 48
-                    }
-                })
-            }
-            if (value === 'table' && isLogin.value) {
-                getTableData()
-            }
+            initTable(value)
         })
 
         onMounted(() => {
-            if (activeOrderTab.value === 'table') {
-                nextTick(() => {
-                    if (!orderTableHeight.value) {
-                        orderTableHeight.value = tableTabWrap.value.getBoundingClientRect().height - searchInputWrap.value.getBoundingClientRect().height - 48
-                    }
-                })
-            }
-            if (activeOrderTab.value === 'table' && isLogin.value) {
-                getTableData()
-            }
+            initTable(activeOrderTab.value)
         })
 
         return {
@@ -440,7 +440,7 @@ export default {
             submitData,
             accountName,
             isAdministrator,
-            orderTotalNum,
+            orderCountNum,
             maxColunmWidth,
             overMediaCritical,
             submitHandle,
@@ -517,6 +517,13 @@ export default {
     margin: 0 4px;
     cursor: pointer;
 }
+.pagination-wrap { 
+    display: flex;
+    margin-top: 12px;
+    align-items: center;
+    color: #606266;
+    font-size: 12px;
+}
 </style>
 
 <style>
@@ -536,5 +543,8 @@ export default {
 }
 .table-input-item-wrap .el-input-number.is-without-controls .el-input__inner {
     padding: 0 6px;
+}
+.pagination-wrap .el-pagination__total {
+    margin-right: 4px;
 }
 </style>
