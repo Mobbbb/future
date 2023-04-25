@@ -313,14 +313,10 @@ export const getGapDate = (gap = 1) => {
     return [start, end]
 }
 
-export const getLastDate = (N = 1) => {
-    return new Date(Date.now() - N * 24 * 60 * 60 * 1000)
-}
-
 /**
  * @description 获取归属的交易日期
- * @param {String} time yyyy-MM-dd hh:mm:ss
- * @returns date yyyy-MM-dd
+ * @param {String} time yyyy-MM-dd hh:mm:ss 实际交易日期
+ * @returns date yyyy-MM-dd 归属日期
  */
 export const getBelongDealDate = (time) => {
     const date = new Date(time)
@@ -336,6 +332,39 @@ export const getBelongDealDate = (time) => {
     }
 
     return dateFormat(date)
+}
+
+/**
+ * @description 获取归属的交易日期区间
+ * @param {String} time yyyy-MM-dd hh:mm:ss
+ * @returns {Array} yyyy-MM-dd
+ */
+export const getBelongDealDateGap = (time) => {
+    const date = new Date(time)
+    const hours = Number(time.slice(11, 13))
+    const strDate = time.slice(0, 10)
+
+    if (hours >= 21) { // 9点之后，区间往后延一天
+        date.setTime(date.getTime() + 3600 * 1000 * 24 * 1)
+
+        if (new Date(date).getDay() === 0) { // 明天是周日
+            date.setTime(date.getTime() + 3600 * 1000 * 24 * 1)
+        } else if (new Date(date).getDay() === 6) { // 明天是周六
+            date.setTime(date.getTime() + 3600 * 1000 * 24 * 2)
+        }
+
+        return [`${strDate} 21:00:00`, `${dateFormat(date)} 20:59:59`]
+    } else {
+        date.setTime(date.getTime() - 3600 * 1000 * 24 * 1)
+
+        if (new Date(date).getDay() === 0) { // 前一天是周日
+            date.setTime(date.getTime() - 3600 * 1000 * 24 * 2)
+        } else if (new Date(date).getDay() === 6) { // 前一天是周六
+            date.setTime(date.getTime() - 3600 * 1000 * 24 * 1)
+        }
+
+        return [`${dateFormat(date)} 21:00:00`, `${strDate} 20:59:59`]
+    }
 }
 
 export const getMonthShortcuts = (num = 5) => {

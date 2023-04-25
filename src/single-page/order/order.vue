@@ -268,7 +268,7 @@ export default {
             if (defaultOrderName) {
                 formData.name = defaultOrderName
             } else {
-                formData.name = futuresConfigList.value[0][0]
+                formData.name = futuresConfigList.value[0] && futuresConfigList.value[0][0] || ''
             }
         })
 
