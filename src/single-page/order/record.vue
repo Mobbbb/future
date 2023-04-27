@@ -225,22 +225,6 @@ export default {
             return []
         })
 
-        const allLineProfit = computed(() => {
-            let sums = 0
-            const values = orderList.value.map(item => Number(item.totalProfit))
-            if (!values.every(value => Number.isNaN(value))) {
-                sums = values.reduce((prev, curr) => {
-                    const value = Number(curr)
-                    if (!Number.isNaN(value)) {
-                        return prev + curr
-                    } else {
-                        return prev
-                    }
-                }, 0)
-            }
-            return parseFloat(sums.toFixed(2))
-        })
-
         const getOrderData = (params) => store.dispatch('order/getOrderData', params)
         const setOrderList = (value) => store.commit('order/setOrderList', value)
 
@@ -272,7 +256,7 @@ export default {
             })
             if (strLength) maxColunmWidth.value = strLength * 9 < 80 ? 80 : strLength * 9
             loading.value = false
-            submitData.num = allLineProfit.value
+            submitData.num = orderCountNum.value.totalProfit
         }
 
         let currentDeleteItem = null
@@ -369,13 +353,13 @@ export default {
         const formatSubmitNum = () => {
             const { account = '' } = store.state.app.USER_INFO
             if (account) submitData.name = [...account.split(',').slice(0, 2)]
-            submitData.num = Math.round(allLineProfit.value * _rate_)
+            submitData.num = Math.round(orderCountNum.value.totalProfit * _rate_)
             submitData.remark = `大号${submitData.num}，小号${submitData.subNum}`
         }
         const formatSubmitRestNum = () => {
             const { account = '' } = store.state.app.USER_INFO
             if (account) submitData.name = [account.split(',').reverse()[0]]
-            submitData.num = Math.floor(allLineProfit.value - Math.round(allLineProfit.value * _rate_) * 2)
+            submitData.num = Math.floor(orderCountNum.value.totalProfit - Math.round(orderCountNum.value.totalProfit* _rate_) * 2)
             submitData.subNum = 0
             submitData.remark = ''
         }
