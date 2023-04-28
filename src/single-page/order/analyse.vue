@@ -192,7 +192,7 @@
             </el-card>
             <el-card class="analyse-card" style="margin: 12px;">
                 <div class="analyse-calendar-header">
-                    <div class="date-picker-wrap" v-if="calendarType">
+                    <div class="date-picker-wrap" v-if="showMonthCalendar">
                         <el-button  type="text" 
                                     :icon="DArrowLeft" 
                                     class="header-icon-btn change-date-icon" 
@@ -236,13 +236,13 @@
                     </div>
                     <el-switch
                         @change="changeSwitch"
-                        v-model="calendarType"
+                        v-model="showMonthCalendar"
                         inline-prompt
                         style="--el-switch-on-color: #13ce66; --el-switch-off-color: var(--el-color-primary)"
                         active-text="月"
                         inactive-text="年"/>
                 </div>
-                <el-calendar v-if="calendarType" class="analyse-calendar" v-model="calendarInnerDate" @input="getAnalyseCalendarHandle">
+                <el-calendar v-if="showMonthCalendar" class="analyse-calendar" v-model="calendarInnerDate" @input="getAnalyseCalendarHandle">
                     <template #header><div></div></template>
                     <template #dateCell="{ data }">
                         <div class="date-cell" :class="getDateCellClass(data)">
@@ -251,7 +251,7 @@
                         </div>
                     </template>
                 </el-calendar>
-                <monthly-calendar class="analyse-monthly-calendar" v-else :year="calendarYear">
+                <monthly-calendar class="analyse-monthly-calendar" v-else :year="calendarYear" @on-click="clickMonCalHandle">
                     <template #dateCell="{ data }">
                         <div class="date-cell month-date-cell" :class="getDateCellClass(data)">
                             <p>{{ data.label }}</p>
@@ -301,7 +301,7 @@ export default {
             preSaleProfitDown: 0,
         })
         const calendarIsLoading = ref(false)
-        const calendarType = ref(true)
+        const showMonthCalendar = ref(true)
         const calendarDate = ref(dateFormat(new Date()))
         const calendarYear = ref(dateFormat(new Date()))
         const calendarInnerDate = computed({
@@ -346,7 +346,7 @@ export default {
         const getAnalyseCalendarHandle = async (date) => {
             if (!isLogin.value) return
             let params = {}
-            if (calendarType.value) {
+            if (showMonthCalendar.value) {
                 const dateParam = date && dateFormat(date) || calendarDate.value
                 const day = new Date(dateParam.slice(0, 4), dateParam.slice(6, 7), 0).getDate()
                 params = parseDateParams([dateParam.slice(0, 8) + '01', `${dateParam.slice(0, 8)}${day}`])
@@ -356,7 +356,7 @@ export default {
             }
             params.openOrClose = 0 // 取所有平仓
             calendarIsLoading.value = true
-            await getAnalyseCalendar({ params, type: calendarType.value ? 'M' : 'Y' })
+            await getAnalyseCalendar({ params, type: showMonthCalendar.value ? 'M' : 'Y' })
             calendarIsLoading.value = false
         }
 
@@ -460,7 +460,7 @@ export default {
 
         const getDateCellClass = (data) => {
             let itemData = analyseCalendarData.value[data.day.slice(0, 7)]
-            if (calendarType.value) {
+            if (showMonthCalendar.value) {
                 itemData = analyseCalendarData.value[data.day]
                 const cellDay = (new Date(data.day)).getDay()
                 if (cellDay === 0 || cellDay === 6) { // 周末
@@ -483,7 +483,7 @@ export default {
                 } else {
                     className = 'green-calendar-cell'
                 }
-            } else if (calendarType.value) {
+            } else if (showMonthCalendar.value) {
                 className = 'normal-calendar-cell'
             } else {
                 className = 'no-data-month-cell'
@@ -495,7 +495,7 @@ export default {
             if (calendarIsLoading.value) return ''
 
             let itemData = analyseCalendarData.value[data.day.slice(0, 7)]
-            if (calendarType.value) {
+            if (showMonthCalendar.value) {
                 itemData = analyseCalendarData.value[data.day]
                 const cellDay = (new Date(data.day)).getDay()
                 if (festivalList.includes(data.day) || festivalMap[data.day] || festivalMap[data.day.slice(5, 10)]) {
@@ -515,9 +515,15 @@ export default {
         }
 
         const changeSwitch = () => {
-            if (!calendarType.value) { // 切换为年，立即请求数据
+            if (!showMonthCalendar.value) { // 切换为年，立即请求数据
                 getAnalyseCalendarHandle()
             }
+        }
+
+        const clickMonCalHandle = (value) => {
+            showMonthCalendar.value = true
+            calendarDate.value = value.day + '-01'
+            getAnalyseCalendarHandle()
         }
 
         watch(isLogin, (value) => {
@@ -567,7 +573,7 @@ export default {
             calendarInnerDate,
             analyseCalendarData,
             displayTime,
-            calendarType,
+            showMonthCalendar,
             selectDate,
             selectYear,
             changeAnalyseDateHandle,
@@ -576,6 +582,7 @@ export default {
             addCommas,
             getAnalyseCalendarHandle,
             changeSwitch,
+            clickMonCalHandle,
         }
     },
 }

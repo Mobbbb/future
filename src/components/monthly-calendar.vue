@@ -6,7 +6,7 @@
                 <tbody>
                     <tr class="el-calendar-table__row" v-for="item in monthArr" :key="item">
                         <td v-for="cell in item" :key="cell">
-                            <div class="el-calendar-day" @click="clickHandle(monthMap[cell])">
+                            <div class="el-calendar-day" @click="clickHandle({ month: monthMap[cell], label: cell, day: `${year_}-${monthMap[cell]}` })">
                                 <slot name="dateCell" 
                                     :data="{ month: monthMap[cell], label: cell, day: `${year_}-${monthMap[cell]}` }"
                                     :month="cell">
