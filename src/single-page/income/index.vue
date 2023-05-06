@@ -63,6 +63,7 @@
 import { ref, nextTick, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { useStore } from 'vuex'
 import { getOption } from './option'
+import { useWatchUserSwitch } from '@/composables/watch'
 import { fetchIncomeInfo, fetchDeleteIncome } from '@/api'
 import { getDateBetween, dateFormat } from '@/libs/util'
 import { festivalList } from '@/config/festivalMap'
@@ -232,22 +233,7 @@ export default {
             setLoginDrawerStatus(true)
         }
 
-        watch(isLogin, async (value) => {
-            if (value) {
-                await getTableData()
-                if (activeName.value === 'add') {
-                    getTotalIncome()
-                } else if (activeName.value === 'day') {
-                    getDayIncome()
-                }
-            } else {
-                tableData.value = []
-                chartDataArr.value = []
-                chartDataTotalArr.value = []
-            }
-        })
-
-        onMounted(async () => {
+        const initData = async () => {
             if (isLogin.value) {
                 await getTableData()
                 if (activeName.value === 'add') {
@@ -256,6 +242,21 @@ export default {
                     getDayIncome()
                 }
             }
+        }
+
+        watch(isLogin, async (value) => {
+            if (value) {
+                initData()
+            } else {
+                tableData.value = []
+                chartDataArr.value = []
+                chartDataTotalArr.value = []
+            }
+        })
+        useWatchUserSwitch(initData)
+
+        onMounted(() => {
+            initData()
         })
 
         return {

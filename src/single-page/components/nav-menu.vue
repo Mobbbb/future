@@ -25,12 +25,13 @@
 
             <div class="user-wrap">
                 <el-dropdown v-if="isLogin" trigger="hover">
-                    <img class="avatar-image" :src="USER_INFO.avatar" v-if="USER_INFO.avatar">
+                    <img class="avatar-image" :src="USER_INFO.avatar" v-if="USER_INFO.avatar" />
                     <el-icon class="avatar-icon" v-else><Avatar /></el-icon>
                     <template #dropdown>
                         <el-dropdown-menu>
-                            <el-dropdown-item>{{USER_INFO.userId}}</el-dropdown-item>
+                            <el-dropdown-item><span class="user-id-wrap">{{USER_INFO.userId}}</span></el-dropdown-item>
                             <el-dropdown-item @click="showCloseSetting">优先平今</el-dropdown-item>
+                            <el-dropdown-item @click="changeUser">切换账号</el-dropdown-item>
                             <el-dropdown-item @click="clickLogout">退出</el-dropdown-item>
                         </el-dropdown-menu>
                     </template>
@@ -107,6 +108,9 @@ export default {
         clickLogout() {
             this.logoutAction()
         },
+        changeUser() {
+            this.setLoginDrawerStatus(true)
+        },
         searchHandle() {
             this.$emit('on-search', this.searchText)
         },
@@ -180,6 +184,12 @@ export default {
     line-height: 28px;
     right: 48px;
     top: 14px;
+}
+.user-id-wrap {
+    display: block;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 </style>
 

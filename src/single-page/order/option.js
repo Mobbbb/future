@@ -56,7 +56,7 @@ function getYAxisConfig(dataSource, serieIndexs = []) {
         return Math.abs(num1) > Math.abs(num2) ? Math.abs(num1) : Math.abs(num2)
     })
     // 间隔值：默认分割段数 5
-    let interval = yAxisMax(absMax) / 5
+    let interval = yAxisMax(Math.abs(absMax)) / 5
 
     // 取最大值
     let max = Math.max(...yData)

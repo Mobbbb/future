@@ -167,6 +167,7 @@
 <script>
 import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
 import { useStore } from 'vuex'
+import { useWatchUserSwitch } from '@/composables/watch'
 import { fetchDeleteOrder, fetchCancelOrder, fetchInsertIncome } from '@/api'
 import { parseDateParams, getGapDate, getMonthShortcuts, dateFormat } from '@/libs/util'
 import { ElMessage } from 'element-plus'
@@ -250,7 +251,7 @@ export default {
             orderCountNum.value = await getOrderData(searchParams)
             let strLength = 0
             orderList.value.forEach(item => {
-                if (item.linkId.length > strLength) {
+                if (item.linkId.length > strLength && item.linkId) {
                     strLength = item.linkId.length
                 }
             })
@@ -378,37 +379,36 @@ export default {
             getTableData()
         }
 
-        const initTable = (value) => {
-            if (value === 'table') {
+        const initTable = () => {
+            if (activeOrderTab.value === 'table') {
                 nextTick(() => {
                     if (!orderTableHeight.value) {
                         orderTableHeight.value = tableTabWrap.value.getBoundingClientRect().height
                             - searchInputWrap.value.getBoundingClientRect().height
                             - 48
-                        searchParams.pageSize = Math.ceil((orderTableHeight.value - 80) / 40)
-                        searchParams.pageSize = searchParams.pageSize < 0 ? 10 : searchParams.pageSize
+                        // searchParams.pageSize = Math.ceil((orderTableHeight.value - 80) / 40)
+                        // searchParams.pageSize = searchParams.pageSize < 0 ? 10 : searchParams.pageSize
                     }
-                    if (isLogin.value) {
-                        getTableData()
-                    }
+                    getTableData()
                 })
             }
         }
 
         watch(isLogin, (value) => {
             if (value) {
-                getTableData()
+                initTable()
             } else {
                 setOrderList([]) // 清空数据
             }
         })
+        useWatchUserSwitch(initTable)
 
-        watch(activeOrderTab, (value) => {
-            initTable(value)
+        watch(activeOrderTab, () => {
+            initTable()
         })
 
         onMounted(() => {
-            initTable(activeOrderTab.value)
+            initTable()
         })
 
         return {

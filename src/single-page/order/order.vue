@@ -60,6 +60,7 @@
 <script>
 import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
 import { useStore } from 'vuex'
+import { useWatchUserSwitch } from '@/composables/watch'
 import { fetchInsertOrder, fetchRecentlyFeature } from '@/api'
 import { dateFormat } from '@/libs/util'
 import { ElMessage } from 'element-plus'
@@ -241,28 +242,36 @@ export default {
             })
         }
 
-        watch(isLogin, async (value) => {
+        const initOpeningAndRecentlyFeature = async () => {
+            if (activeOrderTab.value === 'order') {
+                if (isLogin.value) {
+                    await getRecentlyFeature()
+                    rerenderTable()
+                } else {
+                    nextTick(() => {
+                        openingOrderTableHeight.value = 115
+                    })
+                }
+            }
+        }
+
+        watch(isLogin, (value) => {
             if (value) {
-                await getRecentlyFeature()
-                rerenderTable()
+                initOpeningAndRecentlyFeature()
             } else {
                 setOpeningOrderList([]) // 清空数据
                 recentlyFeatureNames.value = []
                 openingOrderTableHeight.value = 115
             }
         })
+        useWatchUserSwitch(initOpeningAndRecentlyFeature)
 
-        watch(activeOrderTab, async (value) => {
-            if (value === 'order' && isLogin.value) {
-                rerenderTable()
-            }
+        watch(activeOrderTab, () => {
+            initOpeningAndRecentlyFeature()
         })
 
         onMounted(async () => {
-            if (isLogin.value) {
-                await getRecentlyFeature()
-                rerenderTable()
-            }
+            await initOpeningAndRecentlyFeature()
             // 设置默认选中的合约
             const defaultOrderName = localStorage.getItem('default-order-name')
             if (defaultOrderName) {

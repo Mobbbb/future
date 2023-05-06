@@ -24,6 +24,7 @@ const app = {
 
             showLoginDrawerStatus: false,
             closeSettingShowStatus: false,
+            switchUserFlag: false,
 
             goods: {
                 type: '',
@@ -93,6 +94,9 @@ const app = {
         setInDayFirstLists(state, value) {
             state.USER_INFO.inDayFirstLists = value
         },
+        changeSwitchUserFlag(state) {
+            state.switchUserFlag = !state.switchUserFlag
+        },
         SET_USER_INFO(state, value) {
             state.USER_INFO = value
         },
@@ -124,11 +128,39 @@ const app = {
                 })
             }
         },
-        logoutAction({ commit }) {
+        logoutAction({ commit, dispatch }) {
+            dispatch('removeLoginStorage')
             commit('SET_USER_INFO', {})
             delCookie('feature-uid')
             delCookie('feature-token')
             clearPrivateRoute()
+        },
+        saveLoginStatus({}, data) {
+            const { uid, avatar } = data
+            let loginList = localStorage.getItem('feature-login-list')
+            if (loginList) {
+                loginList = JSON.parse(loginList)
+            } else {
+                loginList = []
+            }
+            
+            loginList = loginList.filter(item => item.uid !== uid)
+            loginList.unshift({
+                uid,
+                avatar,
+                token: getCookie('feature-token'),
+            })
+            localStorage.setItem('feature-login-list', JSON.stringify(loginList))
+        },
+        removeLoginStorage({ state }) {
+            let loginList = localStorage.getItem('feature-login-list')
+            if (loginList) {
+                loginList = JSON.parse(loginList)
+            } else {
+                loginList = []
+            }
+            loginList = loginList.filter(item => item.uid !== state.USER_INFO.userId)
+            localStorage.setItem('feature-login-list', JSON.stringify(loginList))
         },
         async requestHomeList({ commit }) {
             let result = await fetchListData()

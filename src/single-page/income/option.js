@@ -168,7 +168,7 @@ export const getOption = (dim = [], onlyShowLast = 0) => {
 const formatLabel = (data, item, index, showType = 0) => {
     if (item.num === 0) {
         return {
-            value: item.num,
+            value: 0,
             symbol: 'none',
             label: {
                 show: false,
@@ -176,14 +176,15 @@ const formatLabel = (data, item, index, showType = 0) => {
         }
     }
 
+    const value = item.num.toFixed(2)
     if (showType === 1) {
         if (index === data.length - 1) {
             return {
-                value: item.num,
+                value,
             }
         } else {
             return {
-                value: item.num,
+                value,
                 symbol: 'none',
                 label: {
                     show: false,
@@ -192,11 +193,11 @@ const formatLabel = (data, item, index, showType = 0) => {
         }
     } else if (showType === 0) {
         return {
-            value: item.num,
+            value,
         }
     } else {
         return {
-            value: item.num,
+            value,
             symbol: 'none',
             label: {
                 show: false,

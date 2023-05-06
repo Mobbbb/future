@@ -177,6 +177,17 @@ export const genVH = (length) => {
     return length * clientHeight / 800
 }
 
+export const setCookie = (cookieName, cookieValue, daysToExpire = 30, cookiePath = '/', cookieDomain) => {
+    cookieDomain = cookieDomain || window.location.hostname
+    let expires = ''
+    if (daysToExpire) {
+        const date = new Date()
+        date.setTime(date.getTime() + daysToExpire * 24 * 60 * 60 * 1000)
+        expires = "; expires=" + date.toGMTString()
+    }
+    document.cookie = cookieName + "=" + cookieValue + expires + "; path=" + cookiePath + "; domain=" + cookieDomain
+}
+
 export const getCookie = (name) => {
     const cookieArr = document.cookie.split(';')
     for (let i = 0; i < cookieArr.length; i++) {

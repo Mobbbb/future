@@ -267,6 +267,7 @@
 <script>
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useStore } from 'vuex'
+import { useWatchUserSwitch } from '@/composables/watch'
 import { formatNumUnit, parseDateParams, getGapDate, getMonthShortcuts, dateFormat, getMonth, addCommas } from '@/libs/util'
 import festivalMap, { festivalList } from '@/config/festivalMap'
 import { getBarOption } from './option'
@@ -526,32 +527,31 @@ export default {
             getAnalyseCalendarHandle()
         }
 
-        watch(isLogin, (value) => {
-            if (value && activeOrderTab.value === 'analyse') {
+        const initAnalyseData = () => {
+            if (activeOrderTab.value === 'analyse' && isLogin.value) {
                 analyseAccount()
                 getAnalyseCalendarHandle()
             }
+        }
 
-            if (!value) {
+        watch(isLogin, (value) => {
+            if (value) {
+                initAnalyseData()
+            } else {
                 setAnalyseList([]) // 清空数据
                 setAnalyseCalendarData({}) // 清空数据
                 analyseAccount()
                 getAnalyseCalendarHandle()
             }
         })
+        useWatchUserSwitch(initAnalyseData)
 
-        watch(activeOrderTab, async (value) => {
-            if (value === 'analyse') {
-                analyseAccount()
-                getAnalyseCalendarHandle()
-            }
+        watch(activeOrderTab, () => {
+            initAnalyseData()
         })
 
         onMounted(() => {
-            if (activeOrderTab.value === 'analyse') {
-                analyseAccount()
-                getAnalyseCalendarHandle()
-            }
+            initAnalyseData()
         })
 
         onBeforeUnmount(() => {
