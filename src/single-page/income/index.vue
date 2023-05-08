@@ -15,12 +15,16 @@
             </el-tab-pane>
             <el-tab-pane label="收益列表" name="table">
                 <div class="table-wrap">
-                    <el-table :data="showListData" height="100%" style="font-size: 12px;">
+                    <el-table class="income-table" :data="showListData" height="100%" :show-summary="isAdministrator"
+                        :summary-method="getSummaries" :row-class-name="tableRowClassName" style="font-size: 12px;">
+                        <el-table-column prop="id" label="编号" width="60" align="center" fixed="left" />
                         <el-table-column prop="date" label="日期" />
+                        <el-table-column prop="dNum" label="大号收益" v-if="isAdministrator" />
+                        <el-table-column prop="xNum" label="小号收益" v-if="isAdministrator" />
                         <el-table-column prop="num" label="收益" />
                         <el-table-column prop="name" label="角色" />
-                        <el-table-column prop="remark" label="备注" />
-                        <el-table-column fixed="right" label="操作" width="60" align="center">
+                        <el-table-column prop="remark" min-width="140" label="备注" show-overflow-tooltip />
+                        <el-table-column label="操作" width="60" align="center">
                             <template #default="scope">
                                 <el-button link
                                     type="danger"
@@ -65,7 +69,7 @@ import { useStore } from 'vuex'
 import { getOption } from './option'
 import { useWatchUserSwitch } from '@/composables/watch'
 import { fetchIncomeInfo, fetchDeleteIncome } from '@/api'
-import { getDateBetween, dateFormat } from '@/libs/util'
+import { getDateBetween, dateFormat, extractStringBetween } from '@/libs/util'
 import { festivalList } from '@/config/festivalMap'
 
 export default {
@@ -81,9 +85,13 @@ export default {
         const pageSize = 40
         let myChart1 = null
         let myChart2 = null
+        let subTotalNum = 0
+        let dtotalNum = 0
+        let totalNum = 0
 
         const setActiveIncomeTab = (value) => store.commit('app/setActiveIncomeTab', value)
         const isLogin = computed(() => store.getters['app/isLogin'])
+        const isAdministrator = computed(() => store.getters['app/isAdministrator'])
         const activeName = computed({
             get() {
                 return store.state.app.activeIncomeTab
@@ -145,6 +153,39 @@ export default {
             const res = await fetchIncomeInfo()
             const data = res.data || []
             data.sort((a, b) => Date.parse(new Date(b.date)) - Date.parse(new Date(a.date)))
+            subTotalNum = 0
+            dtotalNum = 0
+            totalNum = 0
+            const dateObj = {}
+            data.forEach(item => {
+                const length = item.name.split(',').length
+                let subItemNum = 0
+                let itemNum = (item.num * length)
+                if (item.remark) {
+                    subItemNum = Number(extractStringBetween(item.remark, '{', '}')) * 2
+                    subTotalNum += subItemNum
+                    item.remark = item.remark.replaceAll('{', '')
+                    item.remark = item.remark.replaceAll('}', '')
+                }
+                if (typeof dateObj[item.date] === 'undefined') {
+                    dateObj[item.date] = 0
+                }
+                
+                totalNum += itemNum
+                dateObj[item.date] += (itemNum - subItemNum)
+                dtotalNum += (itemNum - subItemNum)
+                if (item.name !== '其他') item.xNum = subItemNum
+            })
+            data.forEach(item => {
+                if (item.name === '其他') return
+                if (typeof dateObj[item.date] !== 'undefined') {
+                    item.dNum = Number(dateObj[item.date].toFixed(2))
+                    delete dateObj[item.date]
+                } else {
+                    item.dNum = '--'
+                }
+            })
+
             let nameArr = [] // 维度
             // 横坐标全部日期
             let dateArr = []
@@ -244,6 +285,31 @@ export default {
             }
         }
 
+        const tableRowClassName = ({ row }) => {
+            if (row.name && row.name[0] === '其他') {
+                return 'others-row'
+            }
+        }
+
+        const getSummaries = (param) => {
+            const { columns } = param
+            const sums = []
+            columns.forEach((column, index) => {
+                if (index === 0) {
+                    sums[index] = '总计'
+                } else if (column.property === 'dNum') {
+                    sums[index] = dtotalNum.toFixed(2)
+                } else if (column.property === 'xNum') {
+                    sums[index] = subTotalNum.toFixed(2)
+                } else if (column.property === 'num') {
+                    sums[index] = totalNum.toFixed(2)
+                } else {
+                    sums[index] = '--'
+                }
+            })
+            return sums
+        }
+
         watch(isLogin, async (value) => {
             if (value) {
                 initData()
@@ -262,16 +328,19 @@ export default {
         return {
             centerDialogVisible,
             isLogin,
+            isAdministrator,
             tableData,
             showListData,
             activeName,
             pageSize,
             currentPage,
             isShowChart,
+            tableRowClassName,
             deleteRow,
             handleClick,
             showLoginHandle,
             confirmDelete,
+            getSummaries,
         }
     },
 }
@@ -352,5 +421,20 @@ export default {
 .el-table-fixed-column--right .cell {
     padding-left: 0!important;
     padding-right: 0!important;
+}
+.income-table .el-table__footer .el-table__cell:nth-of-type(3) {
+    color: rgb(235, 68, 54);
+    font-weight: bold;
+}
+.income-table .el-table__footer .el-table__cell:nth-of-type(4) {
+    color: rgb(235, 68, 54);
+    font-weight: bold;
+}
+.income-table .el-table__footer .el-table__cell:nth-of-type(5) {
+    color: rgb(235, 68, 54);
+    font-weight: bold;
+}
+.income-table .others-row .el-table__cell {
+    background: var(--el-color-info-light-9);
 }
 </style>

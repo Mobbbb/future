@@ -3,6 +3,11 @@
         <div class="table-search-input-wrap" ref="searchInputWrap">
             <div class="search-item-wrap">
                 <span>起止日期：</span>
+                <el-button  type="text" 
+                            :icon="DArrowLeft" 
+                            class="header-icon-btn change-date-icon" 
+                            @click="selectDate('prev')">
+                </el-button>
                 <el-date-picker
                     v-model="searchParams.date"
                     type="daterange"
@@ -13,10 +18,15 @@
                     :clearable="false"
                     :editable="false"
                     :shortcuts="shortcuts"
-                    @change="changeInputHandle"
+                    @change="selectDate"
                     class="date-picker"
                     popper-class="date-picker-popper"
                     style="width: 260px;" />
+                <el-button  type="text" 
+                            :icon="DArrowRight" 
+                            class="header-icon-btn change-date-icon" 
+                            @click="selectDate('next')">
+                </el-button>
             </div>
             <div class="search-item-wrap">
                 <span>合约名：</span>
@@ -77,24 +87,6 @@
                     <span v-else>已平{{scope.row.closeHands}}手</span>
                 </template>
             </el-table-column>
-            <el-table-column prop="profit" label="平仓盈亏" width="90" :fixed="overMediaCritical ? 'normal' : 'right'" align="center">
-                <template #default="scope">
-                    <div v-if="(scope.row.profit || scope.row.profit === 0)"
-                        :style="scope.row.profit > 0 ? { color: '#eb4436' } : { color: '#0e9d58' }">
-                        <span style="font-weight: bold;">{{scope.row.profit}}</span>
-                    </div>
-                    <div v-else class="talbe-block-cell">--</div>
-                </template>
-            </el-table-column>
-            <el-table-column prop="totalProfit" label="净盈亏" width="90" fixed="right" align="center">
-                <template #default="scope">
-                    <div v-if="(scope.row.totalProfit || scope.row.totalProfit === 0)"
-                        :style="scope.row.totalProfit > 0 ? { color: '#eb4436' } : { color: '#0e9d58' }">
-                        <span style="font-weight: bold;">{{scope.row.totalProfit}}</span>
-                    </div>
-                    <div v-else class="talbe-block-cell">--</div>
-                </template>
-            </el-table-column>
             <el-table-column label="操作" align="right" width="142">
                 <template #default="scope">
                     <el-button link
@@ -110,6 +102,24 @@
                         @click.prevent="deleteRow(scope)">
                         删除
                     </el-button>
+                </template>
+            </el-table-column>
+            <el-table-column prop="profit" label="平仓盈亏" width="90" :fixed="overMediaCritical ? false : 'right'" align="center">
+                <template #default="scope">
+                    <div v-if="(scope.row.profit || scope.row.profit === 0)"
+                        :style="scope.row.profit > 0 ? { color: '#eb4436' } : { color: '#0e9d58' }">
+                        <span style="font-weight: bold;">{{scope.row.profit}}</span>
+                    </div>
+                    <div v-else class="talbe-block-cell">--</div>
+                </template>
+            </el-table-column>
+            <el-table-column prop="totalProfit" label="净盈亏" width="90" fixed="right" align="center">
+                <template #default="scope">
+                    <div v-if="(scope.row.totalProfit || scope.row.totalProfit === 0)"
+                        :style="scope.row.totalProfit > 0 ? { color: '#eb4436' } : { color: '#0e9d58' }">
+                        <span style="font-weight: bold;">{{scope.row.totalProfit}}</span>
+                    </div>
+                    <div v-else class="talbe-block-cell">--</div>
                 </template>
             </el-table-column>
         </el-table>
@@ -169,13 +179,14 @@ import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useWatchUserSwitch } from '@/composables/watch'
 import { fetchDeleteOrder, fetchCancelOrder, fetchInsertIncome } from '@/api'
-import { parseDateParams, getGapDate, getMonthShortcuts, dateFormat } from '@/libs/util'
+import { parseDateParams, getGapDate, getMonthShortcuts, dateFormat, getDateByStep } from '@/libs/util'
 import { ElMessage } from 'element-plus'
+import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 
 export default {
     name: 'record',
     setup() {
-        const monthShortcuts = getMonthShortcuts(4)
+        const monthShortcuts = getMonthShortcuts(5)
         const store = new useStore()
         const searchInputWrap = ref()
         const tableTabWrap = ref()
@@ -257,7 +268,7 @@ export default {
             })
             if (strLength) maxColunmWidth.value = strLength * 9 < 80 ? 80 : strLength * 9
             loading.value = false
-            submitData.num = orderCountNum.value.totalProfit
+            submitData.num = orderCountNum.value.totalProfit || 0
         }
 
         let currentDeleteItem = null
@@ -291,7 +302,7 @@ export default {
                 } else if (!calcPropertyArr.includes(column.property)) {
                     sums[index] = '--'
                 } else {
-                    sums[index] = orderCountNum.value[column.property]
+                    sums[index] = orderCountNum.value[column.property] || '--'
                 }
                 // const values = data.map((item) => Number(item[column.property]))
                 // if (!values.every((value) => Number.isNaN(value))) {
@@ -316,6 +327,11 @@ export default {
         }
 
         const changeInputHandle = () => {
+            getTableData()
+        }
+
+        const selectDate = (type) => {
+            searchParams.date = [getDateByStep(searchParams.date[0], type), getDateByStep(searchParams.date[1], type)]
             getTableData()
         }
 
@@ -354,19 +370,21 @@ export default {
         const formatSubmitNum = () => {
             const { account = '' } = store.state.app.USER_INFO
             if (account) submitData.name = [...account.split(',').slice(0, 2)]
-            submitData.num = Math.round(orderCountNum.value.totalProfit * _rate_)
-            submitData.remark = `大号${submitData.num}，小号${submitData.subNum}`
+            const num = orderCountNum.value.totalProfit || 0
+            submitData.num = Number((num * _rate_).toFixed(2))
+            submitData.remark = `大号${submitData.num}，小号{${submitData.subNum}}`
         }
         const formatSubmitRestNum = () => {
             const { account = '' } = store.state.app.USER_INFO
             if (account) submitData.name = [account.split(',').reverse()[0]]
-            submitData.num = Math.floor(orderCountNum.value.totalProfit - Math.round(orderCountNum.value.totalProfit* _rate_) * 2)
+            const num = orderCountNum.value.totalProfit || 0
+            submitData.num = Number((num - Number((num * _rate_).toFixed(2)) * 2).toFixed(2))
             submitData.subNum = 0
             submitData.remark = ''
         }
         const inputSubNumHandle = () => {
             if (submitData.name.length > 1) {
-                submitData.remark = `大号${submitData.num}，小号${submitData.subNum}`
+                submitData.remark = `大号${submitData.num}，小号{${submitData.subNum}}`
             }
         }
 
@@ -412,6 +430,8 @@ export default {
         })
 
         return {
+            DArrowLeft,
+            DArrowRight,
             loading,
             centerDialogVisible,
             orderList,
@@ -427,6 +447,7 @@ export default {
             orderCountNum,
             maxColunmWidth,
             overMediaCritical,
+            selectDate,
             submitHandle,
             tableRowClassName,
             deleteRow,

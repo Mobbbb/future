@@ -224,3 +224,22 @@ input {
 .gc-pagination .el-pagination__jump {
     margin-left: 0!important;
 }
+
+/* date picker btn */
+.header-icon-btn {
+    font-size: 16px!important;
+    transition: color .2s ease,background-color .2s ease!important;
+    height: 16px!important;
+}
+.change-date-icon {
+    color: #DCDFE6!important;
+}
+.change-date-icon:hover {
+    color: #C0C4CC!important;
+}
+.change-date-icon:first-of-type {
+    margin-right: 6px;
+}
+.change-date-icon:last-of-type {
+    margin-left: 6px;
+}

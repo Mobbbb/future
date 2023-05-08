@@ -298,7 +298,17 @@ export const parseDateParams = (dateParams) => {
         params.startDate = dateFormat(prevDay) + ' 21:00:00'
     }
     if (dateParams[1]) {
-        params.endDate = dateFormat(dateParams[1]) + ' 20:59:59'
+        let endDay = Date.parse(new Date(dateParams[1]))
+        
+        if (dateParams[0] === dateParams[1]) {
+            if (new Date(endDay).getDay() === 0) { // 周日
+                endDay += 1 * 24 * 60 * 60 * 1000
+            } else if (new Date(endDay).getDay() === 6) { // 周六
+                endDay += 2 * 24 * 60 * 60 * 1000
+            }
+        }
+
+        params.endDate = dateFormat(endDay) + ' 20:59:59'
     }
     return params
 }
@@ -401,7 +411,30 @@ export const getMonthShortcuts = (num = 5) => {
     return monthShortcuts
 }
 
-export const getMonth = (date, direction) => {
+export const getDateByStep = (date, direction) => {
+    // 将输入的日期字符串转换为日期对象
+    let currentDate = date
+
+    if (!(date instanceof Date)) {
+        currentDate = new Date(date)
+    }
+
+    if (direction === 'prev') {
+        currentDate.setTime(currentDate.getTime() - 1 * 24 * 3600 * 1000)
+    } else if (direction === 'next') {
+        currentDate.setTime(currentDate.getTime() + 1 * 24 * 3600 * 1000)
+    } else {
+        return dateFormat(currentDate)
+    }
+    
+    if (currentDate.getDay() === 0 || currentDate.getDay() === 6) { // 跳过周末
+        currentDate = getDateByStep(currentDate, direction)
+    }
+
+    return dateFormat(currentDate)
+}
+
+export const getMonthByStep = (date, direction) => {
     // 将输入的日期字符串转换为日期对象
     let currentDate = date
 
@@ -412,13 +445,13 @@ export const getMonth = (date, direction) => {
     // 获取目标月份的年份和月份
     let year, month
     if (direction === 'prev') {
-      year = currentDate.getMonth() === 0 ? currentDate.getFullYear() - 1 : currentDate.getFullYear()
-      month = currentDate.getMonth() === 0 ? 11 : currentDate.getMonth() - 1
+        year = currentDate.getMonth() === 0 ? currentDate.getFullYear() - 1 : currentDate.getFullYear()
+        month = currentDate.getMonth() === 0 ? 11 : currentDate.getMonth() - 1
     } else if (direction === 'next') {
-      year = currentDate.getMonth() === 11 ? currentDate.getFullYear() + 1 : currentDate.getFullYear()
-      month = currentDate.getMonth() === 11 ? 0 : currentDate.getMonth() + 1
+        year = currentDate.getMonth() === 11 ? currentDate.getFullYear() + 1 : currentDate.getFullYear()
+        month = currentDate.getMonth() === 11 ? 0 : currentDate.getMonth() + 1
     } else {
-      return dateFormat(currentDate)
+        return dateFormat(currentDate)
     }
   
     // 创建一个新的日期对象，表示目标月份的同一天
@@ -429,5 +462,18 @@ export const getMonth = (date, direction) => {
   
     // 返回目标月份的日期字符串
     return formattedDate
-  }
-  
+}
+
+export const extractStringBetween = (str, startSymbol, endSymbol) => {
+    endSymbol = endSymbol || startSymbol
+    const startIndex = str.indexOf(startSymbol)
+    if (startIndex === -1) {
+        return ''
+    }
+    const endIndex = str.indexOf(endSymbol, startIndex + startSymbol.length)
+    if (endIndex === -1) {
+        return ''
+    }
+    return str.substring(startIndex + startSymbol.length, endIndex)
+}
+    

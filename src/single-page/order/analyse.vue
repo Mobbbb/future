@@ -268,7 +268,7 @@
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useStore } from 'vuex'
 import { useWatchUserSwitch } from '@/composables/watch'
-import { formatNumUnit, parseDateParams, getGapDate, getMonthShortcuts, dateFormat, getMonth, addCommas } from '@/libs/util'
+import { formatNumUnit, parseDateParams, getGapDate, getMonthShortcuts, dateFormat, getMonthByStep, addCommas } from '@/libs/util'
 import festivalMap, { festivalList } from '@/config/festivalMap'
 import { getBarOption } from './option'
 import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
@@ -447,7 +447,7 @@ export default {
         }
 
         const selectDate = (type) => {
-            calendarDate.value = getMonth(calendarDate.value, type)
+            calendarDate.value = getMonthByStep(calendarDate.value, type)
             getAnalyseCalendarHandle()
         }
 
@@ -668,24 +668,6 @@ export default {
     width: 100%;
     display: flex;
     align-items: center;
-}
-.header-icon-btn {
-    font-size: 16px;
-    cursor: pointer;
-    transition: color .2s ease,background-color .2s ease;
-    height: 16px;
-}
-.change-date-icon {
-    color: #DCDFE6;
-}
-.change-date-icon:hover {
-    color: #C0C4CC;
-}
-.change-date-icon:first-of-type {
-    margin-right: 6px;
-}
-.change-date-icon:last-of-type {
-    margin-left: 6px;
 }
 .date-cell {
     height: 100%;

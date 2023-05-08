@@ -60,9 +60,9 @@ const order = {
             
             commit('setOrderList', result)
             return {
-                commission: commission || '--',
-                profit: profit || '--',
-                totalProfit: totalProfit || '--',
+                commission,
+                profit,
+                totalProfit,
                 total: total || 0,
             }
         },
