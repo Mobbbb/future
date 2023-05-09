@@ -177,7 +177,6 @@
 <script>
 import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
 import { useStore } from 'vuex'
-import { useWatchUserSwitch } from '@/composables/watch'
 import { fetchDeleteOrder, fetchCancelOrder, fetchInsertIncome } from '@/api'
 import { parseDateParams, getGapDate, getMonthShortcuts, dateFormat, getDateByStep } from '@/libs/util'
 import { ElMessage } from 'element-plus'
@@ -419,7 +418,6 @@ export default {
                 setOrderList([]) // 清空数据
             }
         })
-        useWatchUserSwitch(initTable)
 
         watch(activeOrderTab, () => {
             initTable()

@@ -60,7 +60,6 @@
 <script>
 import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
 import { useStore } from 'vuex'
-import { useWatchUserSwitch } from '@/composables/watch'
 import { fetchInsertOrder, fetchRecentlyFeature } from '@/api'
 import { dateFormat } from '@/libs/util'
 import { ElMessage } from 'element-plus'
@@ -264,7 +263,6 @@ export default {
                 openingOrderTableHeight.value = 115
             }
         })
-        useWatchUserSwitch(initOpeningAndRecentlyFeature)
 
         watch(activeOrderTab, () => {
             initOpeningAndRecentlyFeature()

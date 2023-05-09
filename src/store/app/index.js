@@ -94,9 +94,6 @@ const app = {
         setInDayFirstLists(state, value) {
             state.USER_INFO.inDayFirstLists = value
         },
-        changeSwitchUserFlag(state) {
-            state.switchUserFlag = !state.switchUserFlag
-        },
         SET_USER_INFO(state, value) {
             state.USER_INFO = value
         },

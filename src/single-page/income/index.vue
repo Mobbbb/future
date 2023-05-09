@@ -17,7 +17,7 @@
                 <div class="table-wrap">
                     <el-table class="income-table" :data="showListData" height="100%" :show-summary="isAdministrator"
                         :summary-method="getSummaries" :row-class-name="tableRowClassName" style="font-size: 12px;">
-                        <el-table-column prop="id" label="编号" width="60" align="center" fixed="left" />
+                        <el-table-column prop="id" label="编号" width="60" fixed="left" />
                         <el-table-column prop="date" label="日期" />
                         <el-table-column prop="dNum" label="大号收益" v-if="isAdministrator" />
                         <el-table-column prop="xNum" label="小号收益" v-if="isAdministrator" />
@@ -67,7 +67,6 @@
 import { ref, nextTick, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { useStore } from 'vuex'
 import { getOption } from './option'
-import { useWatchUserSwitch } from '@/composables/watch'
 import { fetchIncomeInfo, fetchDeleteIncome } from '@/api'
 import { getDateBetween, dateFormat, extractStringBetween } from '@/libs/util'
 import { festivalList } from '@/config/festivalMap'
@@ -319,7 +318,6 @@ export default {
                 chartDataTotalArr.value = []
             }
         })
-        useWatchUserSwitch(initData)
 
         onMounted(() => {
             initData()

@@ -267,7 +267,6 @@
 <script>
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useStore } from 'vuex'
-import { useWatchUserSwitch } from '@/composables/watch'
 import { formatNumUnit, parseDateParams, getGapDate, getMonthShortcuts, dateFormat, getMonthByStep, addCommas } from '@/libs/util'
 import festivalMap, { festivalList } from '@/config/festivalMap'
 import { getBarOption } from './option'
@@ -544,7 +543,6 @@ export default {
                 getAnalyseCalendarHandle()
             }
         })
-        useWatchUserSwitch(initAnalyseData)
 
         watch(activeOrderTab, () => {
             initAnalyseData()

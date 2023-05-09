@@ -33,7 +33,7 @@
 <script>
 import { mapState, mapGetters ,mapMutations, mapActions } from 'vuex'
 import { fetchUserLogin } from '@/api/index'
-import { addPrivateRoute, clearPrivateRoute } from '@/router'
+import { addPrivateRoute } from '@/router'
 import { setCookie } from '@/libs/util'
 import { Avatar } from '@element-plus/icons-vue'
 import GcButton from '@/components/gc-button.vue'
@@ -66,7 +66,6 @@ export default {
         ]),
         ...mapGetters('app', [
             'isWhiteUser',
-            'isLogin',
         ]),
     },
     watch: {
@@ -82,7 +81,6 @@ export default {
     methods: {
         ...mapMutations('app', [
             'setLoginDrawerStatus',
-            'changeSwitchUserFlag',
         ]),
         ...mapActions('app', [
             'INIT_USER',
@@ -102,7 +100,6 @@ export default {
         async afterSubmit(result) {
             const { data = {}, success, msg } = result
             if (success) {
-                const oldLoginStatus = this.isLogin
                 this.setLoginDrawerStatus(false)
                 await this.INIT_USER()
                 this.$message.success(msg)
@@ -112,9 +109,6 @@ export default {
                     addPrivateRoute()
                 }
                 this.saveLoginStatus(data)
-                if (oldLoginStatus) { // 切换账号
-                    this.changeSwitchUserFlag()
-                }
             }
         },
         async switchUser(data, isSelf) {
@@ -122,15 +116,7 @@ export default {
             const { uid, token } = data
             setCookie('feature-token', token)
             setCookie('feature-uid', uid)
-            this.setLoginDrawerStatus(false)
-            await this.INIT_USER()
-            this.$message.success('切换成功')
-            if (this.isWhiteUser) {
-                addPrivateRoute()
-            } else {
-                clearPrivateRoute()
-            }
-            this.changeSwitchUserFlag()
+            location.reload()
         },
     },
 }
