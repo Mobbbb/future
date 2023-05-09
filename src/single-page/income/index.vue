@@ -76,8 +76,8 @@ export default {
     setup() {
         const store = new useStore()
         const tableData = ref([])
-        const chartDataArr = ref([])
-        const chartDataTotalArr = ref([])
+        const chartDataArr1 = ref([])
+        const chartDataArr2 = ref([])
         const currentPage = ref(1)
         const centerDialogVisible = ref(false)
 
@@ -118,14 +118,14 @@ export default {
             }
         })
 
-        const isShowChart = computed(() => chartDataArr.value.length)
+        const isShowChart = computed(() => chartDataArr1.value.length)
 
         const getDayIncome = () => {
             if (!isShowChart.value) return
             nextTick(() => {
                 document.getElementById('incomeChart1').removeAttribute('_echarts_instance_')
                 myChart1 = echarts.init(document.getElementById('incomeChart1'))
-                myChart1.setOption(getOption(chartDataArr.value, 2))
+                myChart1.setOption(getOption(chartDataArr1.value, 2))
             })
         }
 
@@ -134,7 +134,7 @@ export default {
             nextTick(() => {
                 document.getElementById('incomeChart2').removeAttribute('_echarts_instance_')
                 myChart2 = echarts.init(document.getElementById('incomeChart2'))
-                myChart2.setOption(getOption(chartDataTotalArr.value, 1))
+                myChart2.setOption(getOption(chartDataArr2.value, 1))
             })
         }
 
@@ -152,6 +152,8 @@ export default {
             const res = await fetchIncomeInfo()
             const data = res.data || []
             data.sort((a, b) => Date.parse(new Date(b.date)) - Date.parse(new Date(a.date)))
+
+            // 表格数据处理
             subTotalNum = 0
             dtotalNum = 0
             totalNum = 0
@@ -184,15 +186,22 @@ export default {
                     item.dNum = '--'
                 }
             })
+            tableData.value = data
 
-            let nameArr = [] // 维度
-            // 横坐标全部日期
+            // 横坐标日期
             let dateArr = []
             if (data[data.length - 1]) {
                 dateArr = getDateBetween(data[data.length - 1].date, dateFormat(new Date()))
             }
-            // 过滤节假日
-            dateArr = dateArr.filter(item => !festivalList.includes(item))
+            dateArr = dateArr.filter(item => { // 过滤节假日和周末
+                const dateTime = new Date(item)
+                return !festivalList.includes(item) && dateTime.getDay() !== 0 && dateTime.getDay() !== 6
+            })
+            
+            // 维度
+            chartDataArr1.value = []
+            chartDataArr2.value = []
+            let nameArr = []
             data.forEach(item => {
                 if (!Array.isArray(item.name)) {
                     item.name = item.name.split(',')
@@ -200,58 +209,44 @@ export default {
                 nameArr = nameArr.concat(item.name)
                 nameArr = [...new Set(nameArr)]
             })
-            chartDataArr.value = []
-            chartDataTotalArr.value = []
-            nameArr.forEach(nameItem => {
-                chartDataArr.value.push({
-                    name: nameItem,
-                    data: [],
-                })
-                chartDataTotalArr.value.push({
-                    name: nameItem,
-                    data: [],
-                })
+            nameArr.forEach(item => {
+                chartDataArr1.value.push({ name: item, data: [] })
+                chartDataArr2.value.push({ name: item, data: [] })
             })
-            chartDataArr.value.forEach(item => { // 装填数据
-                data.forEach(cell => {
-                    if (cell.name.includes(item.name)) {
-                        item.data.push(cell)
-                    }
-                })
-            })
-            
-            dateArr.forEach(dateItem => { // 补全横坐标
-                // 过滤周末
-                const dateTime = new Date(dateItem)
-                if (dateTime.getDay() === 0 || dateTime.getDay() === 6) return
 
-                chartDataArr.value.forEach(item => {
-                    const lineItemDateArr = item.data.map(cell => cell.date)
-                    if (!lineItemDateArr.includes(dateItem)) {
-                        item.data.push({
-                            date: dateItem,
-                            num: 0,
-                        })
-                    }
+            // chart1数据装填
+            const dateObjMap = {}
+            data.forEach(item => {
+                item.name.forEach(cell => {
+                    dateObjMap[`${item.date}-${cell}`] = item.num
                 })
             })
-            chartDataArr.value.forEach(item => {
+            dateArr.forEach(dateItem => { // 补全横坐标
+                chartDataArr1.value.forEach(item => {
+                    item.data.push({
+                        date: dateItem,
+                        num: dateObjMap[`${dateItem}-${item.name}`] || 0,
+                    })
+                })
+            })
+            chartDataArr1.value.forEach(item => {
                 item.data.sort((a, b) => Date.parse(new Date(a.date)) - Date.parse(new Date(b.date)))
             })
-            chartDataArr.value.forEach((item, index) => {
+
+            // chart2数据装填
+            chartDataArr1.value.forEach((item, index) => {
                 item.data.forEach((cell, cellIndex) => {
                     if (cellIndex) {
-                        chartDataTotalArr.value[index].data.push({
+                        chartDataArr2.value[index].data.push({
                             // 当前项 + 上一项
-                            num: cell.num + chartDataTotalArr.value[index].data[cellIndex - 1].num,
+                            num: cell.num + chartDataArr2.value[index].data[cellIndex - 1].num,
                             date: cell.date,
                         })
                     } else {
-                        chartDataTotalArr.value[index].data.push(cell)
+                        chartDataArr2.value[index].data.push(cell)
                     }
                 })
             })
-            tableData.value = data
         }
 
         let currentDeleteItem = null
@@ -314,8 +309,8 @@ export default {
                 initData()
             } else {
                 tableData.value = []
-                chartDataArr.value = []
-                chartDataTotalArr.value = []
+                chartDataArr1.value = []
+                chartDataArr2.value = []
             }
         })
 
