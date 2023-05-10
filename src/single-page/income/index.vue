@@ -61,7 +61,7 @@
     </div>
 </template>
 
-<script>
+<script setup>
 import { ref, nextTick, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { useStore } from 'vuex'
 import { getOption } from './option'
@@ -71,353 +71,327 @@ import { festivalList } from '@/config/festivalMap'
 import { Edit, Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
-export default {
-    name: 'income',
-    setup() {
-        const store = new useStore()
-        const tableData = ref([])
-        const chartDataArr1 = ref([])
-        const chartDataArr2 = ref([])
-        const currentPage = ref(1)
-        const flagDateArr = ref([])
-        const centerDialogVisible = ref(false)
+const store = new useStore()
+const tableData = ref([])
+const chartDataArr1 = ref([])
+const chartDataArr2 = ref([])
+const currentPage = ref(1)
+const flagDateArr = ref([])
+const centerDialogVisible = ref(false)
 
-        const pageSize = 40
-        let myChart1 = null
-        let myChart2 = null
-        let xTotalNum = 0
-        let dtotalNum = 0
-        let totalNum = 0
+const pageSize = 40
+let myChart1 = null
+let myChart2 = null
+let xTotalNum = 0
+let dtotalNum = 0
+let totalNum = 0
 
-        const setActiveIncomeTab = (value) => store.commit('app/setActiveIncomeTab', value)
-        const isLogin = computed(() => store.getters['app/isLogin'])
-        const isAdministrator = computed(() => store.getters['app/isAdministrator'])
-        const activeName = computed({
-            get() {
-                return store.state.app.activeIncomeTab
-            },
-            set(value) {
-                setActiveIncomeTab(value)
-            },
-        })
-
-        const showListData = computed(() => {
-            const startNum = (currentPage.value - 1) * pageSize
-            return tableData.value.slice(startNum, startNum + pageSize)
-        })
-
-        onBeforeUnmount(() => {
-            if (myChart1) {
-                myChart1.clear()
-                myChart1.dispose()
-                myChart1 = null
-            }
-            if (myChart2) {
-                myChart2.clear()
-                myChart2.dispose()
-                myChart2 = null
-            }
-        })
-
-        const isShowChart = computed(() => chartDataArr1.value.length)
-
-        const getDayIncome = () => {
-            if (!isShowChart.value) return
-            nextTick(() => {
-                document.getElementById('incomeChart1').removeAttribute('_echarts_instance_')
-                myChart1 = echarts.init(document.getElementById('incomeChart1'))
-                myChart1.setOption(getOption(chartDataArr1.value, 2))
-            })
-        }
-
-        const getTotalIncome = () => {
-            if (!isShowChart.value) return
-            nextTick(() => {
-                document.getElementById('incomeChart2').removeAttribute('_echarts_instance_')
-                myChart2 = echarts.init(document.getElementById('incomeChart2'))
-                myChart2.setOption(getOption(chartDataArr2.value, 1))
-            })
-        }
-
-        const handleClick = async () => {
-            if (activeName.value === 'add') {
-                getTotalIncome()
-            } else if (activeName.value === 'table') {
-                getTableData()
-            } else {
-                getDayIncome()
-            }
-        }
-
-        const getTableData = async () => {
-            const flagRes = await fetchFlag()
-            if (Array.isArray(flagRes.data)) {
-                const flagData = flagRes.data[0] || {}
-                const { date_status = '' } = flagData
-                if (date_status) {
-                    flagDateArr.value = date_status.split(',')
-                }
-            }
-            const res = await fetchIncomeInfo()
-            const data = res.data || []
-            data.sort((a, b) => Date.parse(new Date(b.date)) - Date.parse(new Date(a.date)))
-
-            // 横坐标日期
-            let dateArr = []
-            if (data[data.length - 1]) {
-                dateArr = getDateBetween(data[data.length - 1].date, dateFormat(new Date()))
-            }
-            dateArr = dateArr.filter(item => { // 过滤节假日和周末
-                const dateTime = new Date(item)
-                return !festivalList.includes(item) && dateTime.getDay() !== 0 && dateTime.getDay() !== 6
-            })
-            
-            // 维度
-            chartDataArr1.value = []
-            chartDataArr2.value = []
-            let nameArr = []
-            data.forEach(item => {
-                if (!Array.isArray(item.name)) {
-                    item.name = item.name.split(',')
-                }
-                nameArr = nameArr.concat(item.name)
-                nameArr = [...new Set(nameArr)]
-            })
-            nameArr.forEach(item => {
-                chartDataArr1.value.push({ name: item, data: [] })
-                chartDataArr2.value.push({ name: item, data: [] })
-            })
-
-            // chart1数据装填
-            const dateObjMap = {}
-            data.forEach(item => {
-                item.name.forEach(cell => {
-                    dateObjMap[`${item.date}-${cell}`] = item.num
-                })
-            })
-            dateArr.forEach(dateItem => { // 补全横坐标
-                chartDataArr1.value.forEach(item => {
-                    item.data.push({
-                        date: dateItem,
-                        num: dateObjMap[`${dateItem}-${item.name}`] || 0,
-                    })
-                })
-            })
-            chartDataArr1.value.forEach(item => {
-                item.data.sort((a, b) => Date.parse(new Date(a.date)) - Date.parse(new Date(b.date)))
-            })
-
-            // chart2数据装填
-            chartDataArr1.value.forEach((item, index) => {
-                item.data.forEach((cell, cellIndex) => {
-                    if (cellIndex) {
-                        chartDataArr2.value[index].data.push({
-                            // 当前项 + 上一项
-                            num: cell.num + chartDataArr2.value[index].data[cellIndex - 1].num,
-                            date: cell.date,
-                        })
-                    } else {
-                        chartDataArr2.value[index].data.push(cell)
-                    }
-                })
-            })
-
-            if (isAdministrator.value) {
-                // 表格数据处理
-                xTotalNum = 0
-                dtotalNum = 0
-                totalNum = 0
-                const dateObj = {}
-                const expandTableData = []
-                data.forEach(item => {
-                    const length = item.name.length
-                    let xItemNum = 0
-                    let totalItemNum = item.num * length
-                    if (item.remark) {
-                        xItemNum = Number(extractStringBetween(item.remark, '{', '}')) * 2
-                        xTotalNum += xItemNum
-                        item.remark = item.remark.replaceAll('{', '')
-                        item.remark = item.remark.replaceAll('}', '')
-                    }
-                    if (!dateObj[item.date]) {
-                        dateObj[item.date] = {
-                            id: item.id,
-                            xNum: 0,
-                            dNum: 0,
-                            arr: [],
-                            remark: '',
-                            others: 0,
-                        }
-                    }
-                    
-                    totalNum += totalItemNum
-                    dtotalNum += (totalItemNum - xItemNum)
-                    dateObj[item.date].dNum += (totalItemNum - xItemNum)
-                    if (!dateObj[item.date].xNum || xItemNum) {
-                        dateObj[item.date].xNum = xItemNum
-                    }
-                    dateObj[item.date].remark = dateObj[item.date].remark || item.remark
-                    item.name.forEach(cell => {
-                        if (cell === '其他') {
-                            dateObj[item.date].arr.push({
-                                ...item,
-                                xNum: 0,
-                                dNum: item.num,
-                                date: '',
-                                remark: '',
-                                name: cell,
-                            })
-                            dateObj[item.date].others = item.num
-                        } else {
-                            dateObj[item.date].arr.push({
-                                ...item,
-                                id: item.id + '-' + cell,
-                                dNum: Number((item.num - xItemNum / 2).toFixed(2)),
-                                xNum: xItemNum / 2,
-                                date: '',
-                                remark: '',
-                                name: cell,
-                            })
-                        }
-                    })
-                })
-
-                Object.keys(dateObj).forEach(date => {
-                    expandTableData.push({
-                        id: dateObj[date].id + '-parent',
-                        dNum: Number(dateObj[date].dNum.toFixed(2)),
-                        xNum: Number(dateObj[date].xNum.toFixed(2)),
-                        num: Number((dateObj[date].dNum + dateObj[date].xNum).toFixed(2)),
-                        date,
-                        name: 'All',
-                        remark: dateObj[date].remark,
-                        children: dateObj[date].arr,
-                    })
-                })
-                tableData.value = expandTableData
-            } else {
-                tableData.value = data
-            }
-        }
-
-        let currentDeleteItem = null
-        const deleteRow = async (data) => {
-            currentDeleteItem = data
-            centerDialogVisible.value = true
-        }
-
-        const confirmDelete = async () => {
-            if (currentDeleteItem) {
-                await fetchDeleteIncome(currentDeleteItem.row.id)
-                getTableData()
-            }
-            centerDialogVisible.value = false
-        }
-
-        const checkDate = async ({ row }) => {
-            let text = '标记成功'
-            const innerflagDateArr = [...flagDateArr.value]
-            const index = flagDateArr.value.indexOf(row.date)
-            if (index > -1) {
-                text = '取消成功'
-                innerflagDateArr.splice(index, 1)
-            } else {
-                innerflagDateArr.push(row.date)
-            }
-            const result = await updateFlagStatus({
-                key: 'date_status',
-                q: innerflagDateArr.join(','),
-            })
-            const { success, msg } = result
-            if (success) {
-                ElMessage.success(text)
-                flagDateArr.value = innerflagDateArr
-            } else {
-                ElMessage.success(msg) 
-            }
-        }
-
-        const setLoginDrawerStatus = (status) => store.commit('app/setLoginDrawerStatus', status)
-        const showLoginHandle = () => {
-            setLoginDrawerStatus(true)
-        }
-
-        const initData = async () => {
-            if (isLogin.value) {
-                await getTableData()
-                if (activeName.value === 'add') {
-                    getTotalIncome()
-                } else if (activeName.value === 'day') {
-                    getDayIncome()
-                }
-            }
-        }
-
-        const tableRowClassName = ({ row }) => {
-            if (isAdministrator.value) {
-                if (!row.children) {
-                    return 'others-row'
-                } else if (flagDateArr.value.includes(row.date)) {
-                    return 'tag-row'
-                }
-            }
-        }
-
-        const getSummaries = (param) => {
-            const { columns } = param
-            const sums = []
-            columns.forEach((column, index) => {
-                if (index === 0) {
-                    sums[index] = '总计'
-                } else if (column.property === 'dNum') {
-                    sums[index] = dtotalNum.toFixed(2)
-                } else if (column.property === 'xNum') {
-                    sums[index] = xTotalNum.toFixed(2)
-                } else if (column.property === 'num') {
-                    sums[index] = totalNum.toFixed(2)
-                } else {
-                    sums[index] = '--'
-                }
-            })
-            return sums
-        }
-
-        watch(isLogin, async (value) => {
-            if (value) {
-                initData()
-            } else {
-                tableData.value = []
-                chartDataArr1.value = []
-                chartDataArr2.value = []
-            }
-        })
-
-        onMounted(() => {
-            initData()
-        })
-
-        return {
-            Edit,
-            Delete,
-            centerDialogVisible,
-            isLogin,
-            isAdministrator,
-            tableData,
-            showListData,
-            activeName,
-            pageSize,
-            currentPage,
-            isShowChart,
-            tableRowClassName,
-            deleteRow,
-            checkDate,
-            handleClick,
-            showLoginHandle,
-            confirmDelete,
-            getSummaries,
-        }
+const setActiveIncomeTab = (value) => store.commit('app/setActiveIncomeTab', value)
+const isLogin = computed(() => store.getters['app/isLogin'])
+const isAdministrator = computed(() => store.getters['app/isAdministrator'])
+const activeName = computed({
+    get() {
+        return store.state.app.activeIncomeTab
     },
+    set(value) {
+        setActiveIncomeTab(value)
+    },
+})
+
+const showListData = computed(() => {
+    const startNum = (currentPage.value - 1) * pageSize
+    return tableData.value.slice(startNum, startNum + pageSize)
+})
+
+onBeforeUnmount(() => {
+    if (myChart1) {
+        myChart1.clear()
+        myChart1.dispose()
+        myChart1 = null
+    }
+    if (myChart2) {
+        myChart2.clear()
+        myChart2.dispose()
+        myChart2 = null
+    }
+})
+
+const isShowChart = computed(() => chartDataArr1.value.length)
+
+const getDayIncome = () => {
+    if (!isShowChart.value) return
+    nextTick(() => {
+        document.getElementById('incomeChart1').removeAttribute('_echarts_instance_')
+        myChart1 = echarts.init(document.getElementById('incomeChart1'))
+        myChart1.setOption(getOption(chartDataArr1.value, 2))
+    })
 }
+
+const getTotalIncome = () => {
+    if (!isShowChart.value) return
+    nextTick(() => {
+        document.getElementById('incomeChart2').removeAttribute('_echarts_instance_')
+        myChart2 = echarts.init(document.getElementById('incomeChart2'))
+        myChart2.setOption(getOption(chartDataArr2.value, 1))
+    })
+}
+
+const handleClick = async () => {
+    if (activeName.value === 'add') {
+        getTotalIncome()
+    } else if (activeName.value === 'table') {
+        getTableData()
+    } else {
+        getDayIncome()
+    }
+}
+
+const getTableData = async () => {
+    const flagRes = await fetchFlag()
+    if (Array.isArray(flagRes.data)) {
+        const flagData = flagRes.data[0] || {}
+        const { date_status = '' } = flagData
+        if (date_status) {
+            flagDateArr.value = date_status.split(',')
+        }
+    }
+    const res = await fetchIncomeInfo()
+    const data = res.data || []
+    data.sort((a, b) => Date.parse(new Date(b.date)) - Date.parse(new Date(a.date)))
+
+    // 横坐标日期
+    let dateArr = []
+    if (data[data.length - 1]) {
+        dateArr = getDateBetween(data[data.length - 1].date, dateFormat(new Date()))
+    }
+    dateArr = dateArr.filter(item => { // 过滤节假日和周末
+        const dateTime = new Date(item)
+        return !festivalList.includes(item) && dateTime.getDay() !== 0 && dateTime.getDay() !== 6
+    })
+    
+    // 维度
+    chartDataArr1.value = []
+    chartDataArr2.value = []
+    let nameArr = []
+    data.forEach(item => {
+        if (!Array.isArray(item.name)) {
+            item.name = item.name.split(',')
+        }
+        nameArr = nameArr.concat(item.name)
+        nameArr = [...new Set(nameArr)]
+    })
+    nameArr.forEach(item => {
+        chartDataArr1.value.push({ name: item, data: [] })
+        chartDataArr2.value.push({ name: item, data: [] })
+    })
+
+    // chart1数据装填
+    const dateObjMap = {}
+    data.forEach(item => {
+        item.name.forEach(cell => {
+            dateObjMap[`${item.date}-${cell}`] = item.num
+        })
+    })
+    dateArr.forEach(dateItem => { // 补全横坐标
+        chartDataArr1.value.forEach(item => {
+            item.data.push({
+                date: dateItem,
+                num: dateObjMap[`${dateItem}-${item.name}`] || 0,
+            })
+        })
+    })
+    chartDataArr1.value.forEach(item => {
+        item.data.sort((a, b) => Date.parse(new Date(a.date)) - Date.parse(new Date(b.date)))
+    })
+
+    // chart2数据装填
+    chartDataArr1.value.forEach((item, index) => {
+        item.data.forEach((cell, cellIndex) => {
+            if (cellIndex) {
+                chartDataArr2.value[index].data.push({
+                    // 当前项 + 上一项
+                    num: cell.num + chartDataArr2.value[index].data[cellIndex - 1].num,
+                    date: cell.date,
+                })
+            } else {
+                chartDataArr2.value[index].data.push(cell)
+            }
+        })
+    })
+
+    if (isAdministrator.value) {
+        // 表格数据处理
+        xTotalNum = 0
+        dtotalNum = 0
+        totalNum = 0
+        const dateObj = {}
+        const expandTableData = []
+        data.forEach(item => {
+            const length = item.name.length
+            let xItemNum = 0
+            let totalItemNum = item.num * length
+            if (item.remark) {
+                xItemNum = Number(extractStringBetween(item.remark, '{', '}')) * 2
+                xTotalNum += xItemNum
+                item.remark = item.remark.replaceAll('{', '')
+                item.remark = item.remark.replaceAll('}', '')
+            }
+            if (!dateObj[item.date]) {
+                dateObj[item.date] = {
+                    id: item.id,
+                    xNum: 0,
+                    dNum: 0,
+                    arr: [],
+                    remark: '',
+                    others: 0,
+                }
+            }
+            
+            totalNum += totalItemNum
+            dtotalNum += (totalItemNum - xItemNum)
+            dateObj[item.date].dNum += (totalItemNum - xItemNum)
+            if (!dateObj[item.date].xNum || xItemNum) {
+                dateObj[item.date].xNum = xItemNum
+            }
+            dateObj[item.date].remark = dateObj[item.date].remark || item.remark
+            item.name.forEach(cell => {
+                if (cell === '其他') {
+                    dateObj[item.date].arr.push({
+                        ...item,
+                        xNum: 0,
+                        dNum: item.num,
+                        date: '',
+                        remark: '',
+                        name: cell,
+                    })
+                    dateObj[item.date].others = item.num
+                } else {
+                    dateObj[item.date].arr.push({
+                        ...item,
+                        id: item.id + '-' + cell,
+                        dNum: Number((item.num - xItemNum / 2).toFixed(2)),
+                        xNum: xItemNum / 2,
+                        date: '',
+                        remark: '',
+                        name: cell,
+                    })
+                }
+            })
+        })
+
+        Object.keys(dateObj).forEach(date => {
+            expandTableData.push({
+                id: dateObj[date].id + '-parent',
+                dNum: Number(dateObj[date].dNum.toFixed(2)),
+                xNum: Number(dateObj[date].xNum.toFixed(2)),
+                num: Number((dateObj[date].dNum + dateObj[date].xNum).toFixed(2)),
+                date,
+                name: 'All',
+                remark: dateObj[date].remark,
+                children: dateObj[date].arr,
+            })
+        })
+        tableData.value = expandTableData
+    } else {
+        tableData.value = data
+    }
+}
+
+let currentDeleteItem = null
+const deleteRow = async (data) => {
+    currentDeleteItem = data
+    centerDialogVisible.value = true
+}
+
+const confirmDelete = async () => {
+    if (currentDeleteItem) {
+        await fetchDeleteIncome(currentDeleteItem.row.id)
+        getTableData()
+    }
+    centerDialogVisible.value = false
+}
+
+const checkDate = async ({ row }) => {
+    let text = '标记成功'
+    const innerflagDateArr = [...flagDateArr.value]
+    const index = flagDateArr.value.indexOf(row.date)
+    if (index > -1) {
+        text = '取消成功'
+        innerflagDateArr.splice(index, 1)
+    } else {
+        innerflagDateArr.push(row.date)
+    }
+    const result = await updateFlagStatus({
+        key: 'date_status',
+        q: innerflagDateArr.join(','),
+    })
+    const { success, msg } = result
+    if (success) {
+        ElMessage.success(text)
+        flagDateArr.value = innerflagDateArr
+    } else {
+        ElMessage.success(msg) 
+    }
+}
+
+const setLoginDrawerStatus = (status) => store.commit('app/setLoginDrawerStatus', status)
+const showLoginHandle = () => {
+    setLoginDrawerStatus(true)
+}
+
+const initData = async () => {
+    if (isLogin.value) {
+        await getTableData()
+        if (activeName.value === 'add') {
+            getTotalIncome()
+        } else if (activeName.value === 'day') {
+            getDayIncome()
+        }
+    }
+}
+
+const tableRowClassName = ({ row }) => {
+    if (isAdministrator.value) {
+        if (!row.children) {
+            return 'others-row'
+        } else if (flagDateArr.value.includes(row.date)) {
+            return 'tag-row'
+        }
+    }
+}
+
+const getSummaries = (param) => {
+    const { columns } = param
+    const sums = []
+    columns.forEach((column, index) => {
+        if (index === 0) {
+            sums[index] = '总计'
+        } else if (column.property === 'dNum') {
+            sums[index] = dtotalNum.toFixed(2)
+        } else if (column.property === 'xNum') {
+            sums[index] = xTotalNum.toFixed(2)
+        } else if (column.property === 'num') {
+            sums[index] = totalNum.toFixed(2)
+        } else {
+            sums[index] = '--'
+        }
+    })
+    return sums
+}
+
+watch(isLogin, async (value) => {
+    if (value) {
+        initData()
+    } else {
+        tableData.value = []
+        chartDataArr1.value = []
+        chartDataArr2.value = []
+    }
+})
+
+onMounted(() => {
+    initData()
+})
 </script>
 
 <style scoped>
@@ -512,6 +486,6 @@ export default {
     background: var(--el-color-info-light-9);
 }
 .income-table .tag-row .el-table__cell {
-    background: red!important;
+    background: var(--el-color-warning-light-9)!important;
 }
 </style>
