@@ -28,7 +28,9 @@
                             <template #default="scope">
                                 <el-button circle v-if="!scope.row.children" type="danger" size="small" :icon="Delete"
                                     @click.prevent="deleteRow(scope)"></el-button>
-                                <el-button circle v-else type="warning" size="small" :icon="Edit"
+                                <el-button circle v-else size="small"
+                                    :type="flagDateArr.indexOf(scope.row.date) > -1 ? 'warning': 'primary'"
+                                    :icon="flagDateArr.indexOf(scope.row.date) > -1 ? DocumentRemove : DocumentAdd"
                                     @click.prevent="checkDate(scope)"></el-button>
                             </template>
                         </el-table-column>
@@ -68,7 +70,7 @@ import { getOption } from './option'
 import { fetchIncomeInfo, fetchDeleteIncome, updateFlagStatus, fetchFlag } from '@/api'
 import { getDateBetween, dateFormat, extractStringBetween } from '@/libs/util'
 import { festivalList } from '@/config/festivalMap'
-import { Edit, Delete } from '@element-plus/icons-vue'
+import { DocumentAdd, DocumentRemove, Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 
 const store = new useStore()

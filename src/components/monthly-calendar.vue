@@ -101,6 +101,7 @@ export default {
     text-align: center;
     color: #222;
     cursor: pointer;
+    margin-bottom: 12px;
 }
 .monthly-calendar-table .el-calendar-day p:first-of-type {
     padding: 8px;
