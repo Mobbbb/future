@@ -37,6 +37,14 @@ export const fetchFlag = () => {
     })
 }
 
+export const updateFlagStatus = (params) => {
+    return axios.request({
+        url: prefixApi + '/other/updateStatus',
+        method: 'get',
+        params,
+    })
+}
+
 export const fetchInsertLog = (params) => {
     return axios.request({
         url: prefixApi + '/other/insertLog',

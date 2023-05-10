@@ -16,22 +16,20 @@
             <el-tab-pane label="收益列表" name="table">
                 <div class="table-wrap">
                     <el-table class="income-table" :data="showListData" height="100%" :show-summary="isAdministrator"
-                        :summary-method="getSummaries" :row-class-name="tableRowClassName" style="font-size: 12px;">
-                        <el-table-column prop="id" label="编号" width="60" fixed="left" />
-                        <el-table-column prop="date" label="日期" />
+                        :summary-method="getSummaries" :row-class-name="tableRowClassName"
+                        row-key="id" style="font-size: 12px;">
+                        <el-table-column prop="date" label="日期" width="120" />
                         <el-table-column prop="dNum" label="大号收益" v-if="isAdministrator" />
                         <el-table-column prop="xNum" label="小号收益" v-if="isAdministrator" />
                         <el-table-column prop="num" label="收益" />
                         <el-table-column prop="name" label="角色" />
                         <el-table-column prop="remark" min-width="140" label="备注" show-overflow-tooltip />
-                        <el-table-column label="操作" width="60" align="center">
+                        <el-table-column label="操作" width="60" align="center" fixed="right">
                             <template #default="scope">
-                                <el-button link
-                                    type="danger"
-                                    size="small"
-                                    @click.prevent="deleteRow(scope)">
-                                    删除
-                                </el-button>
+                                <el-button circle v-if="!scope.row.children" type="danger" size="small" :icon="Delete"
+                                    @click.prevent="deleteRow(scope)"></el-button>
+                                <el-button circle v-else type="warning" size="small" :icon="Edit"
+                                    @click.prevent="checkDate(scope)"></el-button>
                             </template>
                         </el-table-column>
                     </el-table>
@@ -67,9 +65,11 @@
 import { ref, nextTick, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { useStore } from 'vuex'
 import { getOption } from './option'
-import { fetchIncomeInfo, fetchDeleteIncome } from '@/api'
+import { fetchIncomeInfo, fetchDeleteIncome, updateFlagStatus, fetchFlag } from '@/api'
 import { getDateBetween, dateFormat, extractStringBetween } from '@/libs/util'
 import { festivalList } from '@/config/festivalMap'
+import { Edit, Delete } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 
 export default {
     name: 'income',
@@ -79,12 +79,13 @@ export default {
         const chartDataArr1 = ref([])
         const chartDataArr2 = ref([])
         const currentPage = ref(1)
+        const flagDateArr = ref([])
         const centerDialogVisible = ref(false)
 
         const pageSize = 40
         let myChart1 = null
         let myChart2 = null
-        let subTotalNum = 0
+        let xTotalNum = 0
         let dtotalNum = 0
         let totalNum = 0
 
@@ -149,44 +150,17 @@ export default {
         }
 
         const getTableData = async () => {
+            const flagRes = await fetchFlag()
+            if (Array.isArray(flagRes.data)) {
+                const flagData = flagRes.data[0] || {}
+                const { date_status = '' } = flagData
+                if (date_status) {
+                    flagDateArr.value = date_status.split(',')
+                }
+            }
             const res = await fetchIncomeInfo()
             const data = res.data || []
             data.sort((a, b) => Date.parse(new Date(b.date)) - Date.parse(new Date(a.date)))
-
-            // 表格数据处理
-            subTotalNum = 0
-            dtotalNum = 0
-            totalNum = 0
-            const dateObj = {}
-            data.forEach(item => {
-                const length = item.name.split(',').length
-                let subItemNum = 0
-                let itemNum = (item.num * length)
-                if (item.remark) {
-                    subItemNum = Number(extractStringBetween(item.remark, '{', '}')) * 2
-                    subTotalNum += subItemNum
-                    item.remark = item.remark.replaceAll('{', '')
-                    item.remark = item.remark.replaceAll('}', '')
-                }
-                if (typeof dateObj[item.date] === 'undefined') {
-                    dateObj[item.date] = 0
-                }
-                
-                totalNum += itemNum
-                dateObj[item.date] += (itemNum - subItemNum)
-                dtotalNum += (itemNum - subItemNum)
-                if (item.name !== '其他') item.xNum = subItemNum
-            })
-            data.forEach(item => {
-                if (item.name === '其他') return
-                if (typeof dateObj[item.date] !== 'undefined') {
-                    item.dNum = Number(dateObj[item.date].toFixed(2))
-                    delete dateObj[item.date]
-                } else {
-                    item.dNum = '--'
-                }
-            })
-            tableData.value = data
 
             // 横坐标日期
             let dateArr = []
@@ -247,6 +221,83 @@ export default {
                     }
                 })
             })
+
+            if (isAdministrator.value) {
+                // 表格数据处理
+                xTotalNum = 0
+                dtotalNum = 0
+                totalNum = 0
+                const dateObj = {}
+                const expandTableData = []
+                data.forEach(item => {
+                    const length = item.name.length
+                    let xItemNum = 0
+                    let totalItemNum = item.num * length
+                    if (item.remark) {
+                        xItemNum = Number(extractStringBetween(item.remark, '{', '}')) * 2
+                        xTotalNum += xItemNum
+                        item.remark = item.remark.replaceAll('{', '')
+                        item.remark = item.remark.replaceAll('}', '')
+                    }
+                    if (!dateObj[item.date]) {
+                        dateObj[item.date] = {
+                            id: item.id,
+                            xNum: 0,
+                            dNum: 0,
+                            arr: [],
+                            remark: '',
+                            others: 0,
+                        }
+                    }
+                    
+                    totalNum += totalItemNum
+                    dtotalNum += (totalItemNum - xItemNum)
+                    dateObj[item.date].dNum += (totalItemNum - xItemNum)
+                    if (!dateObj[item.date].xNum || xItemNum) {
+                        dateObj[item.date].xNum = xItemNum
+                    }
+                    dateObj[item.date].remark = dateObj[item.date].remark || item.remark
+                    item.name.forEach(cell => {
+                        if (cell === '其他') {
+                            dateObj[item.date].arr.push({
+                                ...item,
+                                xNum: 0,
+                                dNum: item.num,
+                                date: '',
+                                remark: '',
+                                name: cell,
+                            })
+                            dateObj[item.date].others = item.num
+                        } else {
+                            dateObj[item.date].arr.push({
+                                ...item,
+                                id: item.id + '-' + cell,
+                                dNum: Number((item.num - xItemNum / 2).toFixed(2)),
+                                xNum: xItemNum / 2,
+                                date: '',
+                                remark: '',
+                                name: cell,
+                            })
+                        }
+                    })
+                })
+
+                Object.keys(dateObj).forEach(date => {
+                    expandTableData.push({
+                        id: dateObj[date].id + '-parent',
+                        dNum: Number(dateObj[date].dNum.toFixed(2)),
+                        xNum: Number(dateObj[date].xNum.toFixed(2)),
+                        num: Number((dateObj[date].dNum + dateObj[date].xNum).toFixed(2)),
+                        date,
+                        name: 'All',
+                        remark: dateObj[date].remark,
+                        children: dateObj[date].arr,
+                    })
+                })
+                tableData.value = expandTableData
+            } else {
+                tableData.value = data
+            }
         }
 
         let currentDeleteItem = null
@@ -261,6 +312,29 @@ export default {
                 getTableData()
             }
             centerDialogVisible.value = false
+        }
+
+        const checkDate = async ({ row }) => {
+            let text = '标记成功'
+            const innerflagDateArr = [...flagDateArr.value]
+            const index = flagDateArr.value.indexOf(row.date)
+            if (index > -1) {
+                text = '取消成功'
+                innerflagDateArr.splice(index, 1)
+            } else {
+                innerflagDateArr.push(row.date)
+            }
+            const result = await updateFlagStatus({
+                key: 'date_status',
+                q: innerflagDateArr.join(','),
+            })
+            const { success, msg } = result
+            if (success) {
+                ElMessage.success(text)
+                flagDateArr.value = innerflagDateArr
+            } else {
+                ElMessage.success(msg) 
+            }
         }
 
         const setLoginDrawerStatus = (status) => store.commit('app/setLoginDrawerStatus', status)
@@ -280,8 +354,12 @@ export default {
         }
 
         const tableRowClassName = ({ row }) => {
-            if (row.name && row.name[0] === '其他') {
-                return 'others-row'
+            if (isAdministrator.value) {
+                if (!row.children) {
+                    return 'others-row'
+                } else if (flagDateArr.value.includes(row.date)) {
+                    return 'tag-row'
+                }
             }
         }
 
@@ -294,7 +372,7 @@ export default {
                 } else if (column.property === 'dNum') {
                     sums[index] = dtotalNum.toFixed(2)
                 } else if (column.property === 'xNum') {
-                    sums[index] = subTotalNum.toFixed(2)
+                    sums[index] = xTotalNum.toFixed(2)
                 } else if (column.property === 'num') {
                     sums[index] = totalNum.toFixed(2)
                 } else {
@@ -319,6 +397,8 @@ export default {
         })
 
         return {
+            Edit,
+            Delete,
             centerDialogVisible,
             isLogin,
             isAdministrator,
@@ -330,6 +410,7 @@ export default {
             isShowChart,
             tableRowClassName,
             deleteRow,
+            checkDate,
             handleClick,
             showLoginHandle,
             confirmDelete,
@@ -415,6 +496,10 @@ export default {
     padding-left: 0!important;
     padding-right: 0!important;
 }
+.income-table .el-table__footer .el-table__cell:nth-of-type(2) {
+    color: rgb(235, 68, 54);
+    font-weight: bold;
+}
 .income-table .el-table__footer .el-table__cell:nth-of-type(3) {
     color: rgb(235, 68, 54);
     font-weight: bold;
@@ -423,11 +508,10 @@ export default {
     color: rgb(235, 68, 54);
     font-weight: bold;
 }
-.income-table .el-table__footer .el-table__cell:nth-of-type(5) {
-    color: rgb(235, 68, 54);
-    font-weight: bold;
-}
 .income-table .others-row .el-table__cell {
     background: var(--el-color-info-light-9);
+}
+.income-table .tag-row .el-table__cell {
+    background: red!important;
 }
 </style>

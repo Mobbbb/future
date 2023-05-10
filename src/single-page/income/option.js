@@ -181,6 +181,9 @@ const formatLabel = (data, item, index, showType = 0) => {
         if (index === data.length - 1) {
             return {
                 value,
+                label: {
+                    position: 'insideBottomRight',
+                },
             }
         } else {
             return {
