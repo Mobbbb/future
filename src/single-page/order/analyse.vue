@@ -53,7 +53,7 @@
             <el-card class="analyse-card" style="margin: 12px;">
                 <div class="card-title">品种盈亏及胜率<span class="card-title-date">({{displayTime}})</span></div>
                 <div class="card-row-wrap">
-                    <div id="barChart"></div>
+                    <div id="barChart" :style="{ maxWidth: `${barChartMaxWidth}px` }"></div>
                 </div>
             </el-card>
             <el-card class="analyse-card" style="margin: 12px;">
@@ -265,7 +265,7 @@
 </template>
 
 <script>
-import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useStore } from 'vuex'
 import { formatNumUnit, parseDateParams, getGapDate, getMonthShortcuts, dateFormat, getMonthByStep, addCommas } from '@/libs/util'
 import festivalMap, { festivalList } from '@/config/festivalMap'
@@ -321,6 +321,7 @@ export default {
             ...monthShortcuts,
         ]
         const analyseDate = ref(monthShortcuts[0].value)
+        const barChartMaxWidth = ref(0)
 
         const getAnalyseData = (params) => store.dispatch('order/getAnalyseData', params)
         const getAnalyseCalendar = (params) => store.dispatch('order/getAnalyseCalendar', params)
@@ -412,15 +413,18 @@ export default {
                 totalProfit += item.totalProfit
             })
 
-            const barOption = getBarOption(chFutureMap)
+            barChartMaxWidth.value = Object.keys(chFutureMap).length * 50
             
-            document.getElementById('barChart').removeAttribute('_echarts_instance_')
-            barChart = echarts.init(document.getElementById('barChart'))
-            barChart.setOption(barOption)
-            barChart.dispatchAction({
-                type: 'showTip',
-                seriesIndex: 0,
-                dataIndex: 0,
+            nextTick(() => {
+                destroyBarChart()
+                barChart = echarts.init(document.getElementById('barChart'))
+                const barOption = getBarOption(chFutureMap)
+                barChart.setOption(barOption)
+                barChart.dispatchAction({
+                    type: 'showTip',
+                    seriesIndex: 0,
+                    dataIndex: 0,
+                })
             })
             analyseResult.buyRate = (buyWinNum / buyNum * 100).toFixed(2) * 1 || 0
             analyseResult.saleRate = (saleWinNum / saleNum * 100).toFixed(2) * 1 || 0
@@ -439,6 +443,15 @@ export default {
             analyseResult.buyProfitUp = formatNumUnit(buyProfitUp.toFixed(2) * 1 || 0)
             analyseResult.buyProfitDown = formatNumUnit(buyProfitDown.toFixed(2) * 1 || 0)
             analyseResult.totalProfit = totalProfit.toFixed(2) * 1 || 0
+        }
+
+        const destroyBarChart = () => {
+            if (barChart) {
+                barChart.clear()
+                barChart.dispose()
+                barChart = null
+                document.getElementById('barChart').removeAttribute('_echarts_instance_')
+            }
         }
 
         const changeAnalyseDateHandle = () => {
@@ -553,11 +566,7 @@ export default {
         })
 
         onBeforeUnmount(() => {
-            if (barChart) {
-                barChart.clear()
-                barChart.dispose()
-                barChart = null
-            }
+            destroyBarChart()
         })
 
         return {
@@ -572,6 +581,7 @@ export default {
             analyseCalendarData,
             displayTime,
             showMonthCalendar,
+            barChartMaxWidth,
             selectDate,
             selectYear,
             changeAnalyseDateHandle,
@@ -719,8 +729,8 @@ export default {
 }
 #barChart {
     width: 100%;
-    max-width: 500px;
     height: 37.5vh;
+    min-width: 500px;
     background: white;
 }
 </style>
