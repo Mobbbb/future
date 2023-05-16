@@ -264,7 +264,7 @@
     </div>
 </template>
 
-<script>
+<script setup>
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useStore } from 'vuex'
 import { formatNumUnit, parseDateParams, getGapDate, getMonthShortcuts, dateFormat, getMonthByStep, addCommas } from '@/libs/util'
@@ -273,327 +273,293 @@ import { getBarOption } from './option'
 import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import MonthlyCalendar from '@/components/monthly-calendar.vue'
 
-export default {
-    name: 'order',
-    components: {
-        MonthlyCalendar,
+let barChartIns = null
+const store = new useStore()
+const analyseResult = reactive({
+    buyRate: 0,
+    saleRate: 0,
+    totalRate: 0,
+    totalProfit: 0,
+    buyProfit: { num: 0, unit: '' },
+    buyProfitUp: { num: 0, unit: '' },
+    buyProfitDown: { num: 0, unit: '' },
+    saleProfit: { num: 0, unit: '' },
+    saleProfitUp: { num: 0, unit: '' },
+    saleProfitDown: { num: 0, unit: '' },
+    preBuyProfit: 0,
+    preBuyProfitUp: 0,
+    preBuyProfitDown: 0,
+    preSaleProfit: 0,
+    preSaleProfitUp: 0,
+    preSaleProfitDown: 0,
+})
+const calendarIsLoading = ref(false)
+const showMonthCalendar = ref(true)
+const calendarDate = ref(dateFormat(new Date()))
+const calendarYear = ref(dateFormat(new Date()))
+const calendarInnerDate = computed({
+    get() {
+        return new Date(calendarDate.value)
     },
-    setup() {
-        const store = new useStore()
-        let barChart = null
-
-        const analyseResult = reactive({
-            buyRate: 0,
-            saleRate: 0,
-            totalRate: 0,
-            totalProfit: 0,
-            buyProfit: { num: 0, unit: '' },
-            buyProfitUp: { num: 0, unit: '' },
-            buyProfitDown: { num: 0, unit: '' },
-            saleProfit: { num: 0, unit: '' },
-            saleProfitUp: { num: 0, unit: '' },
-            saleProfitDown: { num: 0, unit: '' },
-            preBuyProfit: 0,
-            preBuyProfitUp: 0,
-            preBuyProfitDown: 0,
-            preSaleProfit: 0,
-            preSaleProfitUp: 0,
-            preSaleProfitDown: 0,
-        })
-        const calendarIsLoading = ref(false)
-        const showMonthCalendar = ref(true)
-        const calendarDate = ref(dateFormat(new Date()))
-        const calendarYear = ref(dateFormat(new Date()))
-        const calendarInnerDate = computed({
-            get() {
-                return new Date(calendarDate.value)
-            },
-            set(value) {
-                calendarDate.value = dateFormat(value)
-            },
-        })
-        const monthShortcuts = getMonthShortcuts()
-        const shortcuts = [
-            { text: '今日', value: () => getGapDate() },
-            { text: '近7天', value: () => getGapDate(7) },
-            { text: '近30天', value: () => getGapDate(30) },
-            { text: '近365天', value: () => getGapDate(365) },
-            ...monthShortcuts,
-        ]
-        const analyseDate = ref(monthShortcuts[0].value)
-        const barChartMaxWidth = ref(0)
-
-        const getAnalyseData = (params) => store.dispatch('order/getAnalyseData', params)
-        const getAnalyseCalendar = (params) => store.dispatch('order/getAnalyseCalendar', params)
-        const setAnalyseList = (value) => store.commit('order/setAnalyseList', value)
-        const setAnalyseCalendarData = (value) => store.commit('order/setAnalyseCalendarData', value)
-        const analyseList = computed(() => store.state.order.analyseList)
-        const activeOrderTab = computed(() => store.state.app.activeOrderTab)
-        const analyseCalendarData = computed(() => store.state.order.analyseCalendarData)
-        const enFutureMap = computed(() => store.getters['order/enFutureMap'])
-        const isLogin = computed(() => store.getters['app/isLogin'])
-
-        const displayTime = computed(() => {
-            return dateFormat(analyseDate.value[0]) + ' To ' + dateFormat(analyseDate.value[1])
-        })
-
-        const getAnalyseDataHandle = async () => { // 所有平仓订单
-            if (!isLogin.value) return
-            const params = parseDateParams(analyseDate.value)
-            params.openOrClose = 0
-            await getAnalyseData(params)
-        }
-
-        const getAnalyseCalendarHandle = async (date) => {
-            if (!isLogin.value) return
-            let params = {}
-            if (showMonthCalendar.value) {
-                const dateParam = date && dateFormat(date) || calendarDate.value
-                const day = new Date(dateParam.slice(0, 4), dateParam.slice(6, 7), 0).getDate()
-                params = parseDateParams([dateParam.slice(0, 8) + '01', `${dateParam.slice(0, 8)}${day}`])
-            } else {
-                const year = date || new Date(calendarYear.value).getFullYear()
-                params = parseDateParams([`${year}-01-01`, `${year}-12-31`])
-            }
-            params.openOrClose = 0 // 取所有平仓
-            calendarIsLoading.value = true
-            await getAnalyseCalendar({ params, type: showMonthCalendar.value ? 'M' : 'Y' })
-            calendarIsLoading.value = false
-        }
-
-        const analyseAccount = async () => {
-            await getAnalyseDataHandle()
-
-            let buyNum = 0
-            let buyWinNum = 0
-            let saleNum = 0
-            let saleWinNum = 0
-            let saleProfit = 0
-            let saleProfitUp = 0
-            let saleProfitDown = 0
-            let buyProfit = 0
-            let buyProfitUp = 0
-            let buyProfitDown = 0
-            let totalProfit = 0
-
-            const chFutureMap = {}
-            analyseList.value.forEach(item => {
-                if (!chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]]) {
-                    chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]] = {
-                        winNum: 0,
-                        totalNum: 0,
-                        totalProfit: 0,
-                    }
-                }
-                if (item.totalProfit > 0) {
-                    chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]].winNum ++
-                } 
-                chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]].totalNum ++
-                chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]].totalProfit += item.totalProfit
-
-                if (item.buyOrSale === 1) { // 平空单
-                    saleNum ++
-                    if (item.totalProfit > 0) {
-                        saleWinNum ++
-                        saleProfitUp += item.totalProfit
-                    } else {
-                        saleProfitDown += item.totalProfit
-                    }
-                    saleProfit += item.totalProfit
-                } else { // 平多单
-                    buyNum ++
-                    if (item.totalProfit > 0) { // 盈利
-                        buyWinNum ++
-                        buyProfitUp += item.totalProfit
-                    } else {
-                        buyProfitDown += item.totalProfit
-                    }
-                    buyProfit += item.totalProfit
-                }
-                totalProfit += item.totalProfit
-            })
-
-            barChartMaxWidth.value = Object.keys(chFutureMap).length * 50
-            
-            nextTick(() => {
-                destroyBarChart()
-                barChart = echarts.init(document.getElementById('barChart'))
-                const barOption = getBarOption(chFutureMap)
-                barChart.setOption(barOption)
-                barChart.dispatchAction({
-                    type: 'showTip',
-                    seriesIndex: 0,
-                    dataIndex: 0,
-                })
-            })
-            analyseResult.buyRate = (buyWinNum / buyNum * 100).toFixed(2) * 1 || 0
-            analyseResult.saleRate = (saleWinNum / saleNum * 100).toFixed(2) * 1 || 0
-            analyseResult.totalRate = ((saleWinNum + buyWinNum) / (buyNum + saleNum) * 100).toFixed(2) * 1 || 0
-            analyseResult.preBuyProfit = (buyProfit / buyNum).toFixed(1) * 1 || 0
-            analyseResult.preBuyProfitUp = (buyProfitUp / buyWinNum).toFixed(1) * 1 || 0
-            analyseResult.preBuyProfitDown = (buyProfitDown / (buyNum - buyWinNum)).toFixed(1) * 1 || 0
-            analyseResult.preSaleProfit = (saleProfit / saleNum).toFixed(1) * 1 || 0
-            analyseResult.preSaleProfitUp = (saleProfitUp / saleWinNum).toFixed(1) * 1 || 0
-            analyseResult.preSaleProfitDown = (saleProfitDown / (saleNum - saleWinNum)).toFixed(1) * 1 || 0
-
-            analyseResult.saleProfit = formatNumUnit(saleProfit.toFixed(2) * 1 || 0)
-            analyseResult.saleProfitUp = formatNumUnit(saleProfitUp.toFixed(2) * 1 || 0)
-            analyseResult.saleProfitDown = formatNumUnit(saleProfitDown.toFixed(2) * 1 || 0)
-            analyseResult.buyProfit = formatNumUnit(buyProfit.toFixed(2) * 1 || 0)
-            analyseResult.buyProfitUp = formatNumUnit(buyProfitUp.toFixed(2) * 1 || 0)
-            analyseResult.buyProfitDown = formatNumUnit(buyProfitDown.toFixed(2) * 1 || 0)
-            analyseResult.totalProfit = totalProfit.toFixed(2) * 1 || 0
-        }
-
-        const destroyBarChart = () => {
-            if (barChart) {
-                barChart.clear()
-                barChart.dispose()
-                barChart = null
-                document.getElementById('barChart').removeAttribute('_echarts_instance_')
-            }
-        }
-
-        const changeAnalyseDateHandle = () => {
-            analyseAccount()
-        }
-
-        const selectDate = (type) => {
-            calendarDate.value = getMonthByStep(calendarDate.value, type)
-            getAnalyseCalendarHandle()
-        }
-
-        const selectYear = (value) => {
-            if (typeof value === 'number') {
-                const year = new Date(calendarYear.value).getFullYear()
-                calendarYear.value = `${year + value}-01-01`
-            }
-            getAnalyseCalendarHandle()
-        }
-
-        const getDateCellClass = (data) => {
-            let itemData = analyseCalendarData.value[data.day.slice(0, 7)]
-            if (showMonthCalendar.value) {
-                itemData = analyseCalendarData.value[data.day]
-                const cellDay = (new Date(data.day)).getDay()
-                if (cellDay === 0 || cellDay === 6) { // 周末
-                    return 'weekend-day-cell'
-                }
-                if (festivalList.includes(data.day) || festivalMap[data.day] || festivalMap[data.day.slice(5, 10)]) { // 节假日
-                    return 'festival-day-cell'
-                }
-                if (data.day.slice(0, 7) !== calendarDate.value.slice(0, 7)) { // 其他月份
-                    return ''
-                }
-            }
-
-            if (calendarIsLoading.value) return ''
-
-            let className = ''
-            if (itemData) {
-                if (itemData > 0) {
-                    className = 'red-calendar-cell'
-                } else {
-                    className = 'green-calendar-cell'
-                }
-            } else if (showMonthCalendar.value) {
-                className = 'normal-calendar-cell'
-            } else {
-                className = 'no-data-month-cell'
-            }
-            return className
-        }
-
-        const fromatDateCellData = (data) => {
-            if (calendarIsLoading.value) return ''
-
-            let itemData = analyseCalendarData.value[data.day.slice(0, 7)]
-            if (showMonthCalendar.value) {
-                itemData = analyseCalendarData.value[data.day]
-                const cellDay = (new Date(data.day)).getDay()
-                if (festivalList.includes(data.day) || festivalMap[data.day] || festivalMap[data.day.slice(5, 10)]) {
-                    return festivalMap[data.day] || festivalMap[data.day.slice(5, 10)] || '休'
-                }
-                // 周末、其他月份
-                if (data.day.slice(0, 7) !== calendarDate.value.slice(0, 7) || cellDay === 0 || cellDay === 6) {
-                    return ''
-                }
-            }
-
-            if (typeof itemData !== 'undefined') {
-                return Math.round(itemData)
-            } else {
-                return '--'
-            }
-        }
-
-        const changeSwitch = () => {
-            if (!showMonthCalendar.value) { // 切换为年，立即请求数据
-                getAnalyseCalendarHandle()
-            }
-        }
-
-        const clickMonCalHandle = (value) => {
-            showMonthCalendar.value = true
-            calendarDate.value = value.day + '-01'
-            getAnalyseCalendarHandle()
-        }
-
-        const initAnalyseData = () => {
-            if (activeOrderTab.value === 'analyse' && isLogin.value) {
-                analyseAccount()
-                getAnalyseCalendarHandle()
-            }
-        }
-
-        watch(isLogin, (value) => {
-            if (value) {
-                initAnalyseData()
-            } else {
-                setAnalyseList([]) // 清空数据
-                setAnalyseCalendarData({}) // 清空数据
-                analyseAccount()
-                getAnalyseCalendarHandle()
-            }
-        })
-
-        watch(activeOrderTab, () => {
-            initAnalyseData()
-        })
-
-        onMounted(() => {
-            initAnalyseData()
-        })
-
-        onBeforeUnmount(() => {
-            destroyBarChart()
-        })
-
-        return {
-            DArrowLeft,
-            DArrowRight,
-            shortcuts,
-            analyseDate,
-            analyseResult,
-            calendarDate,
-            calendarYear,
-            calendarInnerDate,
-            analyseCalendarData,
-            displayTime,
-            showMonthCalendar,
-            barChartMaxWidth,
-            selectDate,
-            selectYear,
-            changeAnalyseDateHandle,
-            getDateCellClass,
-            fromatDateCellData,
-            addCommas,
-            getAnalyseCalendarHandle,
-            changeSwitch,
-            clickMonCalHandle,
-        }
+    set(value) {
+        calendarDate.value = dateFormat(value)
     },
+})
+const monthShortcuts = getMonthShortcuts()
+const shortcuts = [
+    { text: '今日', value: () => getGapDate() },
+    { text: '近7天', value: () => getGapDate(7) },
+    { text: '近30天', value: () => getGapDate(30) },
+    { text: '近365天', value: () => getGapDate(365) },
+    ...monthShortcuts,
+]
+const analyseDate = ref(monthShortcuts[0].value)
+const barChartMaxWidth = ref(0)
+
+const getAnalyseData = (params) => store.dispatch('order/getAnalyseData', params)
+const getAnalyseCalendar = (params) => store.dispatch('order/getAnalyseCalendar', params)
+const setAnalyseList = (value) => store.commit('order/setAnalyseList', value)
+const setAnalyseCalendarData = (value) => store.commit('order/setAnalyseCalendarData', value)
+const analyseList = computed(() => store.state.order.analyseList)
+const activeOrderTab = computed(() => store.state.app.activeOrderTab)
+const analyseCalendarData = computed(() => store.state.order.analyseCalendarData)
+const enFutureMap = computed(() => store.getters['order/enFutureMap'])
+const isLogin = computed(() => store.getters['app/isLogin'])
+
+const displayTime = computed(() => {
+    return dateFormat(analyseDate.value[0]) + ' To ' + dateFormat(analyseDate.value[1])
+})
+
+const getAnalyseDataHandle = async () => { // 所有平仓订单
+    if (!isLogin.value) return
+    const params = parseDateParams(analyseDate.value)
+    params.openOrClose = 0
+    await getAnalyseData(params)
 }
+
+const getAnalyseCalendarHandle = async (date) => {
+    if (!isLogin.value) return
+    let params = {}
+    if (showMonthCalendar.value) {
+        const dateParam = date && dateFormat(date) || calendarDate.value
+        const day = new Date(dateParam.slice(0, 4), dateParam.slice(6, 7), 0).getDate()
+        params = parseDateParams([dateParam.slice(0, 8) + '01', `${dateParam.slice(0, 8)}${day}`])
+    } else {
+        const year = date || new Date(calendarYear.value).getFullYear()
+        params = parseDateParams([`${year}-01-01`, `${year}-12-31`])
+    }
+    params.openOrClose = 0 // 取所有平仓
+    calendarIsLoading.value = true
+    await getAnalyseCalendar({ params, type: showMonthCalendar.value ? 'M' : 'Y' })
+    calendarIsLoading.value = false
+}
+
+const analyseAccount = async () => {
+    await getAnalyseDataHandle()
+
+    let buyNum = 0
+    let buyWinNum = 0
+    let saleNum = 0
+    let saleWinNum = 0
+    let saleProfit = 0
+    let saleProfitUp = 0
+    let saleProfitDown = 0
+    let buyProfit = 0
+    let buyProfitUp = 0
+    let buyProfitDown = 0
+    let totalProfit = 0
+
+    const chFutureMap = {}
+    analyseList.value.forEach(item => {
+        if (!chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]]) {
+            chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]] = {
+                winNum: 0,
+                totalNum: 0,
+                totalProfit: 0,
+            }
+        }
+        if (item.totalProfit > 0) {
+            chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]].winNum ++
+        } 
+        chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]].totalNum ++
+        chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]].totalProfit += item.totalProfit
+
+        if (item.buyOrSale === 1) { // 平空单
+            saleNum ++
+            if (item.totalProfit > 0) {
+                saleWinNum ++
+                saleProfitUp += item.totalProfit
+            } else {
+                saleProfitDown += item.totalProfit
+            }
+            saleProfit += item.totalProfit
+        } else { // 平多单
+            buyNum ++
+            if (item.totalProfit > 0) { // 盈利
+                buyWinNum ++
+                buyProfitUp += item.totalProfit
+            } else {
+                buyProfitDown += item.totalProfit
+            }
+            buyProfit += item.totalProfit
+        }
+        totalProfit += item.totalProfit
+    })
+
+    barChartMaxWidth.value = Object.keys(chFutureMap).length * 50
+    
+    nextTick(() => {
+        destroyBarChart()
+        barChartIns = echarts.init(document.getElementById('barChart'))
+        barChartIns.setOption(getBarOption(chFutureMap))
+        barChartIns.dispatchAction({
+            type: 'showTip',
+            seriesIndex: 0,
+            dataIndex: 0,
+        })
+    })
+    analyseResult.buyRate = (buyWinNum / buyNum * 100).toFixed(2) * 1 || 0
+    analyseResult.saleRate = (saleWinNum / saleNum * 100).toFixed(2) * 1 || 0
+    analyseResult.totalRate = ((saleWinNum + buyWinNum) / (buyNum + saleNum) * 100).toFixed(2) * 1 || 0
+    analyseResult.preBuyProfit = (buyProfit / buyNum).toFixed(1) * 1 || 0
+    analyseResult.preBuyProfitUp = (buyProfitUp / buyWinNum).toFixed(1) * 1 || 0
+    analyseResult.preBuyProfitDown = (buyProfitDown / (buyNum - buyWinNum)).toFixed(1) * 1 || 0
+    analyseResult.preSaleProfit = (saleProfit / saleNum).toFixed(1) * 1 || 0
+    analyseResult.preSaleProfitUp = (saleProfitUp / saleWinNum).toFixed(1) * 1 || 0
+    analyseResult.preSaleProfitDown = (saleProfitDown / (saleNum - saleWinNum)).toFixed(1) * 1 || 0
+
+    analyseResult.saleProfit = formatNumUnit(saleProfit.toFixed(2) * 1 || 0)
+    analyseResult.saleProfitUp = formatNumUnit(saleProfitUp.toFixed(2) * 1 || 0)
+    analyseResult.saleProfitDown = formatNumUnit(saleProfitDown.toFixed(2) * 1 || 0)
+    analyseResult.buyProfit = formatNumUnit(buyProfit.toFixed(2) * 1 || 0)
+    analyseResult.buyProfitUp = formatNumUnit(buyProfitUp.toFixed(2) * 1 || 0)
+    analyseResult.buyProfitDown = formatNumUnit(buyProfitDown.toFixed(2) * 1 || 0)
+    analyseResult.totalProfit = totalProfit.toFixed(2) * 1 || 0
+}
+
+const destroyBarChart = () => {
+    if (barChartIns) {
+        barChartIns.clear()
+        barChartIns.dispose()
+        barChartIns = null
+        document.getElementById('barChart').removeAttribute('_echarts_instance_')
+    }
+}
+
+const changeAnalyseDateHandle = () => {
+    analyseAccount()
+}
+
+const selectDate = (type) => {
+    calendarDate.value = getMonthByStep(calendarDate.value, type)
+    getAnalyseCalendarHandle()
+}
+
+const selectYear = (value) => {
+    if (typeof value === 'number') {
+        const year = new Date(calendarYear.value).getFullYear()
+        calendarYear.value = `${year + value}-01-01`
+    }
+    getAnalyseCalendarHandle()
+}
+
+const getDateCellClass = (data) => {
+    let itemData = analyseCalendarData.value[data.day.slice(0, 7)]
+    if (showMonthCalendar.value) {
+        itemData = analyseCalendarData.value[data.day]
+        const cellDay = (new Date(data.day)).getDay()
+        if (cellDay === 0 || cellDay === 6) { // 周末
+            return 'weekend-day-cell'
+        }
+        if (festivalList.includes(data.day) || festivalMap[data.day] || festivalMap[data.day.slice(5, 10)]) { // 节假日
+            return 'festival-day-cell'
+        }
+        if (data.day.slice(0, 7) !== calendarDate.value.slice(0, 7)) { // 其他月份
+            return ''
+        }
+    }
+
+    if (calendarIsLoading.value) return ''
+
+    let className = ''
+    if (itemData) {
+        if (itemData > 0) {
+            className = 'red-calendar-cell'
+        } else {
+            className = 'green-calendar-cell'
+        }
+    } else if (showMonthCalendar.value) {
+        className = 'normal-calendar-cell'
+    } else {
+        className = 'no-data-month-cell'
+    }
+    return className
+}
+
+const fromatDateCellData = (data) => {
+    if (calendarIsLoading.value) return ''
+
+    let itemData = analyseCalendarData.value[data.day.slice(0, 7)]
+    if (showMonthCalendar.value) {
+        itemData = analyseCalendarData.value[data.day]
+        const cellDay = (new Date(data.day)).getDay()
+        if (festivalList.includes(data.day) || festivalMap[data.day] || festivalMap[data.day.slice(5, 10)]) {
+            return festivalMap[data.day] || festivalMap[data.day.slice(5, 10)] || '休'
+        }
+        // 周末、其他月份
+        if (data.day.slice(0, 7) !== calendarDate.value.slice(0, 7) || cellDay === 0 || cellDay === 6) {
+            return ''
+        }
+    }
+
+    if (typeof itemData !== 'undefined') {
+        return Math.round(itemData)
+    } else {
+        return '--'
+    }
+}
+
+const changeSwitch = () => {
+    if (!showMonthCalendar.value) { // 切换为年，立即请求数据
+        getAnalyseCalendarHandle()
+    }
+}
+
+const clickMonCalHandle = (value) => {
+    showMonthCalendar.value = true
+    calendarDate.value = value.day + '-01'
+    getAnalyseCalendarHandle()
+}
+
+const initAnalyseData = () => {
+    if (activeOrderTab.value === 'analyse' && isLogin.value) {
+        analyseAccount()
+        getAnalyseCalendarHandle()
+    }
+}
+
+watch(isLogin, (value) => {
+    if (value) {
+        initAnalyseData()
+    } else {
+        setAnalyseList([]) // 清空数据
+        setAnalyseCalendarData({}) // 清空数据
+        analyseAccount()
+        getAnalyseCalendarHandle()
+    }
+})
+
+watch(activeOrderTab, () => {
+    initAnalyseData()
+})
+
+onMounted(() => {
+    initAnalyseData()
+})
+
+onBeforeUnmount(() => {
+    destroyBarChart()
+})
 </script>
 
 <style scoped>
