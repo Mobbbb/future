@@ -53,7 +53,7 @@
             <el-card class="analyse-card" style="margin: 12px;">
                 <div class="card-title">品种盈亏及胜率<span class="card-title-date">({{displayTime}})</span></div>
                 <div class="card-row-wrap">
-                    <div id="barChart" :style="{ maxWidth: `${barChartMaxWidth}px` }"></div>
+                    <div id="barChart" :style="{ width: `${barChartMaxWidth}px` }"></div>
                 </div>
             </el-card>
             <el-card class="analyse-card" style="margin: 12px;">
@@ -406,7 +406,7 @@ const analyseAccount = async () => {
         totalProfit += item.totalProfit
     })
 
-    barChartMaxWidth.value = Object.keys(chFutureMap).length * 50
+    barChartMaxWidth.value = Object.keys(chFutureMap).length * 50 < 500 ?  500 : Object.keys(chFutureMap).length * 50
     
     nextTick(() => {
         destroyBarChart()
@@ -694,9 +694,8 @@ onBeforeUnmount(() => {
     max-width: 512px;
 }
 #barChart {
-    width: 100%;
     height: 37.5vh;
-    min-width: 500px;
+    max-width: 100%;
     background: white;
 }
 </style>
