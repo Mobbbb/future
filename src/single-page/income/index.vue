@@ -265,6 +265,7 @@ const getTableData = async () => {
                         date: '',
                         remark: '',
                         name: cell,
+                        _id: item.id,
                     })
                     dateObj[item.date].others = item.num
                 } else {
@@ -276,6 +277,7 @@ const getTableData = async () => {
                         date: '',
                         remark: '',
                         name: cell,
+                        _id: item.id,
                     })
                 }
             })
@@ -307,7 +309,8 @@ const deleteRow = async (data) => {
 
 const confirmDelete = async () => {
     if (currentDeleteItem) {
-        await fetchDeleteIncome(currentDeleteItem.row.id)
+        const id = currentDeleteItem.row._id || currentDeleteItem.row.id
+        await fetchDeleteIncome(id)
         getTableData()
     }
     centerDialogVisible.value = false
