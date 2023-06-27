@@ -66,6 +66,7 @@ export default {
         ]),
         ...mapGetters('app', [
             'isWhiteUser',
+            'isLogin',
         ]),
     },
     watch: {
@@ -93,11 +94,24 @@ export default {
             if (!this.username || !this.password) {
                 this.$message.error('账号/密码不得为空')
             } else {
+                const isLogin = this.isLogin
                 const result = await fetchUserLogin(this.username, this.password)
-                this.afterSubmit(result)
+                if (isLogin) {
+                    this.afterSwitchLoginSubmit(result)
+                } else {
+                    this.afterLoginSubmit(result)
+                }
             }
         },
-        async afterSubmit(result) {
+        async afterSwitchLoginSubmit(result) {
+            const { data = {}, success, msg } = result
+            if (success) {
+                this.$message.success(msg)
+                this.saveLoginStatus(data)
+                location.reload()
+            }
+        },
+        async afterLoginSubmit(result) {
             const { data = {}, success, msg } = result
             if (success) {
                 this.setLoginDrawerStatus(false)

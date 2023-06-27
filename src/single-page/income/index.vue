@@ -16,7 +16,7 @@
             <el-tab-pane label="收益列表" name="table">
                 <div class="table-wrap">
                     <el-table class="income-table" :data="showListData" height="100%" :show-summary="isAdministrator"
-                        :summary-method="getSummaries" :row-class-name="tableRowClassName"
+                        :summary-method="getSummaries" :row-class-name="tableRowClassName" :class="greenTotalCell"
                         row-key="id" style="font-size: 12px;">
                         <el-table-column prop="date" label="日期" width="120" />
                         <el-table-column prop="dNum" label="大号收益" v-if="isAdministrator" />
@@ -80,6 +80,7 @@ const chartDataArr2 = ref([])
 const currentPage = ref(1)
 const flagDateArr = ref([])
 const centerDialogVisible = ref(false)
+const greenTotalCell = ref('')
 
 const pageSize = 40
 let myChart1 = null
@@ -296,6 +297,11 @@ const getTableData = async () => {
             })
         })
         tableData.value = expandTableData
+        
+        greenTotalCell.value = ''
+        if (dtotalNum < 0) greenTotalCell.value += 'green-total-cell1 '
+        if (xTotalNum < 0) greenTotalCell.value += 'green-total-cell2 '
+        if (totalNum < 0) greenTotalCell.value += 'green-total-cell3 '
     } else {
         tableData.value = data
     }
@@ -486,6 +492,15 @@ onMounted(() => {
 .income-table .el-table__footer .el-table__cell:nth-of-type(4) {
     color: rgb(235, 68, 54);
     font-weight: bold;
+}
+.green-total-cell1 .el-table__footer .el-table__cell:nth-of-type(2) {
+    color: rgb(14, 157, 88);
+}
+.green-total-cell2 .el-table__footer .el-table__cell:nth-of-type(3) {
+    color: rgb(14, 157, 88);
+}
+.green-total-cell3 .el-table__footer .el-table__cell:nth-of-type(4) {
+    color: rgb(14, 157, 88);
 }
 .income-table .others-row .el-table__cell {
     background: var(--el-color-info-light-9);

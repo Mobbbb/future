@@ -41,7 +41,7 @@
                     </span>
                 </template>
             </el-table-column>
-            <el-table-column prop="price" label="开仓均价" />
+            <el-table-column prop="price" minWidth="90" label="开仓均价" />
             <el-table-column prop="hands" label="手数" />
             <el-table-column prop="commission" width="120" label="开仓总手续费" />
         </el-table>
