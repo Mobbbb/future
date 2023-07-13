@@ -41,7 +41,16 @@
                     </span>
                 </template>
             </el-table-column>
-            <el-table-column prop="price" minWidth="90" label="开仓均价" />
+            <el-table-column prop="price" minWidth="90" label="开仓均价">
+                <template #default="scope">
+                    <el-popover placement="top" :width="340" trigger="click" @after-enter="orderPriceClick(scope.row, scope.$index)">
+                        <template #reference>
+                            <div class="price-cell">{{ scope.row.price }}</div>
+                        </template>
+                        <div :id="'lineChart' + scope.$index" class="line-chart"></div>
+                    </el-popover>
+                </template>
+            </el-table-column>
             <el-table-column prop="hands" label="手数" />
             <el-table-column prop="commission" width="120" label="开仓总手续费" />
         </el-table>
@@ -57,248 +66,241 @@
     </div>
 </template>
 
-<script>
+<script setup>
 import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
 import { useStore } from 'vuex'
 import { fetchInsertOrder, fetchRecentlyFeature } from '@/api'
 import { dateFormat } from '@/libs/util'
 import { ElMessage } from 'element-plus'
+import { getLineOption } from './option'
 
 const futuresNum = 6
 
-export default {
-    name: 'order',
-    setup() {
-        const date = new Date()
-        const store = new useStore()
-        const ruleFormRef = ref()
-        const tableTabWrap = ref()
-        const formWrap = ref()
-        const recentlyFeatureNames = ref([])
-        const openingOrderTableHeight = ref(40)
-        const showOrderNameDrawer = ref(false)
-        const formData = reactive({
-            date,
-            name: '',
-            buyOrSale: 0,
-            openOrClose: 0,
-            hands: NaN,
-            price: NaN,
+const date = new Date()
+const store = new useStore()
+const ruleFormRef = ref()
+const tableTabWrap = ref()
+const formWrap = ref()
+const recentlyFeatureNames = ref([])
+const openingOrderTableHeight = ref(40)
+const showOrderNameDrawer = ref(false)
+const formData = reactive({
+    date,
+    name: '',
+    buyOrSale: 0,
+    openOrClose: 0,
+    hands: NaN,
+    price: NaN,
+})
+
+const rules = reactive({
+    date: [{ required: true, message: '请选择日期', trigger: 'change' }],
+    name: [{ required: true, message: '请选择合约', trigger: 'change' }],
+    hands: [{ required: true,  message: '请输入手数', trigger: 'change', validator: (rule, value, callback) => {
+        if (value) {
+            callback()
+        } else {
+            callback(new Error())
+        }
+    }}],
+    price: [{ required: true,  message: '请输入成交价', trigger: 'change', validator: (rule, value, callback) => {
+        if (value) {
+            callback()
+        } else {
+            callback(new Error())
+        }
+    }}],
+})
+
+const futuresList = computed(() => store.getters['order/futuresList'])
+const isLogin = computed(() => store.getters['app/isLogin'])
+const overMediaCritical = computed(() => store.getters['app/overMediaCritical'])
+const openingOrderList = computed(() => store.state.order.openingOrderList)
+const openingOrderGroup = computed(() => store.state.order.openingOrderGroup)
+const activeOrderTab = computed(() => store.state.app.activeOrderTab)
+const setLoginDrawerStatus = (status) => store.commit('app/setLoginDrawerStatus', status)
+const setOpeningOrderList = (value) => store.commit('order/setOpeningOrderList', value)
+const emptyAnalyseCalendarDataByDate = (date) => store.commit('order/emptyAnalyseCalendarDataByDate', date)
+const getOpeningOrderData = () => store.dispatch('order/getOpeningOrderData')
+
+// 合约列表
+const futuresConfigList = computed(() => {
+    const list = []
+    const dateList = []
+    let year = Number(dateFormat(date, 'yy'))
+    let month = Number(dateFormat(date, 'MM'))
+    
+    for (let i = 0; i < futuresNum; i++) {
+        month ++
+        if (month > 12) {
+            year ++
+            month = 1
+        }
+        if (month < 10) {
+            dateList.unshift(`${year}0${month}`)
+        } else {
+            dateList.unshift(`${year}${month}`)
+        }
+    }
+
+    futuresList.value.forEach(item => {
+        list.push([])
+        dateList.forEach(cell => {
+            list[list.length - 1].unshift(`${item.name}${cell}`)
         })
+    })
+    return list
+})
 
-        const rules = reactive({
-            date: [{ required: true, message: '请选择日期', trigger: 'change' }],
-            name: [{ required: true, message: '请选择合约', trigger: 'change' }],
-            hands: [{ required: true,  message: '请输入手数', trigger: 'change', validator: (rule, value, callback) => {
-                if (value) {
-                    callback()
-                } else {
-                    callback(new Error())
-                }
-            }}],
-            price: [{ required: true,  message: '请输入成交价', trigger: 'change', validator: (rule, value, callback) => {
-                if (value) {
-                    callback()
-                } else {
-                    callback(new Error())
-                }
-            }}],
-        })
+const futuresConfigListMap = computed(() => {
+    const obj = {}
+    futuresList.value.forEach(item => {
+        obj[item.name.toLowerCase()] = item.name
+    })
+    return obj
+})
 
-        const futuresList = computed(() => store.getters['order/futuresList'])
-        const isLogin = computed(() => store.getters['app/isLogin'])
-        const overMediaCritical = computed(() => store.getters['app/overMediaCritical'])
-        const openingOrderList = computed(() => store.state.order.openingOrderList)
-        const activeOrderTab = computed(() => store.state.app.activeOrderTab)
-        const setLoginDrawerStatus = (status) => store.commit('app/setLoginDrawerStatus', status)
-        const setOpeningOrderList = (value) => store.commit('order/setOpeningOrderList', value)
-        const emptyAnalyseCalendarDataByDate = (date) => store.commit('order/emptyAnalyseCalendarDataByDate', date)
-        const getOpeningOrderData = () => store.dispatch('order/getOpeningOrderData')
+const buySaleListNum = computed(() => {
+    const buyList = openingOrderList.value.filter(item => item.buyOrSale === 1 && formData.name === item.name) // 多单列表
+    const saleList = openingOrderList.value.filter(item => item.buyOrSale === 0 && formData.name === item.name) // 空单列表
+    return {
+        buyListNum: buyList.length, // 多单列表为空
+        saleListNum: saleList.length,
+    }
+})
 
-        // 合约列表
-        const futuresConfigList = computed(() => {
-            const list = []
-            const dateList = []
-            let year = Number(dateFormat(date, 'yy'))
-            let month = Number(dateFormat(date, 'MM'))
-            
-            for (let i = 0; i < futuresNum; i++) {
-                month ++
-                if (month > 12) {
-                    year ++
-                    month = 1
-                }
-                if (month < 10) {
-                    dateList.unshift(`${year}0${month}`)
-                } else {
-                    dateList.unshift(`${year}${month}`)
-                }
-            }
-
-            futuresList.value.forEach(item => {
-                list.push([])
-                dateList.forEach(cell => {
-                    list[list.length - 1].unshift(`${item.name}${cell}`)
-                })
-            })
-            return list
-        })
-
-        const futuresConfigListMap = computed(() => {
-            const obj = {}
-            futuresList.value.forEach(item => {
-                obj[item.name.toLowerCase()] = item.name
-            })
-            return obj
-        })
-
-        const buySaleListNum = computed(() => {
-            const buyList = openingOrderList.value.filter(item => item.buyOrSale === 1 && formData.name === item.name) // 多单列表
-            const saleList = openingOrderList.value.filter(item => item.buyOrSale === 0 && formData.name === item.name) // 空单列表
-            return {
-                buyListNum: buyList.length, // 多单列表为空
-                saleListNum: saleList.length,
-            }
-        })
-
-        /**
-         * @param {*} buyOrSale 1买，0卖
-         * @param {*} openOrClose 1开，0平
-         */
-        const submitHandle = async (buyOrSale, openOrClose) => {
-            if (!isLogin.value) {
-                setLoginDrawerStatus(true)
-            } else {    
-                const valid = await ruleFormRef.value.validate().catch(e => e)
-                if (valid !== true) return
-                
-                formData.buyOrSale = buyOrSale
-                formData.openOrClose = openOrClose
-                formData.date = dateFormat(formData.date, 'yyyy-MM-dd hh:mm:ss')
-                const data = await fetchInsertOrder(formData) || {}
-                const { success } = data
-                if (success) {
-                    ElMessage.success('操作成功')
-                    rerenderTable()
-                    formData.hands = NaN
-                    if (!openOrClose) { // 平仓成功
-                        emptyAnalyseCalendarDataByDate(formData.date.slice(0, 7))
-                    }
-                }
-            }
-        }
-
-        const getRecentlyFeature = async () => {
-            const res = await fetchRecentlyFeature()
-            recentlyFeatureNames.value = res.data || []
-            recentlyFeatureNames.value = recentlyFeatureNames.value.slice(0, 6)
-        }
-
-        window._importOrder_ = async (params) => {
-            const enName = futuresConfigListMap.value[params.enName]
-            params.name = enName + params.numName
-            const data = await fetchInsertOrder(params) || {}
-            const { success = false } = data
-            if (success) {
-                ElMessage.success('操作成功')
-            }
-            return success
-        }
-        window._rerenderTable_ = () => {
-            rerenderTable()
-        }
-
-        const popOrderNameDrawer = () => {
-            showOrderNameDrawer.value = true
-        }
-
-        const selectOrderName = (name) => {
-            showOrderNameDrawer.value = false
-            formData.name = name
-            localStorage.setItem('default-order-name', formData.name)
-        }
-
-        const orderRowClick = (row) => {
-            formData.name = row.name
-            formData.hands = row.hands
-            localStorage.setItem('default-order-name', formData.name)
-        }
+/**
+ * @param {*} buyOrSale 1买，0卖
+ * @param {*} openOrClose 1开，0平
+ */
+const submitHandle = async (buyOrSale, openOrClose) => {
+    if (!isLogin.value) {
+        setLoginDrawerStatus(true)
+    } else {    
+        const valid = await ruleFormRef.value.validate().catch(e => e)
+        if (valid !== true) return
         
-        const rerenderTable = async () => {
-            await getOpeningOrderData()
+        formData.buyOrSale = buyOrSale
+        formData.openOrClose = openOrClose
+        formData.date = dateFormat(formData.date, 'yyyy-MM-dd hh:mm:ss')
+        const data = await fetchInsertOrder(formData) || {}
+        const { success } = data
+        if (success) {
+            ElMessage.success('操作成功')
+            rerenderTable()
+            formData.hands = NaN
+            if (!openOrClose) { // 平仓成功
+                emptyAnalyseCalendarDataByDate(formData.date.slice(0, 7))
+            }
+        }
+    }
+}
+
+const getRecentlyFeature = async () => {
+    const res = await fetchRecentlyFeature()
+    recentlyFeatureNames.value = res.data || []
+    recentlyFeatureNames.value = recentlyFeatureNames.value.slice(0, 6)
+}
+
+window._importOrder_ = async (params) => {
+    const enName = futuresConfigListMap.value[params.enName]
+    params.name = enName + params.numName
+    const data = await fetchInsertOrder(params) || {}
+    const { success = false } = data
+    if (success) {
+        ElMessage.success('操作成功')
+    }
+    return success
+}
+window._rerenderTable_ = () => {
+    rerenderTable()
+}
+
+const popOrderNameDrawer = () => {
+    showOrderNameDrawer.value = true
+}
+
+const selectOrderName = (name) => {
+    showOrderNameDrawer.value = false
+    formData.name = name
+    localStorage.setItem('default-order-name', formData.name)
+}
+
+const orderRowClick = (row) => {
+    formData.name = row.name
+    formData.hands = row.hands
+    localStorage.setItem('default-order-name', formData.name)
+}
+
+const orderPriceClick = (row, index) => {
+    const echartLists = {
+        x: [],
+        y: [],
+    }
+    openingOrderGroup.value[`${row.name}${row.buyOrSale}`].forEach(item => {
+        for (let i = 0; i < item.hands; i++) {
+            echartLists.y.push(item.price)
+            echartLists.x.push(dateFormat(item.date, 'MM.dd'))
+        }
+    })
+    const lineChartIns = echarts.init(document.getElementById('lineChart' + index))
+    lineChartIns.setOption(getLineOption(echartLists))
+}
+
+const rerenderTable = async () => {
+    await getOpeningOrderData()
+    nextTick(() => {
+        if (openingOrderList.value.length) {
+            const bottomRestHeight = tableTabWrap.value.getBoundingClientRect().height - formWrap.value.getBoundingClientRect().height - 16
+            const tableTotalHeight = (openingOrderList.value.length + 1) * 40
+            if (bottomRestHeight < tableTotalHeight) {
+                openingOrderTableHeight.value = bottomRestHeight
+            } else {
+                openingOrderTableHeight.value = tableTotalHeight
+            }
+        } else {
+            openingOrderTableHeight.value = 115
+        }
+    })
+}
+
+const initOpeningAndRecentlyFeature = async () => {
+    if (activeOrderTab.value === 'order') {
+        if (isLogin.value) {
+            await getRecentlyFeature()
+            rerenderTable()
+        } else {
             nextTick(() => {
-                if (openingOrderList.value.length) {
-                    const bottomRestHeight = tableTabWrap.value.getBoundingClientRect().height - formWrap.value.getBoundingClientRect().height - 16
-                    const tableTotalHeight = (openingOrderList.value.length + 1) * 40
-                    if (bottomRestHeight < tableTotalHeight) {
-                        openingOrderTableHeight.value = bottomRestHeight
-                    } else {
-                        openingOrderTableHeight.value = tableTotalHeight
-                    }
-                } else {
-                    openingOrderTableHeight.value = 115
-                }
+                openingOrderTableHeight.value = 115
             })
         }
-
-        const initOpeningAndRecentlyFeature = async () => {
-            if (activeOrderTab.value === 'order') {
-                if (isLogin.value) {
-                    await getRecentlyFeature()
-                    rerenderTable()
-                } else {
-                    nextTick(() => {
-                        openingOrderTableHeight.value = 115
-                    })
-                }
-            }
-        }
-
-        watch(isLogin, (value) => {
-            if (value) {
-                initOpeningAndRecentlyFeature()
-            } else {
-                setOpeningOrderList([]) // 清空数据
-                recentlyFeatureNames.value = []
-                openingOrderTableHeight.value = 115
-            }
-        })
-
-        watch(activeOrderTab, () => {
-            initOpeningAndRecentlyFeature()
-        })
-
-        onMounted(async () => {
-            await initOpeningAndRecentlyFeature()
-            // 设置默认选中的合约
-            const defaultOrderName = localStorage.getItem('default-order-name')
-            if (defaultOrderName) {
-                formData.name = defaultOrderName
-            } else {
-                formData.name = futuresConfigList.value[0] && futuresConfigList.value[0][0] || ''
-            }
-        })
-
-        return {
-            overMediaCritical,
-            futuresConfigList,
-            formData,
-            rules,
-            openingOrderList,
-            ruleFormRef,
-            buySaleListNum,
-            showOrderNameDrawer,
-            openingOrderTableHeight,
-            tableTabWrap,
-            formWrap,
-            recentlyFeatureNames,
-            submitHandle,
-            orderRowClick,
-            popOrderNameDrawer,
-            selectOrderName,
-        }
-    },
+    }
 }
+
+watch(isLogin, (value) => {
+    if (value) {
+        initOpeningAndRecentlyFeature()
+    } else {
+        setOpeningOrderList([]) // 清空数据
+        recentlyFeatureNames.value = []
+        openingOrderTableHeight.value = 115
+    }
+})
+
+watch(activeOrderTab, () => {
+    initOpeningAndRecentlyFeature()
+})
+
+onMounted(async () => {
+    await initOpeningAndRecentlyFeature()
+    // 设置默认选中的合约
+    const defaultOrderName = localStorage.getItem('default-order-name')
+    if (defaultOrderName) {
+        formData.name = defaultOrderName
+    } else {
+        formData.name = futuresConfigList.value[0] && futuresConfigList.value[0][0] || ''
+    }
+})
 </script>
 
 <style scoped>
@@ -361,6 +363,13 @@ export default {
 }
 .recently-tag-wrap {
     padding: 0 16px 4px 24px;
+}
+.line-chart {
+    width: 340px;
+    height: 300px;
+}
+.price-cell {
+    cursor: pointer;
 }
 </style>
 

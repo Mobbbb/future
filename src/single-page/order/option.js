@@ -182,7 +182,7 @@ export const getBarOption = (data) => {
             interval: 0,
             axisPointer: {
                 show: true,
-                type: 'line', 
+                type: 'line',
                 lineStyle: {
                     color: '#222',
                     type: 'solid',
@@ -308,7 +308,7 @@ export const getBarOption = (data) => {
                 barMaxWidth: 40,
                 animationDuration: 500,
                 itemStyle: {
-                    color: (params) => params.data[1] > 0 ? areaColorArr[0]: areaColorArr[1],
+                    color: (params) => params.data[1] > 0 ? areaColorArr[0] : areaColorArr[1],
                 },
                 label: {
                     show: false,
@@ -336,4 +336,100 @@ export const getBarOption = (data) => {
     getYAxisIndexSeries(option.series, sourceData, option)
 
     return option
+}
+
+export const getLineOption = (data) => {
+    return {
+        grid: {
+            top: 10,
+            bottom: 10,
+            left: 0,
+            right: '3%',
+            containLabel: true,
+        },
+        xAxis: {
+            type: 'category',
+            data: data.x,
+            interval: 0,
+            axisPointer: {
+                show: true,
+                type: 'line',
+                lineStyle: {
+                    color: '#222',
+                    type: 'solid',
+                },
+            },
+            axisTick: {
+                show: false,
+            },
+            axisLine: {
+                lineStyle: {
+                    color: '#d0d0d0',
+                    width: 1,
+                },
+            },
+            axisLabel: {
+                textStyle: {
+                    color: '#8e8e8e',
+                    fontSize,
+                },
+            },
+        },
+        yAxis: {
+            type: 'value',
+            min: Math.round(Math.min(...data.y) * 0.95 / 100) * 100,
+            max: Math.ceil(Math.max(...data.y) * 1.05 / 100) * 100,
+            axisTick: {
+                show: false,
+            },
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    color: '#f1f3f8',
+                    type: 'dashed',
+                },
+            },
+            axisLine: {
+                show: true,
+                lineStyle: {
+                    color: '#d0d0d0',
+                    width: 1,
+                },
+            },
+            axisPointer: {
+                show: true,
+                type: 'line',
+                lineStyle: {
+                    color: '#222',
+                    type: 'solid',
+                },
+            },
+            axisLabel: {
+                show: true,
+                // *$修改 axisTick 颜色
+                textStyle: {
+                    color: (value) => {
+                        // *$隐藏0坐标
+                        return value !== '0' ? '#8e8e8e' : 'rgba(0, 0, 0, 0)'
+                    },
+                    fontSize,
+                },
+            },
+        },
+        series: [
+            {
+                data: data.y,
+                type: 'line',
+                itemStyle: {
+                    color: '#ef97b2',
+                },
+                label: {
+                    show: true,
+                    fontSize: 8,
+                },
+                animation: true,
+                animationDuration: 300,
+            }
+        ]
+    }
 }

@@ -7,6 +7,7 @@ const order = {
         return {
             orderList: [],
             openingOrderList: [],
+            openingOrderGroup: {},
             analyseList: [],
             futureConfigInfo: [],
             analyseCalendarData: {},
@@ -36,6 +37,9 @@ const order = {
         },
         setOpeningOrderList(state, value) {
             state.openingOrderList = value
+        },
+        setOpeningOrderGroup(state, value) {
+            state.openingOrderGroup = value
         },
         setAnalyseList(state, value) {
             state.analyseList = value
@@ -135,6 +139,7 @@ const order = {
                 itemObj.commission = totalCommission.toFixed(2)
                 formatArr.push(itemObj)
             })
+            commit('setOpeningOrderGroup', groupObj)
             commit('setOpeningOrderList', formatArr)
         }
     },
