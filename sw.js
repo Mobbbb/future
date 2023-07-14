@@ -226,4 +226,5 @@ self.addEventListener('message', function(event) {
         self.skipWaiting()
     }
     console.error(event.data)
+    console.log('feature')
 })

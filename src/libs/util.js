@@ -476,4 +476,3 @@ export const extractStringBetween = (str, startSymbol, endSymbol) => {
     }
     return str.substring(startIndex + startSymbol.length, endIndex)
 }
-    
