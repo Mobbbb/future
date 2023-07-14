@@ -25,7 +25,7 @@ export const updateUserInDayFirstLists = (lists) => {
 
 export const fetchListData = () => {
     return axios.request({
-        url: '/resource/message-board/message.json',
+        url: '/resource/future/message.json',
         method: 'get',
     })
 }
@@ -55,7 +55,7 @@ export const fetchInsertLog = (params) => {
 
 export const fetchIncomeData = () => {
     return axios.request({
-        url: '/resource/message-board/income.json',
+        url: '/resource/future/income.json',
         method: 'get',
     })
 }

@@ -1,7 +1,7 @@
 'use strict'
 
-const name = 'Message - Board'
-const shortName = 'Message - Board'
+const name = 'Future'
+const shortName = 'Future'
 const outputDir = 'dist'
 const assetsDir = 'static'
 const proxyConfig = {

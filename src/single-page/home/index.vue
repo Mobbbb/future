@@ -8,9 +8,9 @@
                     <!-- <div class="number-text">{{index + 1}}</div> -->
                 </div>
                 <el-avatar v-if="item.uin === 491450147" class="list-uid" 
-                    src="/resource/message-board/images/mby.jpg"/>
+                    src="/resource/future/images/mby.jpg"/>
                 <el-avatar v-else class="list-uid"
-                    src="/resource/message-board/images/jhh-avator2.jpg"/>
+                    src="/resource/future/images/jhh-avator2.jpg"/>
             </div>
             <el-empty description="暂无数据" v-if="!showListData.length"></el-empty>
         </div>
