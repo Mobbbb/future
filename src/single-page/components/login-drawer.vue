@@ -72,7 +72,7 @@ export default {
     watch: {
         drawerShowStatus(value) {
             if (value) {
-                let loginList = localStorage.getItem('feature-login-list')
+                let loginList = localStorage.getItem('future-login-list')
                 if (loginList) {
                     this.loginList = JSON.parse(loginList)
                 }
@@ -128,8 +128,8 @@ export default {
         async switchUser(data, isSelf) {
             if (isSelf) return
             const { uid, token } = data
-            setCookie('feature-token', token)
-            setCookie('feature-uid', uid)
+            setCookie('future-token', token)
+            setCookie('future-uid', uid)
             location.reload()
         },
     },

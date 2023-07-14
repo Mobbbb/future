@@ -9,5 +9,5 @@ module.exports = {
         'https://cdn.bootcdn.net/ajax/libs/vue/3.2.31/vue.global.prod.js',
         'https://cdn.bootcdn.net/ajax/libs/element-plus/2.0.5/index.full.min.js',
     ],
-    publicPath: process.env.NODE_ENV === 'production' ? '/feature' : '',
+    publicPath: process.env.NODE_ENV === 'production' ? '/future' : '',
 }

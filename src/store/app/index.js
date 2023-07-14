@@ -100,7 +100,7 @@ const app = {
     },
     actions: {
         async INIT_USER({ commit }) {
-            const userId = getCookie('feature-uid')
+            const userId = getCookie('future-uid')
             if (userId) { // 获取用户相关信息
                 commit('SET_USER_INFO', { userId })
                 const res = await fetchUserInfo()
@@ -128,13 +128,13 @@ const app = {
         logoutAction({ commit, dispatch }) {
             dispatch('removeLoginStorage')
             commit('SET_USER_INFO', {})
-            delCookie('feature-uid')
-            delCookie('feature-token')
+            delCookie('future-uid')
+            delCookie('future-token')
             clearPrivateRoute()
         },
         saveLoginStatus({}, data) {
             const { uid, avatar } = data
-            let loginList = localStorage.getItem('feature-login-list')
+            let loginList = localStorage.getItem('future-login-list')
             if (loginList) {
                 loginList = JSON.parse(loginList)
             } else {
@@ -145,19 +145,19 @@ const app = {
             loginList.unshift({
                 uid,
                 avatar,
-                token: getCookie('feature-token'),
+                token: getCookie('future-token'),
             })
-            localStorage.setItem('feature-login-list', JSON.stringify(loginList))
+            localStorage.setItem('future-login-list', JSON.stringify(loginList))
         },
         removeLoginStorage({ state }) {
-            let loginList = localStorage.getItem('feature-login-list')
+            let loginList = localStorage.getItem('future-login-list')
             if (loginList) {
                 loginList = JSON.parse(loginList)
             } else {
                 loginList = []
             }
             loginList = loginList.filter(item => item.uid !== state.USER_INFO.userId)
-            localStorage.setItem('feature-login-list', JSON.stringify(loginList))
+            localStorage.setItem('future-login-list', JSON.stringify(loginList))
         },
         async requestHomeList({ commit }) {
             let result = await fetchListData()
