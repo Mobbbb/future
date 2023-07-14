@@ -193,7 +193,7 @@ workbox.routing.registerRoute(
 
 // cdn静态资源缓存策略
 workbox.routing.registerRoute(
-    new RegExp(/^https?:\/\/unpkg\.com\/(.*)\.(js|css|woff)$/),
+    new RegExp('^https?:\/\/(.*)bootcdn\.(.*)\.(js|css|woff)$'),
     workbox.strategies.cacheFirst({
         cacheName: 'statics',
         plugins: [
