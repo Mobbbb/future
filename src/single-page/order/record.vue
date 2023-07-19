@@ -6,7 +6,7 @@
                 <el-button  type="text" 
                             :icon="DArrowLeft" 
                             class="header-icon-btn change-date-icon" 
-                            @click="selectDate('prev')">
+                            @click="selectDate(-1)">
                 </el-button>
                 <el-date-picker
                     v-model="searchParams.date"
@@ -25,7 +25,7 @@
                 <el-button  type="text" 
                             :icon="DArrowRight" 
                             class="header-icon-btn change-date-icon" 
-                            @click="selectDate('next')">
+                            @click="selectDate(1)">
                 </el-button>
             </div>
             <div class="search-item-wrap">
@@ -178,9 +178,10 @@
 import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { fetchDeleteOrder, fetchCancelOrder, fetchInsertIncome } from '@/api'
-import { parseDateParams, getGapDate, getMonthShortcuts, dateFormat, getDateByStep } from '@/libs/util'
+import { parseDateParams, getGapDate, getMonthShortcuts, getDateByStep } from '@/libs/util'
 import { ElMessage } from 'element-plus'
 import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
+import { dateFormat } from 'umob'
 
 export default {
     name: 'record',
@@ -329,8 +330,10 @@ export default {
             getTableData()
         }
 
-        const selectDate = (type) => {
-            searchParams.date = [getDateByStep(searchParams.date[0], type), getDateByStep(searchParams.date[1], type)]
+        const selectDate = (num) => {
+            if (typeof num === 'number') {
+                searchParams.date = [getDateByStep(searchParams.date[0], num), getDateByStep(searchParams.date[1], num)]
+            }
             getTableData()
         }
 

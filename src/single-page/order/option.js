@@ -371,7 +371,7 @@ export const getLineOption = (data) => {
             axisLabel: {
                 textStyle: {
                     color: '#8e8e8e',
-                    fontSize,
+                    fontSize: 10,
                 },
             },
         },
@@ -412,7 +412,7 @@ export const getLineOption = (data) => {
                         // *$隐藏0坐标
                         return value !== '0' ? '#8e8e8e' : 'rgba(0, 0, 0, 0)'
                     },
-                    fontSize,
+                    fontSize: 10,
                 },
             },
         },

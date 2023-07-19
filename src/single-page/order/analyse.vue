@@ -29,7 +29,7 @@
                         :style="analyseResult.totalProfit >= 0 ?
                         { color: 'rgb(235, 68, 54)' } :
                         { color: 'rgb(14, 157, 88)' }">
-                        {{addCommas(analyseResult.totalProfit)}}
+                        {{analyseResult.totalProfit.toLocaleString()}}
                     </div>
                 </div>
                 <el-card class="analyse-card" style="margin: 12px;">
@@ -63,8 +63,8 @@
                         <div class="card-item-title">总盈利</div>
                         <div class="card-item-combine-value">
                             <div class="card-item-value" style="color: rgb(235, 68, 54);">
-                                {{analyseResult.buyProfitUp.num}}
-                                <span class="card-item-unit">{{analyseResult.buyProfitUp.unit}}元</span>
+                                {{analyseResult.buyProfitUp[0]}}
+                                <span class="card-item-unit">{{analyseResult.buyProfitUp[1]}}元</span>
                             </div>
                         </div>
                     </div>
@@ -83,8 +83,8 @@
                         <div class="card-item-title">总亏损</div>
                         <div class="card-item-combine-value">
                             <div class="card-item-value" style="color: rgb(14, 157, 88);">
-                                {{analyseResult.buyProfitDown.num}}
-                                <span class="card-item-unit">{{analyseResult.buyProfitDown.unit}}元</span>
+                                {{analyseResult.buyProfitDown[0]}}
+                                <span class="card-item-unit">{{analyseResult.buyProfitDown[1]}}元</span>
                             </div>
                         </div>
                     </div>
@@ -103,11 +103,11 @@
                         <div class="card-item-title">净盈亏</div>
                         <div class="card-item-combine-value">
                             <div class="card-item-value" 
-                                :style="analyseResult.buyProfit.num >= 0 ?
+                                :style="analyseResult.buyProfit[0] >= 0 ?
                                 { color: 'rgb(235, 68, 54)' } :
                                 { color: 'rgb(14, 157, 88)' }">
-                                {{analyseResult.buyProfit.num}}
-                                <span class="card-item-unit">{{analyseResult.buyProfit.unit}}元</span>
+                                {{analyseResult.buyProfit[0]}}
+                                <span class="card-item-unit">{{analyseResult.buyProfit[1]}}元</span>
                             </div>
                         </div>
                     </div>
@@ -130,8 +130,8 @@
                         <div class="card-item-title">总盈利</div>
                         <div class="card-item-combine-value">
                             <div class="card-item-value" style="color: rgb(235, 68, 54);">
-                                {{analyseResult.saleProfitUp.num}}
-                                <span class="card-item-unit">{{analyseResult.saleProfitUp.unit}}元</span>
+                                {{analyseResult.saleProfitUp[0]}}
+                                <span class="card-item-unit">{{analyseResult.saleProfitUp[1]}}元</span>
                             </div>
                         </div>
                     </div>
@@ -150,8 +150,8 @@
                         <div class="card-item-title">总亏损</div>
                         <div class="card-item-combine-value">
                             <div class="card-item-value" style="color: rgb(14, 157, 88);">
-                                {{analyseResult.saleProfitDown.num}}
-                                <span class="card-item-unit">{{analyseResult.saleProfitDown.unit}}元</span>
+                                {{analyseResult.saleProfitDown[0]}}
+                                <span class="card-item-unit">{{analyseResult.saleProfitDown[1]}}元</span>
                             </div>
                         </div>
                     </div>
@@ -170,11 +170,11 @@
                         <div class="card-item-title">净盈亏</div>
                         <div class="card-item-combine-value">
                             <div class="card-item-value" 
-                                :style="analyseResult.saleProfit.num >= 0 ?
+                                :style="analyseResult.saleProfit[0] >= 0 ?
                                 { color: 'rgb(235, 68, 54)' } :
                                 { color: 'rgb(14, 157, 88)' }">
-                                {{analyseResult.saleProfit.num}}
-                                <span class="card-item-unit">{{analyseResult.saleProfit.unit}}元</span>
+                                {{analyseResult.saleProfit[0]}}
+                                <span class="card-item-unit">{{analyseResult.saleProfit[1]}}元</span>
                             </div>
                         </div>
                     </div>
@@ -196,7 +196,7 @@
                         <el-button  type="text" 
                                     :icon="DArrowLeft" 
                                     class="header-icon-btn change-date-icon" 
-                                    @click="selectDate('prev')">
+                                    @click="selectDate(-1)">
                         </el-button>
                         <el-date-picker v-model="calendarDate" 
                                         type="month"
@@ -210,7 +210,7 @@
                         <el-button  type="text" 
                                     :icon="DArrowRight" 
                                     class="header-icon-btn change-date-icon" 
-                                    @click="selectDate('next')">
+                                    @click="selectDate(1)">
                         </el-button>
                     </div>
                     <div class="date-picker-wrap" v-else>
@@ -267,11 +267,12 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useStore } from 'vuex'
-import { formatNumUnit, parseDateParams, getGapDate, getMonthShortcuts, dateFormat, getMonthByStep, addCommas } from '@/libs/util'
+import { parseDateParams, getGapDate, getMonthShortcuts } from '@/libs/util'
 import festivalMap, { festivalList } from '@/config/festivalMap'
 import { getBarOption } from './option'
 import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import MonthlyCalendar from '@/components/monthly-calendar.vue'
+import { dateFormat, bigNumTransform, calculateDate } from 'umob'
 
 let barChartIns = null
 const store = new useStore()
@@ -280,12 +281,12 @@ const analyseResult = reactive({
     saleRate: 0,
     totalRate: 0,
     totalProfit: 0,
-    buyProfit: { num: 0, unit: '' },
-    buyProfitUp: { num: 0, unit: '' },
-    buyProfitDown: { num: 0, unit: '' },
-    saleProfit: { num: 0, unit: '' },
-    saleProfitUp: { num: 0, unit: '' },
-    saleProfitDown: { num: 0, unit: '' },
+    buyProfit: [],
+    buyProfitUp: [],
+    buyProfitDown: [],
+    saleProfit: [],
+    saleProfitUp: [],
+    saleProfitDown: [],
     preBuyProfit: 0,
     preBuyProfitUp: 0,
     preBuyProfitDown: 0,
@@ -428,12 +429,12 @@ const analyseAccount = async () => {
     analyseResult.preSaleProfitUp = (saleProfitUp / saleWinNum).toFixed(1) * 1 || 0
     analyseResult.preSaleProfitDown = (saleProfitDown / (saleNum - saleWinNum)).toFixed(1) * 1 || 0
 
-    analyseResult.saleProfit = formatNumUnit(saleProfit.toFixed(2) * 1 || 0)
-    analyseResult.saleProfitUp = formatNumUnit(saleProfitUp.toFixed(2) * 1 || 0)
-    analyseResult.saleProfitDown = formatNumUnit(saleProfitDown.toFixed(2) * 1 || 0)
-    analyseResult.buyProfit = formatNumUnit(buyProfit.toFixed(2) * 1 || 0)
-    analyseResult.buyProfitUp = formatNumUnit(buyProfitUp.toFixed(2) * 1 || 0)
-    analyseResult.buyProfitDown = formatNumUnit(buyProfitDown.toFixed(2) * 1 || 0)
+    analyseResult.saleProfit = bigNumTransform(saleProfit, { merge: false })
+    analyseResult.saleProfitUp = bigNumTransform(saleProfitUp, { merge: false })
+    analyseResult.saleProfitDown = bigNumTransform(saleProfitDown, { merge: false })
+    analyseResult.buyProfit = bigNumTransform(buyProfit, { merge: false })
+    analyseResult.buyProfitUp = bigNumTransform(buyProfitUp, { merge: false })
+    analyseResult.buyProfitDown = bigNumTransform(buyProfitDown, { merge: false })
     analyseResult.totalProfit = totalProfit.toFixed(2) * 1 || 0
 }
 
@@ -450,8 +451,11 @@ const changeAnalyseDateHandle = () => {
     analyseAccount()
 }
 
-const selectDate = (type) => {
-    calendarDate.value = getMonthByStep(calendarDate.value, type)
+const selectDate = (num) => {
+    if (num) {
+        calendarDate.value = calculateDate(dateFormat(calendarDate.value, 'yyyy-MM'), num) + '-01'
+    }
+    
     getAnalyseCalendarHandle()
 }
 

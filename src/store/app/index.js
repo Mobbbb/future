@@ -1,7 +1,7 @@
 import { fetchInsertLog, fetchUserInfo, fetchListData } from '@/api'
-import { getCurrentTime, getQueryVariable, getCookie, delCookie } from '@/libs/util'
 import { whiteUserList, administrator, initPath } from '@/router/config'
 import router, { clearPrivateRoute } from '@/router'
+import { delCookie, getUrlParams, dateFormat, getCookie } from 'umob'
 
 const app = {
     namespaced: true,
@@ -117,10 +117,10 @@ const app = {
             }
         },
         async fetchInsertLogHandle({}, routerName) {
-            if (location.hostname !== 'localhost' && getQueryVariable('log') !== '0') {
+            if (location.hostname !== 'localhost' && getUrlParams('log') !== '0') {
                 await fetchInsertLog({
                     userAgent: navigator.userAgent,
-                    createTime: getCurrentTime(),
+                    createTime: dateFormat(new Date()),
                     routerName: routerName || router.currentRoute.value.path,
                 })
             }

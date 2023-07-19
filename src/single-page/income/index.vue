@@ -68,10 +68,10 @@ import { ref, nextTick, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { useStore } from 'vuex'
 import { getOption } from './option'
 import { fetchIncomeInfo, fetchDeleteIncome, updateFlagStatus, fetchFlag } from '@/api'
-import { getDateBetween, dateFormat, extractStringBetween } from '@/libs/util'
 import { festivalList } from '@/config/festivalMap'
 import { DocumentAdd, DocumentRemove, Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { dateGap, dateFormat, extractStr } from 'umob'
 
 const store = new useStore()
 const tableData = ref([])
@@ -165,7 +165,7 @@ const getTableData = async () => {
     // 横坐标日期
     let dateArr = []
     if (data[data.length - 1]) {
-        dateArr = getDateBetween(data[data.length - 1].date, dateFormat(new Date()))
+        dateArr = dateGap(data[data.length - 1].date, dateFormat(new Date()))
     }
     dateArr = dateArr.filter(item => { // 过滤节假日和周末
         const dateTime = new Date(item)
@@ -234,7 +234,7 @@ const getTableData = async () => {
             let xItemNum = 0
             let totalItemNum = item.num * length
             if (item.remark) {
-                xItemNum = Number(extractStringBetween(item.remark, '{', '}')) * 2
+                xItemNum = Number(extractStr(item.remark, '{', '}')) * 2
                 xTotalNum += xItemNum
                 item.remark = item.remark.replaceAll('{', '')
                 item.remark = item.remark.replaceAll('}', '')
@@ -474,10 +474,10 @@ onMounted(() => {
 .chart-tab .el-tab-pane {
     height: 100%!important;
 }
-.el-table .cell {
+.chart-tab .el-table .cell {
     padding: 0 6px!important;
 }
-.el-table-fixed-column--right .cell {
+.chart-tab .el-table-fixed-column--right .cell {
     padding-left: 0!important;
     padding-right: 0!important;
 }

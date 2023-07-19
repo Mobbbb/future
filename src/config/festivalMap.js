@@ -1,4 +1,4 @@
-import { dateFormat } from "@/libs/util"
+import { dateFormat } from 'umob'
 
 export const festivalList = [
     '2022-09-10', '2022-09-11', '2022-09-12',

@@ -70,9 +70,9 @@
 import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
 import { useStore } from 'vuex'
 import { fetchInsertOrder, fetchRecentlyFeature } from '@/api'
-import { dateFormat } from '@/libs/util'
 import { ElMessage } from 'element-plus'
 import { getLineOption } from './option'
+import { dateFormat } from 'umob'
 
 const futuresNum = 6
 

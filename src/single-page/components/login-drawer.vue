@@ -34,9 +34,9 @@
 import { mapState, mapGetters ,mapMutations, mapActions } from 'vuex'
 import { fetchUserLogin } from '@/api/index'
 import { addPrivateRoute } from '@/router'
-import { setCookie } from '@/libs/util'
 import { Avatar } from '@element-plus/icons-vue'
 import GcButton from '@/components/gc-button.vue'
+import { setCookie } from 'umob'
 
 export default {
     name: 'login-drawer',
