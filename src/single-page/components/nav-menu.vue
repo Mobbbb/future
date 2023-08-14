@@ -13,7 +13,7 @@
                 </template>
             </el-menu>
 
-            <div class="search-input-wrap" v-show="isHomeRoute">
+            <div class="nav-search-input-wrap" v-show="isHomeRoute">
                 <el-input v-model="searchText" 
                     @keydown.enter="searchHandle" 
                     @clear="searchHandle"
@@ -176,7 +176,7 @@ export default {
     margin-top: -2px;
     white-space: nowrap;
 }
-.search-input-wrap {
+.nav-search-input-wrap {
     position: absolute;
     display: flex;
     width: 120px;
@@ -204,14 +204,14 @@ export default {
 .el-menu-nav > .el-menu-item:hover{
     background-color: transparent!important;
 }
-.search-input-wrap .el-input__inner {
+.nav-search-input-wrap .el-input__inner {
     height: 28px;
     border-radius: 4px 0 0 4px;
 }
-.search-input-wrap .el-input__suffix {
+.nav-search-input-wrap .el-input__suffix {
     height: 28px;
 }
-.search-input-wrap .el-input--suffix .el-input__inner {
+.nav-search-input-wrap .el-input--suffix .el-input__inner {
     padding: 0 11px;
 }
 </style>

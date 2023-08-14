@@ -2,7 +2,7 @@
     <div class="list-wrap">
         <div class="modules-wrap">
             <div class="modules-title">· 工具一</div>
-            <div class="search-input-wrap">
+            <div class="tool-search-input-wrap">
                 <el-input v-model="inputText" 
                     @keydown.enter="searchHandle" 
                     @clear="searchHandle"
@@ -438,7 +438,7 @@ export default {
 .list-wrap {
     padding: 12px 12px 8px 12px;
 }
-.search-input-wrap {
+.tool-search-input-wrap {
     display: flex;
     width: 195px;
     height: 32px;
@@ -527,11 +527,11 @@ export default {
 </style>
 
 <style>
-.search-input-wrap .el-input__inner {
+.tool-search-input-wrap .el-input__inner {
     height: 28px;
     border-radius: 4px 0 0 4px;
 }
-.search-input-wrap .el-input__suffix {
+.tool-search-input-wrap .el-input__suffix {
     height: 28px;
 }
 .checkbox-tool {

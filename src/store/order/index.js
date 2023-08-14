@@ -1,5 +1,4 @@
-import { fetchOrderInfo, fetchOpeningOrderInfo, fetchFutureConfigInfo  } from '@/api'
-import { getBelongDealDate } from '@/libs/util'
+import { fetchOrderInfoHandle, fetchOpeningOrderInfo, fetchFutureConfigInfo, fetchFutureDayLineList  } from '@/api'
 
 const order = {
     namespaced: true,
@@ -8,9 +7,9 @@ const order = {
             orderList: [],
             openingOrderList: [],
             openingOrderGroup: {},
-            analyseList: [],
             futureConfigInfo: [],
-            analyseCalendarData: {},
+
+            futureDayLineList: [],
         }
     },
     getters: {
@@ -20,7 +19,7 @@ const order = {
         closeSettingfuturesList(state) { // 可平今的合约品种
             return state.futureConfigInfo.filter(item => item.canCloseInDay)
         },
-        enFutureMap(state) {
+        enFutureMap(state) { // 英文名-中文名
             const obj = {}
             state.futureConfigInfo.forEach(item => {
                 obj[item.name] = item.chName
@@ -29,6 +28,9 @@ const order = {
         },
     },
     mutations: {
+        setFutureDayLineList(state, value) {
+            state.futureDayLineList = value
+        },
         setFutureConfigInfo(state, value) {
             state.futureConfigInfo = value
         },
@@ -41,74 +43,22 @@ const order = {
         setOpeningOrderGroup(state, value) {
             state.openingOrderGroup = value
         },
-        setAnalyseList(state, value) {
-            state.analyseList = value
-        },
-        setAnalyseCalendarData(state, value) {
-            state.analyseCalendarData = value
-        },
-        emptyAnalyseCalendarDataByDate(state, date) {
-            state.analyseCalendarData[date] = 0
-        },
     },
     actions: {
+        async getOrderData({ commit }, params) {
+            const result = await fetchOrderInfoHandle(params)
+            commit('setOrderList', result.result)
+            return result
+        },
         async getFutureConfigInfo({ commit }) {
             const res = await fetchFutureConfigInfo()
             const futureConfigInfo = res.data || []
             commit('setFutureConfigInfo', futureConfigInfo)
         },
-        async getOrderData({ commit }, params) {
-            const res = await fetchOrderInfo(params)
-            const data = res.data || {}
-            const { result = [], commission, profit, totalProfit, total } = data
-            
-            commit('setOrderList', result)
-            return {
-                commission,
-                profit,
-                totalProfit,
-                total: total || 0,
-            }
-        },
-        async getAnalyseData({ commit }, params) {
-            const res = await fetchOrderInfo(params)
-            const data = res.data || {}
-            const { result = [] } = data
-            commit('setAnalyseList', result)
-        },
-        async getAnalyseCalendar({ state, commit }, { params, type }) {
-            let { endDate } = params
-            let yearMoth = endDate.slice(0, 7)
-            let year = endDate.slice(0, 4)
-            if (state.analyseCalendarData[`${yearMoth}-status`] && type === 'M') return // 如果该月份数据已获取，不再重新请求
-            if (state.analyseCalendarData[`${year}-status`] && type === 'Y') return // 如果该年份数据已获取，不再重新请求
-
-            const res = await fetchOrderInfo(params)
-            const data = res.data || {}
-            const { result = [] } = data
-            let dateMap = {}
-            result.forEach(item => {
-                const belongDate = getBelongDealDate(item.date)
-                const belongMonth = belongDate.slice(0, 7)
-                if (!dateMap[belongDate]) {
-                    dateMap[belongDate] = []
-                }
-                if (!dateMap[belongMonth]) {
-                    dateMap[belongMonth] = []
-                }
-                dateMap[belongDate].push(item.totalProfit)
-                dateMap[belongMonth].push(item.totalProfit)
-            })
-            Object.keys(dateMap).forEach(date => {
-                dateMap[date] = dateMap[date].reduce((a, b) => a + b, 0)
-            })
-            if (type === 'M') dateMap[`${yearMoth}-status`] = 1 // 表示月份数据已获取
-            if (type === 'Y') {
-                dateMap[`${yearMoth}-status`] = 1 // 表示年和月份数据已获取
-                dateMap[`${year}-status`] = 1 // 表示年和月份数据已获取
-            }
-            dateMap = Object.assign(state.analyseCalendarData, dateMap)
-            commit('setAnalyseCalendarData', dateMap)
+        async getFutureDayLineList({ commit }, params) {
+            const res = await fetchFutureDayLineList(params)
+            const info = res.data || []
+            commit('setFutureDayLineList', info)
         },
         async getOpeningOrderData({ commit }) {
             const res = await fetchOpeningOrderInfo()

@@ -120,7 +120,6 @@ const openingOrderGroup = computed(() => store.state.order.openingOrderGroup)
 const activeOrderTab = computed(() => store.state.app.activeOrderTab)
 const setLoginDrawerStatus = (status) => store.commit('app/setLoginDrawerStatus', status)
 const setOpeningOrderList = (value) => store.commit('order/setOpeningOrderList', value)
-const emptyAnalyseCalendarDataByDate = (date) => store.commit('order/emptyAnalyseCalendarDataByDate', date)
 const getOpeningOrderData = () => store.dispatch('order/getOpeningOrderData')
 
 // 合约列表
@@ -189,9 +188,6 @@ const submitHandle = async (buyOrSale, openOrClose) => {
             ElMessage.success('操作成功')
             rerenderTable()
             formData.hands = NaN
-            if (!openOrClose) { // 平仓成功
-                emptyAnalyseCalendarDataByDate(formData.date.slice(0, 7))
-            }
         }
     }
 }

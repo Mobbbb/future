@@ -98,6 +98,19 @@ export const fetchOrderInfo = (params) => {
     })
 }
 
+export const fetchOrderInfoHandle = async (params) => {
+    const res = await fetchOrderInfo(params)
+    const data = res.data || {}
+    const { result = [], commission, profit, totalProfit, total } = data
+    return {
+        commission,
+        profit,
+        totalProfit,
+        total: total || 0,
+        result,
+    }
+}
+
 export const fetchInsertOrder = (params) => {
     return axios.request({
         url: prefixApi + '/other/insertOrder',
@@ -133,5 +146,13 @@ export const fetchOpeningOrderInfo = () => {
     return axios.request({
         url: prefixApi + '/other/openingOrderInfo',
         method: 'get',
+    })
+}
+
+export const fetchFutureDayLineList = (params) => {
+    return axios.request({
+        url: prefixApi + '/other/futureDayShareInfo',
+        method: 'post',
+        data: params,
     })
 }

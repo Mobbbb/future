@@ -146,7 +146,7 @@ export const getBarOption = (data) => {
             top: 60,
             bottom: 35,
             left: 0,
-            right: '3%',
+            right: 5,
             containLabel: true,
         },
         tooltip: {
@@ -338,98 +338,306 @@ export const getBarOption = (data) => {
     return option
 }
 
-export const getLineOption = (data) => {
+export const getLineOption = (lineXAxis, lineYAxis, lineYAxis1, lineYAxis2) => {
+    let combineArr = new Set([...lineYAxis, ...lineYAxis1, ...lineYAxis2])
+    combineArr.delete(null)
+    let min = Math.min(...combineArr)
+    const minLength = String(min).length
+    let formatRate = Math.pow(10, (minLength - 2))
+    formatRate = formatRate < 1 ? 1 : formatRate
+    min = Math.floor(min / formatRate) * formatRate
+
     return {
-        grid: {
-            top: 10,
-            bottom: 10,
-            left: 0,
-            right: '3%',
-            containLabel: true,
-        },
-        xAxis: {
-            type: 'category',
-            data: data.x,
-            interval: 0,
+        tooltip: {
+            trigger: 'axis',
             axisPointer: {
-                show: true,
-                type: 'line',
-                lineStyle: {
-                    color: '#222',
-                    type: 'solid',
-                },
-            },
-            axisTick: {
-                show: false,
-            },
-            axisLine: {
-                lineStyle: {
-                    color: '#d0d0d0',
-                    width: 1,
-                },
-            },
-            axisLabel: {
-                textStyle: {
-                    color: '#8e8e8e',
-                    fontSize: 10,
-                },
+                animation: false
             },
         },
-        yAxis: {
-            type: 'value',
-            min: Math.round(Math.min(...data.y) * 0.95 / 100) * 100,
-            max: Math.ceil(Math.max(...data.y) * 1.05 / 100) * 100,
-            axisTick: {
-                show: false,
-            },
-            splitLine: {
+        axisPointer: {
+            link: [
+                {
+                    xAxisIndex: 'all'
+                }
+            ]
+        }, 
+        dataZoom: [
+            {
                 show: true,
-                lineStyle: {
-                    color: '#f1f3f8',
-                    type: 'dashed',
+                brushSelect: false,
+                showDetail: false,
+                height: 12,
+                bottom: 10,
+                handleIcon: 'path://M512 512m-512 0a512 512 0 1 0 1024 0 512 512 0 1 0-1024 0Z,M663.703704 325.982363v371.734274a26.788948 26.788948 0 0 1-53.276896 0V325.982363a26.788948 26.788948 0 0 1 53.276896 0z m-132.740741 0v371.734274a26.788948 26.788948 0 0 1-53.276896 0V325.982363a26.788948 26.788948 0 0 1 53.276896 0z m-132.740741 0v371.734274a26.788948 26.788948 0 0 1-53.276896 0V325.982363a26.788948 26.788948 0 0 1 53.276896 0z',
+                handleSize: 24,
+                handleStyle: {
+                    color: 'white',
+                    borderWidth: 1,
+                    borderColor: '#dedede',
                 },
-            },
-            axisLine: {
-                show: true,
-                lineStyle: {
-                    color: '#d0d0d0',
-                    width: 1,
-                },
-            },
-            axisPointer: {
-                show: true,
-                type: 'line',
-                lineStyle: {
-                    color: '#222',
-                    type: 'solid',
-                },
-            },
-            axisLabel: {
-                show: true,
-                // *$修改 axisTick 颜色
                 textStyle: {
-                    color: (value) => {
-                        // *$隐藏0坐标
-                        return value !== '0' ? '#8e8e8e' : 'rgba(0, 0, 0, 0)'
+                    fontSize,
+                },
+                backgroundColor: "#f6f7f8",
+                dataBackground: {
+                    lineStyle: {
+                        color: 'transparent',
                     },
-                    fontSize: 10,
+                    areaStyle: {
+                        color: 'transparent',
+                    },
+                },
+                selectedDataBackground: {
+                    lineStyle: {
+                        color: 'transparent',
+                    },
+                    areaStyle: {
+                        color: 'transparent',
+                    },
+                },
+                fillerColor: '#d5dee6',
+                borderColor: 'transparent',
+                emphasis: {
+                    handleStyle: {
+                        color: 'white',
+                        borderColor: '#dedede',
+                    },
+                },
+                xAxisIndex: [0, 1],
+            },
+            {
+                type: 'inside',
+                brushSelect: false,
+                showDetail: false,
+                height: 12,
+                bottom: 10,
+                handleIcon: 'path://M512 512m-512 0a512 512 0 1 0 1024 0 512 512 0 1 0-1024 0Z,M663.703704 325.982363v371.734274a26.788948 26.788948 0 0 1-53.276896 0V325.982363a26.788948 26.788948 0 0 1 53.276896 0z m-132.740741 0v371.734274a26.788948 26.788948 0 0 1-53.276896 0V325.982363a26.788948 26.788948 0 0 1 53.276896 0z m-132.740741 0v371.734274a26.788948 26.788948 0 0 1-53.276896 0V325.982363a26.788948 26.788948 0 0 1 53.276896 0z',
+                handleSize: 24,
+                handleStyle: {
+                    color: 'white',
+                    borderWidth: 1,
+                    borderColor: '#dedede',
+                },
+                textStyle: {
+                    fontSize,
+                },
+                backgroundColor: "#f6f7f8",
+                dataBackground: {
+                    lineStyle: {
+                        color: 'transparent',
+                    },
+                    areaStyle: {
+                        color: 'transparent',
+                    },
+                },
+                selectedDataBackground: {
+                    lineStyle: {
+                        color: 'transparent',
+                    },
+                    areaStyle: {
+                        color: 'transparent',
+                    },
+                },
+                fillerColor: '#d5dee6',
+                borderColor: 'transparent',
+                emphasis: {
+                    handleStyle: {
+                        color: 'white',
+                        borderColor: '#dedede',
+                    },
+                },
+                xAxisIndex: [0, 1],
+            },
+        ],
+        grid: [
+            {
+                left: 20,
+                right: 40,
+                top: '5%',
+                height: '40%',
+                containLabel: false,
+            },
+            {
+                left: 20,
+                right: 40,
+                top: '55%',
+                height: '37%',
+                containLabel: false,
+            }
+        ],
+        xAxis: [
+            {
+                type: 'category',
+                boundaryGap: false,
+                axisLine: {
+                    onZero: true,
+                    lineStyle: {
+                        color: '#d0d0d0',
+                        width: 1,
+                    },
+                },
+                axisLabel: {
+                    textStyle: {
+                        color: '#8e8e8e',
+                        fontSize,
+                    },
+                },
+                data: lineXAxis,
+            },
+            {
+                gridIndex: 1,
+                type: 'category',
+                boundaryGap: false,
+                axisLine: {
+                    onZero: true,
+                    lineStyle: {
+                        color: '#d0d0d0',
+                        width: 1,
+                    },
+                },
+                axisLabel: {
+                    textStyle: {
+                        color: '#8e8e8e',
+                        fontSize,
+                    },
+                },
+                data: lineXAxis,
+                position: 'top'
+            }
+        ],
+        yAxis: [
+            {
+                name: '',
+                type: 'value',
+                position: 'right',
+                min,
+                axisLabel: {
+                    textStyle: {
+                        color: '#8e8e8e',
+                        fontSize,
+                    },
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: '#f1f3f8',
+                        type: 'dashed',
+                    },
                 },
             },
-        },
+            {
+                name: '',
+                gridIndex: 1,
+                type: 'value',
+                inverse: true,
+                position: 'right',
+                min,
+                axisLabel: {
+                    textStyle: {
+                        color: '#8e8e8e',
+                        fontSize,
+                    },
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: '#f1f3f8',
+                        type: 'dashed',
+                    },
+                },
+            }
+        ],
         series: [
             {
-                data: data.y,
+                name: '收盘价',
                 type: 'line',
+                symbolSize: 'none',
+                data: lineYAxis,
+                smooth: true,
+                connectNulls: true,
+                lineStyle: {
+                    color: '#7faaff',
+                    width: 1,
+                },
                 itemStyle: {
-                    color: '#ef97b2',
+                    color: '#7faaff',
                 },
-                label: {
-                    show: true,
-                    fontSize: 8,
+            },
+            {
+                name: '多开',
+                type: 'line',
+                symbolSize: 'none',
+                data: lineYAxis1,
+                smooth: true,
+                connectNulls: true,
+                lineStyle: {
+                    color: 'rgba(243, 63, 109, 1)',
+                    width: 1,
                 },
-                animation: true,
-                animationDuration: 300,
-            }
+                itemStyle: {
+                    color: 'rgba(243, 63, 109, 1)',
+                },
+                areaStyle: {
+                    opacity: 0.9,
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        {
+                            offset: 0,
+                            color: 'rgba(243, 63, 109, 0.5)'
+                        },
+                        {
+                            offset: 1,
+                            color: 'rgba(243, 63, 109, 0.1)'
+                        }
+                    ]),
+                },
+            },
+            {
+                name: '收盘价',
+                type: 'line',
+                xAxisIndex: 1,
+                yAxisIndex: 1,
+                symbolSize: 'none',
+                data: lineYAxis,
+                smooth: true,
+                connectNulls: true,
+                lineStyle: {
+                    color: '#7faaff',
+                    width: 1,
+                },
+                itemStyle: {
+                    color: '#7faaff',
+                },
+            },
+            {
+                name: '空开',
+                type: 'line',
+                xAxisIndex: 1,
+                yAxisIndex: 1,
+                symbolSize: 'none',
+                data: lineYAxis2,
+                smooth: true,
+                connectNulls: true,
+                lineStyle: {
+                    color: 'rgba(17, 166, 66, 1)',
+                    width: 1,
+                },
+                itemStyle: {
+                    color: 'rgba(17, 166, 66, 1)',
+                },
+                areaStyle: {
+                    opacity: 0.9,
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        {
+                            offset: 0,
+                            color: 'rgba(17, 166, 66, 0.1)'
+                        },
+                        {
+                            offset: 1,
+                            color: 'rgba(17, 166, 66, 0.5)'
+                        }
+                    ]),
+                },
+            },
         ]
     }
 }

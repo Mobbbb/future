@@ -4,7 +4,7 @@
             <div class="search-item-wrap">
                 <span style="margin-right: 8px;">日期</span>
                 <el-date-picker
-                    v-model="analyseDate"
+                    v-model="basicDate"
                     type="daterange"
                     unlink-panels
                     range-separator="To"
@@ -13,8 +13,8 @@
                     :clearable="false"
                     :editable="false"
                     :shortcuts="shortcuts"
-                    @change="changeAnalyseDateHandle"
-                    class="date-picker"
+                    @change="changeBasicDate"
+                    class="analyse-date-picker"
                     popper-class="date-picker-popper"
                     style="width: 260px;" />
             </div>
@@ -52,9 +52,7 @@
             </div>
             <el-card class="analyse-card" style="margin: 12px;">
                 <div class="card-title">品种盈亏及胜率<span class="card-title-date">({{displayTime}})</span></div>
-                <div class="card-row-wrap">
-                    <div id="barChart" :style="{ width: `${barChartMaxWidth}px` }"></div>
-                </div>
+                <div id="barChart" :style="{ width: `${barChartMaxWidth}px` }"></div>
             </el-card>
             <el-card class="analyse-card" style="margin: 12px;">
                 <div class="card-title">多单统计<span class="card-title-date">({{displayTime}})</span></div>
@@ -192,11 +190,11 @@
             </el-card>
             <el-card class="analyse-card" style="margin: 12px;">
                 <div class="analyse-calendar-header">
-                    <div class="date-picker-wrap" v-if="showMonthCalendar">
+                    <div class="date-picker-wrap" v-if="monthCalendarShowStatus">
                         <el-button  type="text" 
                                     :icon="DArrowLeft" 
                                     class="header-icon-btn change-date-icon" 
-                                    @click="selectDate(-1)">
+                                    @click="changeCalendarDate(-1)">
                         </el-button>
                         <el-date-picker v-model="calendarDate" 
                                         type="month"
@@ -205,19 +203,19 @@
                                         style="width: 120px;" 
                                         :clearable="false" 
                                         :editable="false"
-                                        @change="selectDate('')">
+                                        @change="changeCalendarDate('')">
                         </el-date-picker>
                         <el-button  type="text" 
                                     :icon="DArrowRight" 
                                     class="header-icon-btn change-date-icon" 
-                                    @click="selectDate(1)">
+                                    @click="changeCalendarDate(1)">
                         </el-button>
                     </div>
                     <div class="date-picker-wrap" v-else>
                         <el-button  type="text" 
                                     :icon="DArrowLeft" 
                                     class="header-icon-btn change-date-icon" 
-                                    @click="selectYear(-1)">
+                                    @click="changeCalendarYear(-1)">
                         </el-button>
                         <el-date-picker v-model="calendarYear" 
                                         type="year"
@@ -226,39 +224,61 @@
                                         style="width: 120px;" 
                                         :clearable="false" 
                                         :editable="false"
-                                        @change="selectYear">
+                                        @change="changeCalendarYear">
                         </el-date-picker>
                         <el-button  type="text" 
                                     :icon="DArrowRight" 
                                     class="header-icon-btn change-date-icon" 
-                                    @click="selectYear(1)">
+                                    @click="changeCalendarYear(1)">
                         </el-button>
                     </div>
                     <el-switch
-                        @change="changeSwitch"
-                        v-model="showMonthCalendar"
+                        @change="changeCalendarDim"
+                        v-model="monthCalendarShowStatus"
                         inline-prompt
                         style="--el-switch-on-color: #13ce66; --el-switch-off-color: var(--el-color-primary)"
                         active-text="月"
                         inactive-text="年"/>
                 </div>
-                <el-calendar v-if="showMonthCalendar" class="analyse-calendar" v-model="calendarInnerDate" @input="getAnalyseCalendarHandle">
+                <el-calendar v-if="monthCalendarShowStatus" class="analyse-calendar" v-model="calendarInnerDate" @input="initCalendar">
                     <template #header><div></div></template>
                     <template #dateCell="{ data }">
-                        <div class="date-cell" :class="getDateCellClass(data)">
+                        <div class="date-cell" :class="getCalendarCellClass(data)">
                             <p>{{ Number(data.day.slice(8, 10)) }}</p>
-                            <p>{{ fromatDateCellData(data) }}</p>
+                            <p>{{ formatCalendarCellData(data) }}</p>
                         </div>
                     </template>
                 </el-calendar>
-                <monthly-calendar class="analyse-monthly-calendar" v-else :year="calendarYear" @on-click="clickMonCalHandle">
+                <monthly-calendar class="analyse-monthly-calendar" v-else :year="calendarYear" @on-click="drillingMonthCalendar">
                     <template #dateCell="{ data }">
-                        <div class="date-cell month-date-cell" :class="getDateCellClass(data)">
+                        <div class="date-cell month-date-cell" :class="getCalendarCellClass(data)">
                             <p>{{ data.label }}</p>
-                            <p>{{ fromatDateCellData(data) }}</p>
+                            <p>{{ formatCalendarCellData(data) }}</p>
                         </div>
                     </template>
                 </monthly-calendar>
+            </el-card>
+            <el-card class="analyse-card" style="margin: 12px;">
+                <div class="line-chart-filter-wrap">
+                    <el-date-picker
+                        v-model="dayLineDate"
+                        type="daterange"
+                        unlink-panels
+                        range-separator="To"
+                        start-placeholder="开始日期"
+                        end-placeholder="结束日期"
+                        :clearable="false"
+                        :editable="false"
+                        :shortcuts="shortcuts"
+                        @change="changeDayLineDate"
+                        class="analyse-date-picker"
+                        popper-class="date-picker-popper"
+                        style="width: 260px;" />
+                    <el-select class="analyse-select" v-model="dayLineFutureNameBindValue" @change="changeDayLineFuture">
+                        <el-option :label="item.chName" :value="item.name" v-for="item in futuresList"></el-option>
+                    </el-select>
+                </div>
+                <div id="lineChart"></div>
             </el-card>
         </div>
     </div>
@@ -269,13 +289,24 @@ import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } 
 import { useStore } from 'vuex'
 import { parseDateParams, getGapDate, getMonthShortcuts } from '@/libs/util'
 import festivalMap, { festivalList } from '@/config/festivalMap'
-import { getBarOption } from './option'
+import { getBarOption, getLineOption } from './option'
 import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import MonthlyCalendar from '@/components/monthly-calendar.vue'
-import { dateFormat, bigNumTransform, calculateDate } from 'umob'
+import { dateFormat, calculateDate } from 'umob'
+import { formatDayLineData, formatBasicData, formatCalendarData } from '@/libs/data-processing'
+import { fetchOrderInfoHandle  } from '@/api'
 
 let barChartIns = null
+let lineChartIns = null
 const store = new useStore()
+const monthShortcuts = getMonthShortcuts()
+const shortcuts = [
+    { text: '今日', value: () => getGapDate() },
+    { text: '近7天', value: () => getGapDate(7) },
+    { text: '近30天', value: () => getGapDate(30) },
+    { text: '近365天', value: () => getGapDate(365) },
+    ...monthShortcuts,
+]
 const analyseResult = reactive({
     buyRate: 0,
     saleRate: 0,
@@ -294,10 +325,25 @@ const analyseResult = reactive({
     preSaleProfitUp: 0,
     preSaleProfitDown: 0,
 })
-const calendarIsLoading = ref(false)
-const showMonthCalendar = ref(true)
 const calendarDate = ref(dateFormat(new Date()))
 const calendarYear = ref(dateFormat(new Date()))
+const basicDate = ref(monthShortcuts[0].value)
+const dayLineDate = ref(getGapDate(30))
+
+const calendarLoadingStatus = ref(false)
+const monthCalendarShowStatus = ref(true)
+const barChartMaxWidth = ref(0)
+const dayLineFutureName = ref('')
+const closeFutureLists = ref([])
+const designatedOpenFutureLists = ref([])
+const calendarDataMap = ref({})
+
+const futureDayLineList = computed(() => store.state.order.futureDayLineList)
+const activeOrderTab = computed(() => store.state.app.activeOrderTab)
+const enFutureMap = computed(() => store.getters['order/enFutureMap'])
+const isLogin = computed(() => store.getters['app/isLogin'])
+const futuresList = computed(() => store.getters['order/futuresList'])
+const displayTime = computed(() => dateFormat(basicDate.value[0]) + ' To ' + dateFormat(basicDate.value[1]))
 const calendarInnerDate = computed({
     get() {
         return new Date(calendarDate.value)
@@ -306,136 +352,125 @@ const calendarInnerDate = computed({
         calendarDate.value = dateFormat(value)
     },
 })
-const monthShortcuts = getMonthShortcuts()
-const shortcuts = [
-    { text: '今日', value: () => getGapDate() },
-    { text: '近7天', value: () => getGapDate(7) },
-    { text: '近30天', value: () => getGapDate(30) },
-    { text: '近365天', value: () => getGapDate(365) },
-    ...monthShortcuts,
-]
-const analyseDate = ref(monthShortcuts[0].value)
-const barChartMaxWidth = ref(0)
-
-const getAnalyseData = (params) => store.dispatch('order/getAnalyseData', params)
-const getAnalyseCalendar = (params) => store.dispatch('order/getAnalyseCalendar', params)
-const setAnalyseList = (value) => store.commit('order/setAnalyseList', value)
-const setAnalyseCalendarData = (value) => store.commit('order/setAnalyseCalendarData', value)
-const analyseList = computed(() => store.state.order.analyseList)
-const activeOrderTab = computed(() => store.state.app.activeOrderTab)
-const analyseCalendarData = computed(() => store.state.order.analyseCalendarData)
-const enFutureMap = computed(() => store.getters['order/enFutureMap'])
-const isLogin = computed(() => store.getters['app/isLogin'])
-
-const displayTime = computed(() => {
-    return dateFormat(analyseDate.value[0]) + ' To ' + dateFormat(analyseDate.value[1])
+const dayLineFutureNameBindValue = computed({
+    get() {
+        const firstFuturesItem = futuresList.value[0] || {}
+        if (!dayLineFutureName.value) {
+            dayLineFutureName.value = firstFuturesItem.name || ''
+        }
+        return dayLineFutureName.value
+    },
+    set(value) {
+        dayLineFutureName.value = value
+    },
 })
 
-const getAnalyseDataHandle = async () => { // 所有平仓订单
-    if (!isLogin.value) return
-    const params = parseDateParams(analyseDate.value)
-    params.openOrClose = 0
-    await getAnalyseData(params)
+const getFutureDayLineList = (params) => store.dispatch('order/getFutureDayLineList', params)
+
+const getCloseFutureByDate = async (dateParams) => { // 所有平仓订单
+    const response = await fetchOrderInfoHandle({
+        ...dateParams,
+        openOrClose: 0,
+    })
+    return response.result
 }
 
-const getAnalyseCalendarHandle = async (date) => {
+const getOpenFutureByName = async () => { // 指定品种的开仓订单
     if (!isLogin.value) return
-    let params = {}
-    if (showMonthCalendar.value) {
+    const params = parseDateParams(dayLineDate.value)
+    const res = await fetchOrderInfoHandle({
+        ...params,
+        name: dayLineFutureName.value,
+        openOrClose: 1,
+    })
+    designatedOpenFutureLists.value = res.result
+}
+
+const initCalendar = async (date) => {
+    if (!isLogin.value) return
+    let dateRange = []
+    if (monthCalendarShowStatus.value) {
         const dateParam = date && dateFormat(date) || calendarDate.value
         const day = new Date(dateParam.slice(0, 4), dateParam.slice(6, 7), 0).getDate()
-        params = parseDateParams([dateParam.slice(0, 8) + '01', `${dateParam.slice(0, 8)}${day}`])
+        dateRange = [dateParam.slice(0, 8) + '01', `${dateParam.slice(0, 8)}${day}`]
     } else {
         const year = date || new Date(calendarYear.value).getFullYear()
-        params = parseDateParams([`${year}-01-01`, `${year}-12-31`])
+        dateRange = [`${year}-01-01`, `${year}-12-31`]
     }
-    params.openOrClose = 0 // 取所有平仓
-    calendarIsLoading.value = true
-    await getAnalyseCalendar({ params, type: showMonthCalendar.value ? 'M' : 'Y' })
-    calendarIsLoading.value = false
+
+    const yearMothKey = `${dateRange[1].slice(0, 7)}-status`
+    const yearKey = `${dateRange[1].slice(0, 4)}-status`
+    if (calendarDataMap.value[yearMothKey] && monthCalendarShowStatus.value) return // 如果该月份数据已获取，不再重新请求
+    if (calendarDataMap.value[yearKey] && !monthCalendarShowStatus.value) return // 如果该年份数据已获取，不再重新请求
+
+    calendarLoadingStatus.value = true
+    const params = parseDateParams(dateRange)
+    const result = await getCloseFutureByDate(params)
+    calendarLoadingStatus.value = false
+
+    formatCalendarData(result, {
+        calendarDataMap: calendarDataMap.value,
+        monthCalendarShowStatus: monthCalendarShowStatus.value,
+        yearMothKey,
+        yearKey,
+    })
 }
 
-const analyseAccount = async () => {
-    await getAnalyseDataHandle()
+const initDayLineChart = async () => {
+    const params = parseDateParams(dayLineDate.value)
+    params.name = dayLineFutureName.value
+    await Promise.all([getOpenFutureByName(), getFutureDayLineList(params)])
 
-    let buyNum = 0
-    let buyWinNum = 0
-    let saleNum = 0
-    let saleWinNum = 0
-    let saleProfit = 0
-    let saleProfitUp = 0
-    let saleProfitDown = 0
-    let buyProfit = 0
-    let buyProfitUp = 0
-    let buyProfitDown = 0
-    let totalProfit = 0
+    const {
+        lineXAxis,
+        lineYAxis,
+        lineYAxis1,
+        lineYAxis2,
+    } = formatDayLineData(designatedOpenFutureLists.value, futureDayLineList.value)
 
-    const chFutureMap = {}
-    analyseList.value.forEach(item => {
-        if (!chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]]) {
-            chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]] = {
-                winNum: 0,
-                totalNum: 0,
-                totalProfit: 0,
-            }
-        }
-        if (item.totalProfit > 0) {
-            chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]].winNum ++
-        } 
-        chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]].totalNum ++
-        chFutureMap[enFutureMap.value[item.name.replace(/[^a-zA-Z]/g, '')]].totalProfit += item.totalProfit
-
-        if (item.buyOrSale === 1) { // 平空单
-            saleNum ++
-            if (item.totalProfit > 0) {
-                saleWinNum ++
-                saleProfitUp += item.totalProfit
-            } else {
-                saleProfitDown += item.totalProfit
-            }
-            saleProfit += item.totalProfit
-        } else { // 平多单
-            buyNum ++
-            if (item.totalProfit > 0) { // 盈利
-                buyWinNum ++
-                buyProfitUp += item.totalProfit
-            } else {
-                buyProfitDown += item.totalProfit
-            }
-            buyProfit += item.totalProfit
-        }
-        totalProfit += item.totalProfit
+    nextTick(() => {
+        destroyLineChart()
+        lineChartIns = echarts.init(document.getElementById('lineChart'))
+        lineChartIns.setOption(getLineOption(lineXAxis, lineYAxis, lineYAxis1, lineYAxis2))
     })
+}
 
-    barChartMaxWidth.value = Object.keys(chFutureMap).length * 50 < 500 ?  500 : Object.keys(chFutureMap).length * 50
+const initBasicInfo = async () => {
+    if (!isLogin.value) return
+    const requestParams = parseDateParams(basicDate.value)
+    closeFutureLists.value = await getCloseFutureByDate(requestParams)
+
+    const params = formatBasicData(enFutureMap.value, closeFutureLists.value)
+
+    barChartMaxWidth.value = Object.keys(params.chFutureMap).length * 60 < 500 ?  500 : Object.keys(params.chFutureMap).length * 60
     
     nextTick(() => {
         destroyBarChart()
         barChartIns = echarts.init(document.getElementById('barChart'))
-        barChartIns.setOption(getBarOption(chFutureMap))
+        barChartIns.setOption(getBarOption(params.chFutureMap))
         barChartIns.dispatchAction({
             type: 'showTip',
             seriesIndex: 0,
             dataIndex: 0,
         })
     })
-    analyseResult.buyRate = (buyWinNum / buyNum * 100).toFixed(2) * 1 || 0
-    analyseResult.saleRate = (saleWinNum / saleNum * 100).toFixed(2) * 1 || 0
-    analyseResult.totalRate = ((saleWinNum + buyWinNum) / (buyNum + saleNum) * 100).toFixed(2) * 1 || 0
-    analyseResult.preBuyProfit = (buyProfit / buyNum).toFixed(1) * 1 || 0
-    analyseResult.preBuyProfitUp = (buyProfitUp / buyWinNum).toFixed(1) * 1 || 0
-    analyseResult.preBuyProfitDown = (buyProfitDown / (buyNum - buyWinNum)).toFixed(1) * 1 || 0
-    analyseResult.preSaleProfit = (saleProfit / saleNum).toFixed(1) * 1 || 0
-    analyseResult.preSaleProfitUp = (saleProfitUp / saleWinNum).toFixed(1) * 1 || 0
-    analyseResult.preSaleProfitDown = (saleProfitDown / (saleNum - saleWinNum)).toFixed(1) * 1 || 0
+    analyseResult.buyRate = params.buyRate
+    analyseResult.saleRate = params.saleRate
+    analyseResult.totalRate = params.totalRate
+    analyseResult.preBuyProfit = params.preBuyProfit
+    analyseResult.preBuyProfitUp = params.preBuyProfitUp
+    analyseResult.preBuyProfitDown = params.preBuyProfitDown
+    analyseResult.preSaleProfit = params.preSaleProfit
+    analyseResult.preSaleProfitUp = params.preSaleProfitUp
+    analyseResult.preSaleProfitDown = params.preSaleProfitDown
 
-    analyseResult.saleProfit = bigNumTransform(saleProfit, { merge: false })
-    analyseResult.saleProfitUp = bigNumTransform(saleProfitUp, { merge: false })
-    analyseResult.saleProfitDown = bigNumTransform(saleProfitDown, { merge: false })
-    analyseResult.buyProfit = bigNumTransform(buyProfit, { merge: false })
-    analyseResult.buyProfitUp = bigNumTransform(buyProfitUp, { merge: false })
-    analyseResult.buyProfitDown = bigNumTransform(buyProfitDown, { merge: false })
-    analyseResult.totalProfit = totalProfit.toFixed(2) * 1 || 0
+    analyseResult.saleProfit = params.saleProfit
+    analyseResult.saleProfitUp = params.saleProfitUp
+    analyseResult.saleProfitDown = params.saleProfitDown
+    analyseResult.buyProfit = params.buyProfit
+    analyseResult.buyProfitUp = params.buyProfitUp
+    analyseResult.buyProfitDown = params.buyProfitDown
+    analyseResult.totalProfit = params.totalProfit
 }
 
 const destroyBarChart = () => {
@@ -447,30 +482,47 @@ const destroyBarChart = () => {
     }
 }
 
-const changeAnalyseDateHandle = () => {
-    analyseAccount()
+const destroyLineChart = () => {
+    if (lineChartIns) {
+        lineChartIns.clear()
+        lineChartIns.dispose()
+        lineChartIns = null
+        document.getElementById('lineChart').removeAttribute('_echarts_instance_')
+    }
 }
 
-const selectDate = (num) => {
+const changeBasicDate = () => {
+    initBasicInfo()
+}
+
+const changeDayLineDate = () => {
+    initDayLineChart()
+}
+
+const changeDayLineFuture = () => {
+    initDayLineChart()
+}
+
+const changeCalendarDate = (num) => {
     if (num) {
         calendarDate.value = calculateDate(dateFormat(calendarDate.value, 'yyyy-MM'), num) + '-01'
     }
     
-    getAnalyseCalendarHandle()
+    initCalendar()
 }
 
-const selectYear = (value) => {
+const changeCalendarYear = (value) => {
     if (typeof value === 'number') {
         const year = new Date(calendarYear.value).getFullYear()
         calendarYear.value = `${year + value}-01-01`
     }
-    getAnalyseCalendarHandle()
+    initCalendar()
 }
 
-const getDateCellClass = (data) => {
-    let itemData = analyseCalendarData.value[data.day.slice(0, 7)]
-    if (showMonthCalendar.value) {
-        itemData = analyseCalendarData.value[data.day]
+const getCalendarCellClass = (data) => {
+    let itemData = calendarDataMap.value[data.day.slice(0, 7)]
+    if (monthCalendarShowStatus.value) {
+        itemData = calendarDataMap.value[data.day]
         const cellDay = (new Date(data.day)).getDay()
         if (cellDay === 0 || cellDay === 6) { // 周末
             return 'weekend-day-cell'
@@ -483,7 +535,7 @@ const getDateCellClass = (data) => {
         }
     }
 
-    if (calendarIsLoading.value) return ''
+    if (calendarLoadingStatus.value) return ''
 
     let className = ''
     if (itemData) {
@@ -492,7 +544,7 @@ const getDateCellClass = (data) => {
         } else {
             className = 'green-calendar-cell'
         }
-    } else if (showMonthCalendar.value) {
+    } else if (monthCalendarShowStatus.value) {
         className = 'normal-calendar-cell'
     } else {
         className = 'no-data-month-cell'
@@ -500,12 +552,12 @@ const getDateCellClass = (data) => {
     return className
 }
 
-const fromatDateCellData = (data) => {
-    if (calendarIsLoading.value) return ''
+const formatCalendarCellData = (data) => {
+    if (calendarLoadingStatus.value) return ''
 
-    let itemData = analyseCalendarData.value[data.day.slice(0, 7)]
-    if (showMonthCalendar.value) {
-        itemData = analyseCalendarData.value[data.day]
+    let itemData = calendarDataMap.value[data.day.slice(0, 7)]
+    if (monthCalendarShowStatus.value) {
+        itemData = calendarDataMap.value[data.day]
         const cellDay = (new Date(data.day)).getDay()
         if (festivalList.includes(data.day) || festivalMap[data.day] || festivalMap[data.day.slice(5, 10)]) {
             return festivalMap[data.day] || festivalMap[data.day.slice(5, 10)] || '休'
@@ -523,46 +575,52 @@ const fromatDateCellData = (data) => {
     }
 }
 
-const changeSwitch = () => {
-    if (!showMonthCalendar.value) { // 切换为年，立即请求数据
-        getAnalyseCalendarHandle()
+const changeCalendarDim = () => {
+    if (!monthCalendarShowStatus.value) { // 切换为年，立即请求数据
+        initCalendar()
     }
 }
 
-const clickMonCalHandle = (value) => {
-    showMonthCalendar.value = true
+const drillingMonthCalendar = (value) => {
+    monthCalendarShowStatus.value = true
     calendarDate.value = value.day + '-01'
-    getAnalyseCalendarHandle()
+    initCalendar()
 }
 
 const initAnalyseData = () => {
+    initBasicInfo()
+    initCalendar()
+    initDayLineChart()
+}
+
+const getDataWhileActive = () => {
     if (activeOrderTab.value === 'analyse' && isLogin.value) {
-        analyseAccount()
-        getAnalyseCalendarHandle()
+        initAnalyseData()
     }
 }
 
 watch(isLogin, (value) => {
     if (value) {
-        initAnalyseData()
+        getDataWhileActive()
     } else {
-        setAnalyseList([]) // 清空数据
-        setAnalyseCalendarData({}) // 清空数据
-        analyseAccount()
-        getAnalyseCalendarHandle()
+        closeFutureLists.value = [] // 清空数据
+        designatedOpenFutureLists.value = [] // 清空数据
+        calendarDataMap.value = {} // 清空数据
+        initAnalyseData()
     }
 })
 
 watch(activeOrderTab, () => {
-    initAnalyseData()
+    getDataWhileActive()
 })
 
 onMounted(() => {
-    initAnalyseData()
+    getDataWhileActive()
 })
 
 onBeforeUnmount(() => {
     destroyBarChart()
+    destroyLineChart()
 })
 </script>
 
@@ -702,6 +760,19 @@ onBeforeUnmount(() => {
     max-width: 100%;
     background: white;
 }
+#lineChart {
+    height: 70vh;
+    width: 100%;
+    max-width: 100%;
+    background: white;
+}
+.line-chart-filter-wrap {
+    display: flex;
+}
+.analyse-select {
+    width: 120px;
+    margin-left: 12px;
+}
 </style>
 
 <style>
@@ -737,5 +808,14 @@ onBeforeUnmount(() => {
     box-shadow: none!important;
     border: 1px solid #333;
     z-index: 100!important;
+}
+.analyse-date-picker.el-input__inner {
+    height: 28px;
+}
+.analyse-date-picker.el-input__suffix {
+    height: 28px;
+}
+.analyse-select.el-select .el-input__inner {
+    height: 28px;
 }
 </style>
