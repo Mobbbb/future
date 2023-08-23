@@ -71,7 +71,7 @@ import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue'
 import { useStore } from 'vuex'
 import { fetchInsertOrder, fetchRecentlyFeature } from '@/api'
 import { ElMessage } from 'element-plus'
-import { getLineOption } from './option'
+import { getOrderLineOption } from './option'
 import { dateFormat } from 'umob'
 
 const futuresNum = 6
@@ -240,7 +240,7 @@ const orderPriceClick = (row, index) => {
         }
     })
     const lineChartIns = echarts.init(document.getElementById('lineChart' + index))
-    lineChartIns.setOption(getLineOption(echartLists))
+    lineChartIns.setOption(getOrderLineOption(echartLists))
 }
 
 const rerenderTable = async () => {
