@@ -164,7 +164,7 @@ export const formatBasicData = (enFutureMap, basciInfo) => {
 
 export const formatCalendarData = (result, {
     calendarDataMap,
-    showMonthCalendar,
+    dayCalendarShowStatus,
     yearMothKey,
     yearKey,
 }) => {
@@ -184,8 +184,8 @@ export const formatCalendarData = (result, {
     Object.keys(dateMap).forEach(date => {
         dateMap[date] = dateMap[date].reduce((a, b) => a + b, 0)
     })
-    if (showMonthCalendar) dateMap[yearMothKey] = 1 // 表示月份数据已获取
-    if (!showMonthCalendar) {
+    if (dayCalendarShowStatus) dateMap[yearMothKey] = 1 // 表示月份数据已获取
+    if (!dayCalendarShowStatus) {
         dateMap[yearMothKey] = 1 // 表示年和月份数据已获取
         dateMap[yearKey] = 1 // 表示年和月份数据已获取
     }

@@ -190,7 +190,7 @@
             </el-card>
             <el-card class="analyse-card" style="margin: 12px;">
                 <div class="analyse-calendar-header">
-                    <div class="date-picker-wrap" v-if="monthCalendarShowStatus">
+                    <div class="date-picker-wrap" v-if="dayCalendarShowStatus">
                         <el-button  type="text" 
                                     :icon="DArrowLeft" 
                                     class="header-icon-btn change-date-icon" 
@@ -234,13 +234,13 @@
                     </div>
                     <el-switch
                         @change="changeCalendarDim"
-                        v-model="monthCalendarShowStatus"
+                        v-model="dayCalendarShowStatus"
                         inline-prompt
                         style="--el-switch-on-color: #13ce66; --el-switch-off-color: var(--el-color-primary)"
                         active-text="月"
                         inactive-text="年"/>
                 </div>
-                <el-calendar v-if="monthCalendarShowStatus" class="analyse-calendar" v-model="calendarInnerDate" @input="initCalendar">
+                <el-calendar v-if="dayCalendarShowStatus" class="analyse-calendar" v-model="calendarInnerDate" @input="initCalendar">
                     <template #header><div></div></template>
                     <template #dateCell="{ data }">
                         <div class="date-cell" :class="getCalendarCellClass(data)">
@@ -331,7 +331,7 @@ const basicDate = ref(monthShortcuts[0].value)
 const dayLineDate = ref(getGapDate(30))
 
 const calendarLoadingStatus = ref(false)
-const monthCalendarShowStatus = ref(true)
+const dayCalendarShowStatus = ref(true)
 const barChartMaxWidth = ref(0)
 const dayLineFutureName = ref('')
 const closeFutureLists = ref([])
@@ -389,7 +389,7 @@ const getOpenFutureByName = async () => { // 指定品种的开仓订单
 const initCalendar = async (date) => {
     if (!isLogin.value) return
     let dateRange = []
-    if (monthCalendarShowStatus.value) {
+    if (dayCalendarShowStatus.value) {
         const dateParam = date && dateFormat(date) || calendarDate.value
         const day = new Date(dateParam.slice(0, 4), dateParam.slice(6, 7), 0).getDate()
         dateRange = [dateParam.slice(0, 8) + '01', `${dateParam.slice(0, 8)}${day}`]
@@ -400,8 +400,8 @@ const initCalendar = async (date) => {
 
     const yearMothKey = `${dateRange[1].slice(0, 7)}-status`
     const yearKey = `${dateRange[1].slice(0, 4)}-status`
-    if (calendarDataMap.value[yearMothKey] && monthCalendarShowStatus.value) return // 如果该月份数据已获取，不再重新请求
-    if (calendarDataMap.value[yearKey] && !monthCalendarShowStatus.value) return // 如果该年份数据已获取，不再重新请求
+    if (calendarDataMap.value[yearMothKey] && dayCalendarShowStatus.value) return // 如果该月份数据已获取，不再重新请求
+    if (calendarDataMap.value[yearKey] && !dayCalendarShowStatus.value) return // 如果该年份数据已获取，不再重新请求
 
     calendarLoadingStatus.value = true
     const params = parseDateParams(dateRange)
@@ -410,7 +410,7 @@ const initCalendar = async (date) => {
 
     formatCalendarData(result, {
         calendarDataMap: calendarDataMap.value,
-        monthCalendarShowStatus: monthCalendarShowStatus.value,
+        dayCalendarShowStatus: dayCalendarShowStatus.value,
         yearMothKey,
         yearKey,
     })
@@ -521,7 +521,7 @@ const changeCalendarYear = (value) => {
 
 const getCalendarCellClass = (data) => {
     let itemData = calendarDataMap.value[data.day.slice(0, 7)]
-    if (monthCalendarShowStatus.value) {
+    if (dayCalendarShowStatus.value) {
         itemData = calendarDataMap.value[data.day]
         const cellDay = (new Date(data.day)).getDay()
         if (cellDay === 0 || cellDay === 6) { // 周末
@@ -544,7 +544,7 @@ const getCalendarCellClass = (data) => {
         } else {
             className = 'green-calendar-cell'
         }
-    } else if (monthCalendarShowStatus.value) {
+    } else if (dayCalendarShowStatus.value) {
         className = 'normal-calendar-cell'
     } else {
         className = 'no-data-month-cell'
@@ -556,7 +556,7 @@ const formatCalendarCellData = (data) => {
     if (calendarLoadingStatus.value) return ''
 
     let itemData = calendarDataMap.value[data.day.slice(0, 7)]
-    if (monthCalendarShowStatus.value) {
+    if (dayCalendarShowStatus.value) {
         itemData = calendarDataMap.value[data.day]
         const cellDay = (new Date(data.day)).getDay()
         if (festivalList.includes(data.day) || festivalMap[data.day] || festivalMap[data.day.slice(5, 10)]) {
@@ -576,13 +576,13 @@ const formatCalendarCellData = (data) => {
 }
 
 const changeCalendarDim = () => {
-    if (!monthCalendarShowStatus.value) { // 切换为年，立即请求数据
+    if (!dayCalendarShowStatus.value) { // 切换为年，立即请求数据
         initCalendar()
     }
 }
 
 const drillingMonthCalendar = (value) => {
-    monthCalendarShowStatus.value = true
+    dayCalendarShowStatus.value = true
     calendarDate.value = value.day + '-01'
     initCalendar()
 }
