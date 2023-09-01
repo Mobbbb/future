@@ -15,6 +15,76 @@ export const filterDataByText = (text, data, key = 'ubbContent') => {
     return filterData
 }
 
+export const formatPriceLineData = (designatedFutureLists) => {
+    const lineXAxis1 = []
+    const lineXAxis2 = []
+    const buyList = []
+    const saleList = []
+    const openOrderMap = {}
+    const totalPrice = []
+    const lineXAxisInfo1 = []
+    const lineXAxisInfo2 = []
+    designatedFutureLists.forEach(item => {
+        if (item.openOrClose) {
+            openOrderMap[item.id] = item // 开仓id - 开仓信息
+        }
+        if (item.buyOrSale && !item.openOrClose) { // 买平
+            buyList.push(item)
+        } else if (!item.buyOrSale && !item.openOrClose) { // 卖平
+            saleList.push(item)
+        }
+    })
+
+    const lineYAxis1 = []
+    saleList.forEach(item => { // 平多
+        item.linkId.split(',').forEach(id => {
+            // 买开/卖平
+            lineYAxis1.push([openOrderMap[id].price, item.price, item.price, item.price])
+            lineXAxis1.push(`${item.date.slice(5, 7)}.${item.date.slice(8, 10)} ${item.date.slice(11, 13)}h`)
+            totalPrice.push(openOrderMap[id].price)
+            totalPrice.push(item.price)
+            lineXAxisInfo1.push([item, openOrderMap[id]])
+        })
+    })
+
+    const lineYAxis2 = []
+    buyList.forEach(item => {
+        item.linkId.split(',').forEach(id => {
+            // 买平/卖开
+            lineYAxis2.push([item.price, openOrderMap[id].price, item.price, item.price])
+            lineXAxis2.push(`${item.date.slice(5, 7)}.${item.date.slice(8, 10)} ${item.date.slice(11, 13)}h`)
+            totalPrice.push(openOrderMap[id].price)
+            totalPrice.push(item.price)
+            lineXAxisInfo2.push([item, openOrderMap[id]])
+        })
+    })
+
+    const delta = lineYAxis1.length - lineYAxis2.length
+    if (delta > 0) {
+        for (let i = 0; i < Math.abs(delta); i++) {
+            lineXAxis2.unshift('')
+            lineYAxis2.unshift([])
+            lineXAxisInfo2.unshift(null)
+        }
+    } else if (delta < 0) {
+        for (let i = 0; i < Math.abs(delta); i++) {
+            lineXAxis1.unshift('')
+            lineYAxis1.unshift([])
+            lineXAxisInfo1.unshift(null)
+        }
+    }
+
+    return {
+        lineXAxis1,
+        lineXAxis2,
+        lineYAxis1,
+        lineYAxis2,
+        totalPrice,
+        lineXAxisInfo1,
+        lineXAxisInfo2,
+    }
+}
+
 export const formatDayLineData = (designatedOpenFutureLists, futureDayLineList) => {
     const dayLineDateMap = {} // date-dayLineItem
     const dayFutureMap = {
@@ -89,7 +159,7 @@ export const formatDayLineData = (designatedOpenFutureLists, futureDayLineList) 
     }
 }
 
-export const formatBasicData = (enFutureMap, basciInfo) => {
+export const formatBasicData = (enFutureNameMap, basciInfo) => {
     let buyNum = 0
     let buyWinNum = 0
     let saleNum = 0
@@ -104,18 +174,18 @@ export const formatBasicData = (enFutureMap, basciInfo) => {
 
     const chFutureMap = {} // 中文名-futureList
     basciInfo.forEach(item => {
-        if (!chFutureMap[enFutureMap[item.name.replace(/[^a-zA-Z]/g, '')]]) {
-            chFutureMap[enFutureMap[item.name.replace(/[^a-zA-Z]/g, '')]] = {
+        if (!chFutureMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]]) {
+            chFutureMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]] = {
                 winNum: 0,
                 totalNum: 0,
                 totalProfit: 0,
             }
         }
         if (item.totalProfit > 0) {
-            chFutureMap[enFutureMap[item.name.replace(/[^a-zA-Z]/g, '')]].winNum ++
+            chFutureMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]].winNum ++
         } 
-        chFutureMap[enFutureMap[item.name.replace(/[^a-zA-Z]/g, '')]].totalNum ++
-        chFutureMap[enFutureMap[item.name.replace(/[^a-zA-Z]/g, '')]].totalProfit += item.totalProfit
+        chFutureMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]].totalNum ++
+        chFutureMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]].totalProfit += item.totalProfit
 
         if (item.buyOrSale === 1) { // 平空单
             saleNum ++

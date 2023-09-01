@@ -203,6 +203,8 @@
                                         style="width: 120px;" 
                                         :clearable="false" 
                                         :editable="false"
+                                        class="analyse-date-picker"
+                                        popper-class="date-picker-popper month-picker-popper"
                                         @change="changeCalendarDate('')">
                         </el-date-picker>
                         <el-button  type="text" 
@@ -260,23 +262,18 @@
             </el-card>
             <el-card class="analyse-card" style="margin: 12px;">
                 <div class="line-chart-filter-wrap">
-                    <el-date-picker
-                        v-model="dayLineDate"
-                        type="daterange"
-                        unlink-panels
-                        range-separator="To"
-                        start-placeholder="开始日期"
-                        end-placeholder="结束日期"
-                        :clearable="false"
-                        :editable="false"
-                        :shortcuts="shortcuts"
-                        @change="changeDayLineDate"
-                        class="analyse-date-picker"
-                        popper-class="date-picker-popper"
-                        style="width: 260px;" />
                     <el-select class="analyse-select" v-model="dayLineFutureNameBindValue" @change="changeDayLineFuture">
                         <el-option :label="item.chName" :value="item.name" v-for="item in futuresList"></el-option>
                     </el-select>
+                    <el-date-picker
+                        v-model="kLineDate"
+                        type="month"
+                        :clearable="false"
+                        :editable="false"
+                        @change="changeKLineDate"
+                        class="analyse-date-picker"
+                        popper-class="date-picker-popper month-picker-popper"
+                        style="width: 100px;" />
                 </div>
                 <div id="lineChart"></div>
             </el-card>
@@ -292,13 +289,16 @@ import festivalMap, { festivalList } from '@/config/festivalMap'
 import { getBarOption, getLineOption } from './option'
 import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import MonthlyCalendar from '@/components/monthly-calendar.vue'
-import { dateFormat, calculateDate } from 'umob'
-import { formatDayLineData, formatBasicData, formatCalendarData } from '@/libs/data-processing'
+import { dateFormat, calculateDate, toMonth } from 'umob'
+import { formatPriceLineData, formatBasicData, formatCalendarData } from '@/libs/data-processing'
 import { fetchOrderInfoHandle  } from '@/api'
+
+const store = new useStore()
+
+const K_LINE_DATE_KEY_NAME = computed(() => `K-LINE-DATE-${store.state.app.USER_INFO.userId}`)
 
 let barChartIns = null
 let lineChartIns = null
-const store = new useStore()
 const monthShortcuts = getMonthShortcuts()
 const shortcuts = [
     { text: '今日', value: () => getGapDate() },
@@ -328,18 +328,19 @@ const analyseResult = reactive({
 const calendarDate = ref(dateFormat(new Date()))
 const calendarYear = ref(dateFormat(new Date()))
 const basicDate = ref(monthShortcuts[0].value)
-const dayLineDate = ref(getGapDate(30))
+const kLineDate = localStorage.getItem(K_LINE_DATE_KEY_NAME.value) 
+    ? ref(localStorage.getItem(K_LINE_DATE_KEY_NAME.value))
+    : ref(calculateDate(dateFormat(new Date(), 'yyyy-MM'), 1))
 
 const calendarLoadingStatus = ref(false)
 const dayCalendarShowStatus = ref(true)
 const barChartMaxWidth = ref(0)
 const dayLineFutureName = ref('')
 const closeFutureLists = ref([])
-const designatedOpenFutureLists = ref([])
 const calendarDataMap = ref({})
 
-const futureDayLineList = computed(() => store.state.order.futureDayLineList)
 const activeOrderTab = computed(() => store.state.app.activeOrderTab)
+const enFutureNameMap = computed(() => store.getters['order/enFutureNameMap'])
 const enFutureMap = computed(() => store.getters['order/enFutureMap'])
 const isLogin = computed(() => store.getters['app/isLogin'])
 const futuresList = computed(() => store.getters['order/futuresList'])
@@ -365,8 +366,6 @@ const dayLineFutureNameBindValue = computed({
     },
 })
 
-const getFutureDayLineList = (params) => store.dispatch('order/getFutureDayLineList', params)
-
 const getCloseFutureByDate = async (dateParams) => { // 所有平仓订单
     const response = await fetchOrderInfoHandle({
         ...dateParams,
@@ -375,15 +374,14 @@ const getCloseFutureByDate = async (dateParams) => { // 所有平仓订单
     return response.result
 }
 
-const getOpenFutureByName = async () => { // 指定品种的开仓订单
-    if (!isLogin.value) return
-    const params = parseDateParams(dayLineDate.value)
+const getFutureByName = async () => { // 指定品种的全部订单
+    if (!isLogin.value) return []
+    const formatDayLineDate = toMonth(kLineDate.value)
     const res = await fetchOrderInfoHandle({
-        ...params,
-        name: dayLineFutureName.value,
-        openOrClose: 1,
+        name: `${dayLineFutureName.value}${formatDayLineDate.slice(2, 4)}${formatDayLineDate.slice(5, 7)}`,
+        orderBy: 'ASC',
     })
-    designatedOpenFutureLists.value = res.result
+    return res.result || []
 }
 
 const initCalendar = async (date) => {
@@ -417,21 +415,15 @@ const initCalendar = async (date) => {
 }
 
 const initDayLineChart = async () => {
-    const params = parseDateParams(dayLineDate.value)
-    params.name = dayLineFutureName.value
-    await Promise.all([getOpenFutureByName(), getFutureDayLineList(params)])
-
-    const {
-        lineXAxis,
-        lineYAxis,
-        lineYAxis1,
-        lineYAxis2,
-    } = formatDayLineData(designatedOpenFutureLists.value, futureDayLineList.value)
+    const designatedFutureLists = await getFutureByName()
 
     nextTick(() => {
+        const params = formatPriceLineData(designatedFutureLists)
+        const option = getLineOption(params, enFutureMap.value[dayLineFutureName.value])
+
         destroyLineChart()
         lineChartIns = echarts.init(document.getElementById('lineChart'))
-        lineChartIns.setOption(getLineOption(lineXAxis, lineYAxis, lineYAxis1, lineYAxis2))
+        lineChartIns.setOption(option)
     })
 }
 
@@ -440,7 +432,7 @@ const initBasicInfo = async () => {
     const requestParams = parseDateParams(basicDate.value)
     closeFutureLists.value = await getCloseFutureByDate(requestParams)
 
-    const params = formatBasicData(enFutureMap.value, closeFutureLists.value)
+    const params = formatBasicData(enFutureNameMap.value, closeFutureLists.value)
 
     barChartMaxWidth.value = Object.keys(params.chFutureMap).length * 60 < 500 ?  500 : Object.keys(params.chFutureMap).length * 60
     
@@ -495,7 +487,8 @@ const changeBasicDate = () => {
     initBasicInfo()
 }
 
-const changeDayLineDate = () => {
+const changeKLineDate = () => {
+    localStorage.setItem(K_LINE_DATE_KEY_NAME.value, toMonth(kLineDate.value))
     initDayLineChart()
 }
 
@@ -604,7 +597,6 @@ watch(isLogin, (value) => {
         getDataWhileActive()
     } else {
         closeFutureLists.value = [] // 清空数据
-        designatedOpenFutureLists.value = [] // 清空数据
         calendarDataMap.value = {} // 清空数据
         initAnalyseData()
     }
@@ -761,7 +753,7 @@ onBeforeUnmount(() => {
     background: white;
 }
 #lineChart {
-    height: 70vh;
+    height: 460px;
     width: 100%;
     max-width: 100%;
     background: white;
@@ -771,7 +763,7 @@ onBeforeUnmount(() => {
 }
 .analyse-select {
     width: 120px;
-    margin-left: 12px;
+    margin-right: 12px;
 }
 </style>
 
@@ -817,5 +809,9 @@ onBeforeUnmount(() => {
 }
 .analyse-select.el-select .el-input__inner {
     height: 28px;
+}
+.analyse-date-picker .el-input__inner {
+    height: 28px;
+    padding-right: 4px;
 }
 </style>

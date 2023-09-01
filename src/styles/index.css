@@ -107,10 +107,16 @@ input {
     .date-picker-popper .el-date-range-picker.has-sidebar {
         width: 100%;
     }
+    .month-picker-popper {
+        right: unset;
+    }
 }
 .date-picker-popper .el-picker-panel__sidebar {
     width: 66px;
     transition: .2s all;
+}
+.month-picker-popper  .el-picker-panel__content {
+    margin-bottom: 8px;
 }
 .detail-picker-popper .el-picker-panel__sidebar {
     width: 70px;

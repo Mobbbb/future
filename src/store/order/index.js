@@ -19,10 +19,17 @@ const order = {
         closeSettingfuturesList(state) { // 可平今的合约品种
             return state.futureConfigInfo.filter(item => item.canCloseInDay)
         },
-        enFutureMap(state) { // 英文名-中文名
+        enFutureNameMap(state) { // 英文名-中文名
             const obj = {}
             state.futureConfigInfo.forEach(item => {
                 obj[item.name] = item.chName
+            })
+            return obj
+        },
+        enFutureMap(state) {
+            const obj = {}
+            state.futureConfigInfo.forEach(item => {
+                obj[item.name] = item
             })
             return obj
         },

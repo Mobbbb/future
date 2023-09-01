@@ -338,8 +338,18 @@ export const getBarOption = (data) => {
     return option
 }
 
-export const getLineOption = (lineXAxis, lineYAxis, lineYAxis1, lineYAxis2) => {
-    let combineArr = new Set([...lineYAxis, ...lineYAxis1, ...lineYAxis2])
+export const getLineOption = (params, config) => {
+    const {
+        lineXAxis1,
+        lineXAxis2,
+        lineYAxis1,
+        lineYAxis2,
+        totalPrice,
+        lineXAxisInfo1,
+        lineXAxisInfo2,
+    } = params
+
+    let combineArr = new Set(totalPrice)
     combineArr.delete(null)
     let min = Math.min(...combineArr)
     const minLength = String(min).length
@@ -353,6 +363,74 @@ export const getLineOption = (lineXAxis, lineYAxis, lineYAxis1, lineYAxis2) => {
             axisPointer: {
                 animation: false
             },
+            className: 'k-line-tooltip',
+            formatter: function(data) {
+                let buyItem = {}
+                let saleItem = {}
+                if (data[0].seriesName === '多单') {
+                    buyItem = data[0]
+                    saleItem = data[1]
+                } else {
+                    buyItem = data[1]
+                    saleItem = data[0]
+                }
+
+                let buyDate1 = ''
+                let buyDate2 = ''
+                let saleDate1 = ''
+                let saleDate2 = ''
+                if (lineXAxisInfo1[buyItem.data[0]]) {
+                    buyDate1 = `(${lineXAxisInfo1[buyItem.data[0]][1].date.slice(5)})`
+                    buyDate2 = `(${lineXAxisInfo1[buyItem.data[0]][0].date.slice(5)})`
+                }
+
+                if (lineXAxisInfo2[saleItem.data[0]]) {
+                    saleDate1 = `(${lineXAxisInfo2[saleItem.data[0]][1].date.slice(5)})`
+                    saleDate2 = `(${lineXAxisInfo2[saleItem.data[0]][0].date.slice(5)})`
+                }
+
+                function circleDom(color, size, left = 0, right = 4) {
+                    return `<span style="display: inline-block; width: ${size}px; height: ${size}px; border-radius: 50%; background: ${color}; margin: 0 ${right}px 0 ${left}px;vertical-align: middle;"></span>`
+                }
+
+                return `
+                        <div style="border: 1px solid rgb(255, 255, 255);">
+                            <div style="line-height: 1; margin-top: 4px;">${circleDom('#eb5454', 10)}<span>多单</span></div>          
+                            <div style="line-height: 1; margin-top: 10px;">${circleDom('#eb5454', 4, 3, 7)}买开${buyDate1}
+                                <span style="font-weight: bold;margin-left: 20px; float: right;">${buyItem.data[1] || ''}</span>
+                            </div>
+                            <div style="line-height: 1; margin-top: 10px;">${circleDom('#eb5454', 4, 3, 7)}卖平${buyDate2}
+                                <span style="font-weight: bold;margin-left: 20px; float: right;">${buyItem.data[2] || ''}</span>
+                            </div>
+                            <div style="line-height: 1; margin-top: 10px;">
+                                ${circleDom('#eb5454', 4, 3, 7)}每手盈亏
+                                <span style="color: ${buyItem.data[2] - buyItem.data[1] > 0 ? fillColor[0] : fillColor[1]};font-weight: bold;margin-left: 20px; float: right;">
+                                    ${(buyItem.data[2] - buyItem.data[1]) * config.num || ''}
+                                </span>
+                            </div>
+                            
+                            <div style="line-height: 1; margin-top: 16px;">${circleDom('#47b262', 10)}<span>空单</span></div>  
+                            <div style="line-height: 1; margin-top: 10px;">${circleDom('#47b262', 4, 3, 7)}卖开${saleDate1}
+                                <span style="font-weight: bold;margin-left: 20px; float: right;">${saleItem.data[2] || ''}</span>
+                            </div>        
+                            <div style="line-height: 1; margin-top: 10px;">${circleDom('#47b262', 4, 3, 7)}买平${saleDate2}
+                                <span style="font-weight: bold;margin-left: 20px; float: right;">${saleItem.data[1] || ''}</span>
+                            </div>
+                            <div style="line-height: 1; margin-top: 10px;">
+                                ${circleDom('#47b262', 4, 3, 7)}每手盈亏
+                                <span style="color: ${saleItem.data[2] - saleItem.data[1] > 0 ? fillColor[0] : fillColor[1]};font-weight: bold;margin-left: 20px; float: right;">
+                                    ${(saleItem.data[2] - saleItem.data[1]) * config.num || ''}
+                                </span>
+                            </div>
+                        </div>
+                `
+            },
+            position: function (pos, params, dom, rect, size) {
+                // 鼠标在左侧时 tooltip 显示到右侧，鼠标在右侧时 tooltip 显示到左侧。
+                var obj = { top: 100 }
+                obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 5
+                return obj
+            }
         },
         axisPointer: {
             link: [
@@ -361,94 +439,6 @@ export const getLineOption = (lineXAxis, lineYAxis, lineYAxis1, lineYAxis2) => {
                 }
             ]
         }, 
-        dataZoom: [
-            {
-                show: true,
-                brushSelect: false,
-                showDetail: false,
-                height: 12,
-                bottom: 10,
-                handleIcon: 'path://M512 512m-512 0a512 512 0 1 0 1024 0 512 512 0 1 0-1024 0Z,M663.703704 325.982363v371.734274a26.788948 26.788948 0 0 1-53.276896 0V325.982363a26.788948 26.788948 0 0 1 53.276896 0z m-132.740741 0v371.734274a26.788948 26.788948 0 0 1-53.276896 0V325.982363a26.788948 26.788948 0 0 1 53.276896 0z m-132.740741 0v371.734274a26.788948 26.788948 0 0 1-53.276896 0V325.982363a26.788948 26.788948 0 0 1 53.276896 0z',
-                handleSize: 24,
-                handleStyle: {
-                    color: 'white',
-                    borderWidth: 1,
-                    borderColor: '#dedede',
-                },
-                textStyle: {
-                    fontSize,
-                },
-                backgroundColor: "#f6f7f8",
-                dataBackground: {
-                    lineStyle: {
-                        color: 'transparent',
-                    },
-                    areaStyle: {
-                        color: 'transparent',
-                    },
-                },
-                selectedDataBackground: {
-                    lineStyle: {
-                        color: 'transparent',
-                    },
-                    areaStyle: {
-                        color: 'transparent',
-                    },
-                },
-                fillerColor: '#d5dee6',
-                borderColor: 'transparent',
-                emphasis: {
-                    handleStyle: {
-                        color: 'white',
-                        borderColor: '#dedede',
-                    },
-                },
-                xAxisIndex: [0, 1],
-            },
-            {
-                type: 'inside',
-                brushSelect: false,
-                showDetail: false,
-                height: 12,
-                bottom: 10,
-                handleIcon: 'path://M512 512m-512 0a512 512 0 1 0 1024 0 512 512 0 1 0-1024 0Z,M663.703704 325.982363v371.734274a26.788948 26.788948 0 0 1-53.276896 0V325.982363a26.788948 26.788948 0 0 1 53.276896 0z m-132.740741 0v371.734274a26.788948 26.788948 0 0 1-53.276896 0V325.982363a26.788948 26.788948 0 0 1 53.276896 0z m-132.740741 0v371.734274a26.788948 26.788948 0 0 1-53.276896 0V325.982363a26.788948 26.788948 0 0 1 53.276896 0z',
-                handleSize: 24,
-                handleStyle: {
-                    color: 'white',
-                    borderWidth: 1,
-                    borderColor: '#dedede',
-                },
-                textStyle: {
-                    fontSize,
-                },
-                backgroundColor: "#f6f7f8",
-                dataBackground: {
-                    lineStyle: {
-                        color: 'transparent',
-                    },
-                    areaStyle: {
-                        color: 'transparent',
-                    },
-                },
-                selectedDataBackground: {
-                    lineStyle: {
-                        color: 'transparent',
-                    },
-                    areaStyle: {
-                        color: 'transparent',
-                    },
-                },
-                fillerColor: '#d5dee6',
-                borderColor: 'transparent',
-                emphasis: {
-                    handleStyle: {
-                        color: 'white',
-                        borderColor: '#dedede',
-                    },
-                },
-                xAxisIndex: [0, 1],
-            },
-        ],
         grid: [
             {
                 left: 20,
@@ -461,14 +451,13 @@ export const getLineOption = (lineXAxis, lineYAxis, lineYAxis1, lineYAxis2) => {
                 left: 20,
                 right: 40,
                 top: '55%',
-                height: '37%',
+                height: '40%',
                 containLabel: false,
             }
         ],
         xAxis: [
             {
                 type: 'category',
-                boundaryGap: false,
                 axisLine: {
                     onZero: true,
                     lineStyle: {
@@ -482,12 +471,11 @@ export const getLineOption = (lineXAxis, lineYAxis, lineYAxis1, lineYAxis2) => {
                         fontSize,
                     },
                 },
-                data: lineXAxis,
+                data: lineXAxis1,
             },
             {
                 gridIndex: 1,
                 type: 'category',
-                boundaryGap: false,
                 axisLine: {
                     onZero: true,
                     lineStyle: {
@@ -501,7 +489,7 @@ export const getLineOption = (lineXAxis, lineYAxis, lineYAxis1, lineYAxis2) => {
                         fontSize,
                     },
                 },
-                data: lineXAxis,
+                data: lineXAxis2,
                 position: 'top'
             }
         ],
@@ -549,94 +537,16 @@ export const getLineOption = (lineXAxis, lineYAxis, lineYAxis1, lineYAxis2) => {
         ],
         series: [
             {
-                name: '收盘价',
-                type: 'line',
-                symbolSize: 'none',
-                data: lineYAxis,
-                smooth: true,
-                connectNulls: true,
-                lineStyle: {
-                    color: '#7faaff',
-                    width: 1,
-                },
-                itemStyle: {
-                    color: '#7faaff',
-                },
-            },
-            {
-                name: '多开',
-                type: 'line',
-                symbolSize: 'none',
+                name: '多单',
+                type: 'candlestick',
                 data: lineYAxis1,
-                smooth: true,
-                connectNulls: true,
-                lineStyle: {
-                    color: 'rgba(243, 63, 109, 1)',
-                    width: 1,
-                },
-                itemStyle: {
-                    color: 'rgba(243, 63, 109, 1)',
-                },
-                areaStyle: {
-                    opacity: 0.9,
-                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        {
-                            offset: 0,
-                            color: 'rgba(243, 63, 109, 0.5)'
-                        },
-                        {
-                            offset: 1,
-                            color: 'rgba(243, 63, 109, 0.1)'
-                        }
-                    ]),
-                },
             },
             {
-                name: '收盘价',
-                type: 'line',
+                name: '空单',
+                type: 'candlestick',
                 xAxisIndex: 1,
                 yAxisIndex: 1,
-                symbolSize: 'none',
-                data: lineYAxis,
-                smooth: true,
-                connectNulls: true,
-                lineStyle: {
-                    color: '#7faaff',
-                    width: 1,
-                },
-                itemStyle: {
-                    color: '#7faaff',
-                },
-            },
-            {
-                name: '空开',
-                type: 'line',
-                xAxisIndex: 1,
-                yAxisIndex: 1,
-                symbolSize: 'none',
                 data: lineYAxis2,
-                smooth: true,
-                connectNulls: true,
-                lineStyle: {
-                    color: 'rgba(17, 166, 66, 1)',
-                    width: 1,
-                },
-                itemStyle: {
-                    color: 'rgba(17, 166, 66, 1)',
-                },
-                areaStyle: {
-                    opacity: 0.9,
-                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        {
-                            offset: 0,
-                            color: 'rgba(17, 166, 66, 0.1)'
-                        },
-                        {
-                            offset: 1,
-                            color: 'rgba(17, 166, 66, 0.5)'
-                        }
-                    ]),
-                },
             },
         ]
     }
@@ -644,6 +554,10 @@ export const getLineOption = (lineXAxis, lineYAxis, lineYAxis1, lineYAxis2) => {
 
 export const getOrderLineOption = (data) => {
     return {
+        tooltip: {
+            trigger: 'axis',
+            formatter: `{c}`
+        },
         grid: {
             top: 10,
             bottom: 10,
