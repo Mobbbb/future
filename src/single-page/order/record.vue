@@ -174,7 +174,7 @@
     </div>
 </template>
 
-<script>
+<script setup>
 import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { fetchDeleteOrder, fetchCancelOrder, fetchInsertIncome } from '@/api'
@@ -183,289 +183,249 @@ import { ElMessage } from 'element-plus'
 import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import { dateFormat } from 'umob'
 
-export default {
-    name: 'record',
-    setup() {
-        const monthShortcuts = getMonthShortcuts(5)
-        const store = new useStore()
-        const searchInputWrap = ref()
-        const tableTabWrap = ref()
-        const orderTableHeight = ref(0)
-        const loading = ref(false)
-        const centerDialogVisible = ref(false)
-        const importDialogVisible = ref(false)
-        const maxColunmWidth = ref(80)
-        const orderCountNum = ref({ total: 0 })
-        const submitData = reactive({
-            date: new Date(),
-            num: 0,
-            subNum: 0,
-            name: '',
-            remark: '',
-        })
-        const searchParams = reactive({
-            date: [new Date(), new Date()],
-            name: '',
-            openOrClose: '',
-            startDate: '',
-            endDate: '',
-            status: 0,
-            pageSize: 30,
-            currentPage: 1,
-        })
+const monthShortcuts = getMonthShortcuts(5)
+const store = new useStore()
+const searchInputWrap = ref()
+const tableTabWrap = ref()
+const orderTableHeight = ref(0)
+const loading = ref(false)
+const centerDialogVisible = ref(false)
+const importDialogVisible = ref(false)
+const maxColunmWidth = ref(80)
+const orderCountNum = ref({ total: 0 })
+const submitData = reactive({
+    date: new Date(),
+    num: 0,
+    subNum: 0,
+    name: '',
+    remark: '',
+})
+const searchParams = reactive({
+    date: [new Date(), new Date()],
+    name: '',
+    openOrClose: '',
+    startDate: '',
+    endDate: '',
+    status: 0,
+    pageSize: 30,
+    currentPage: 1,
+})
 
-        const shortcuts = [
-            { text: '今日', value: () => [new Date(), new Date()] },
-            { text: '近7天', value: () => getGapDate(7) },
-            { text: '近30天', value: () => getGapDate(30) },
-            { text: '近365天', value: () => getGapDate(365) },
-            ...monthShortcuts,
-        ]
+const shortcuts = [
+    { text: '今日', value: () => [new Date(), new Date()] },
+    { text: '近7天', value: () => getGapDate(7) },
+    { text: '近30天', value: () => getGapDate(30) },
+    { text: '近365天', value: () => getGapDate(365) },
+    ...monthShortcuts,
+]
 
-        const orderList = computed(() => store.state.order.orderList)
-        const activeOrderTab = computed(() => store.state.app.activeOrderTab)
-        const isLogin = computed(() => store.getters['app/isLogin'])
-        const isAdministrator = computed(() => store.getters['app/isAdministrator'])
-        const overMediaCritical = computed(() => store.getters['app/overMediaCritical'])
+const orderList = computed(() => store.state.order.orderList)
+const activeOrderTab = computed(() => store.state.app.activeOrderTab)
+const isLogin = computed(() => store.getters['app/isLogin'])
+const isAdministrator = computed(() => store.getters['app/isAdministrator'])
+const overMediaCritical = computed(() => store.getters['app/overMediaCritical'])
 
-        const accountName = computed(() => {
-            const { account = '' } = store.state.app.USER_INFO
-            if (account) {
-                submitData.name = [...account.split(',').slice(0, 2)]
-                return account.split(',')
-            }
-            return []
-        })
+const accountName = computed(() => {
+    const { account = '' } = store.state.app.USER_INFO
+    if (account) {
+        submitData.name = [...account.split(',').slice(0, 2)]
+        return account.split(',')
+    }
+    return []
+})
 
-        const getOrderData = (params) => store.dispatch('order/getOrderData', params)
-        const setOrderList = (value) => store.commit('order/setOrderList', value)
+const getOrderData = (params) => store.dispatch('order/getOrderData', params)
+const setOrderList = (value) => store.commit('order/setOrderList', value)
 
-        const tableRowClassName = ({ row }) => {
-            if (!row.openOrClose) {
-                return 'negative-row'
-            } else if (row.closeHands === row.hands) { // 已被全平
-                return 'disable-row'
-            }
-        }
-
-        const onPageChange = (value) => {
-            searchParams.currentPage = value
-            getTableData()
-        }
-
-        const getTableData = async () => {
-            if (!isLogin.value) return
-            const params = parseDateParams(searchParams.date)
-            searchParams.startDate = params.startDate
-            searchParams.endDate = params.endDate
-            loading.value = true
-            orderCountNum.value = await getOrderData(searchParams)
-            let strLength = 0
-            orderList.value.forEach(item => {
-                if (item.linkId.length > strLength && item.linkId) {
-                    strLength = item.linkId.length
-                }
-            })
-            if (strLength) maxColunmWidth.value = strLength * 9 < 80 ? 80 : strLength * 9
-            loading.value = false
-            submitData.num = orderCountNum.value.totalProfit || 0
-        }
-
-        let currentDeleteItem = null
-        const deleteRow = async (data) => {
-            currentDeleteItem = data
-            centerDialogVisible.value = true
-        }
-
-        const cancelRow = async (data) => {
-            loading.value = true
-            await fetchCancelOrder(data.row) // 回退开仓单
-            getTableData()
-        }
-
-        const confirmDelete = async () => {
-            if (currentDeleteItem) {
-                loading.value = true
-                await fetchDeleteOrder(currentDeleteItem.row.id)
-                getTableData()
-            }
-            centerDialogVisible.value = false
-        }
-
-        const getSummaries = (param) => {
-            const { columns } = param
-            const sums = []
-            const calcPropertyArr = ['totalProfit', 'commission', 'profit']
-            columns.forEach((column, index) => {
-                if (index === 0) {
-                    sums[index] = '总计'
-                } else if (!calcPropertyArr.includes(column.property)) {
-                    sums[index] = '--'
-                } else {
-                    sums[index] = orderCountNum.value[column.property] || '--'
-                }
-                // const values = data.map((item) => Number(item[column.property]))
-                // if (!values.every((value) => Number.isNaN(value))) {
-                //     sums[index] = values.reduce((prev, curr) => {
-                //         const value = Number(curr)
-                //         if (!Number.isNaN(value)) {
-                //             return prev + curr
-                //         } else {
-                //             return prev
-                //         }
-                //     }, 0)
-                //     sums[index] = sums[index].toFixed(2)
-                // } else {
-                //     sums[index] = '--'
-                // }
-            })
-            return sums
-        }
-        
-        const searchHandle = () => {
-            getTableData()
-        }
-
-        const changeInputHandle = () => {
-            getTableData()
-        }
-
-        const selectDate = (num) => {
-            if (typeof num === 'number') {
-                searchParams.date = [getDateByStep(searchParams.date[0], num), getDateByStep(searchParams.date[1], num)]
-            }
-            getTableData()
-        }
-
-        const resetHandle = () => {
-            searchParams.name = ''
-            searchParams.openOrClose = ''
-            searchParams.date = [new Date(), new Date()]
-            searchParams.startDate = ''
-            searchParams.endDate = ''
-            searchParams.status = 0
-            getTableData()
-        }
-
-        const submitHandle = async () => {
-            if (!submitData.name.length) {
-                ElMessage.error('请选择角色')
-                return
-            }
-            const params = {
-                date: dateFormat(new Date(submitData.date), 'yyyy-MM-dd'),
-                num: (submitData.num + submitData.subNum) || 0,
-                name: submitData.name.join(','),
-                remark: submitData.remark,
-            }
-            const res = await fetchInsertIncome(params)
-            if (res.success) {
-                submitData.name = [...accountName.value]
-                submitData.num = 0
-                submitData.subNum = 0
-                submitData.remark = ''
-                ElMessage.success('录入成功')
-            }
-        }
-
-        const _rate_ = 11 / 26
-        const formatSubmitNum = () => {
-            const { account = '' } = store.state.app.USER_INFO
-            if (account) submitData.name = [...account.split(',').slice(0, 2)]
-            const num = orderCountNum.value.totalProfit || 0
-            submitData.num = Number((num * _rate_).toFixed(2))
-            submitData.remark = `大号${submitData.num}，小号{${submitData.subNum}}`
-        }
-        const formatSubmitRestNum = () => {
-            const { account = '' } = store.state.app.USER_INFO
-            if (account) submitData.name = [account.split(',').reverse()[0]]
-            const num = orderCountNum.value.totalProfit || 0
-            submitData.num = Number((num - Number((num * _rate_).toFixed(2)) * 2).toFixed(2))
-            submitData.subNum = 0
-            submitData.remark = ''
-        }
-        const inputSubNumHandle = () => {
-            if (submitData.name.length > 1) {
-                submitData.remark = `大号${submitData.num}，小号{${submitData.subNum}}`
-            }
-        }
-
-        const showSubmitViewHandle = () => {
-            importDialogVisible.value = true
-            submitData.date = Date.parse(searchParams.date[0]) === Date.parse(searchParams.date[1]) ? searchParams.date[0] : new Date()
-        }
-
-        window._rerenderRecordTable_ = () => {
-            getTableData()
-        }
-
-        const initTable = () => {
-            if (activeOrderTab.value === 'table') {
-                nextTick(() => {
-                    if (!orderTableHeight.value) {
-                        orderTableHeight.value = tableTabWrap.value.getBoundingClientRect().height
-                            - searchInputWrap.value.getBoundingClientRect().height
-                            - 48
-                        // searchParams.pageSize = Math.ceil((orderTableHeight.value - 80) / 40)
-                        // searchParams.pageSize = searchParams.pageSize < 0 ? 10 : searchParams.pageSize
-                    }
-                    getTableData()
-                })
-            }
-        }
-
-        watch(isLogin, (value) => {
-            if (value) {
-                initTable()
-            } else {
-                setOrderList([]) // 清空数据
-            }
-        })
-
-        watch(activeOrderTab, () => {
-            initTable()
-        })
-
-        onMounted(() => {
-            initTable()
-        })
-
-        return {
-            DArrowLeft,
-            DArrowRight,
-            loading,
-            centerDialogVisible,
-            orderList,
-            searchInputWrap,
-            tableTabWrap,
-            orderTableHeight,
-            shortcuts,
-            searchParams,
-            importDialogVisible,
-            submitData,
-            accountName,
-            isAdministrator,
-            orderCountNum,
-            maxColunmWidth,
-            overMediaCritical,
-            selectDate,
-            submitHandle,
-            tableRowClassName,
-            deleteRow,
-            cancelRow,
-            getSummaries,
-            searchHandle,
-            resetHandle,
-            changeInputHandle,
-            confirmDelete,
-            formatSubmitNum,
-            formatSubmitRestNum,
-            inputSubNumHandle,
-            showSubmitViewHandle,
-            onPageChange,
-        }
-    },
+const tableRowClassName = ({ row }) => {
+    if (!row.openOrClose) {
+        return 'negative-row'
+    } else if (row.closeHands === row.hands) { // 已被全平
+        return 'disable-row'
+    }
 }
+
+const onPageChange = (value) => {
+    searchParams.currentPage = value
+    getTableData()
+}
+
+const getTableData = async () => {
+    if (!isLogin.value) return
+    const params = parseDateParams(searchParams.date)
+    searchParams.startDate = params.startDate
+    searchParams.endDate = params.endDate
+    loading.value = true
+    orderCountNum.value = await getOrderData(searchParams)
+    let strLength = 0
+    orderList.value.forEach(item => {
+        if (item.linkId.length > strLength && item.linkId) {
+            strLength = item.linkId.length
+        }
+    })
+    if (strLength) maxColunmWidth.value = strLength * 9 < 80 ? 80 : strLength * 9
+    loading.value = false
+    submitData.num = orderCountNum.value.totalProfit || 0
+}
+
+let currentDeleteItem = null
+const deleteRow = async (data) => {
+    currentDeleteItem = data
+    centerDialogVisible.value = true
+}
+
+const cancelRow = async (data) => {
+    loading.value = true
+    await fetchCancelOrder(data.row) // 回退开仓单
+    getTableData()
+}
+
+const confirmDelete = async () => {
+    if (currentDeleteItem) {
+        loading.value = true
+        await fetchDeleteOrder(currentDeleteItem.row.id)
+        getTableData()
+    }
+    centerDialogVisible.value = false
+}
+
+const getSummaries = (param) => {
+    const { columns } = param
+    const sums = []
+    const calcPropertyArr = ['totalProfit', 'commission', 'profit']
+    columns.forEach((column, index) => {
+        if (index === 0) {
+            sums[index] = '总计'
+        } else if (!calcPropertyArr.includes(column.property)) {
+            sums[index] = '--'
+        } else {
+            sums[index] = orderCountNum.value[column.property] || '--'
+        }
+        // const values = data.map((item) => Number(item[column.property]))
+        // if (!values.every((value) => Number.isNaN(value))) {
+        //     sums[index] = values.reduce((prev, curr) => {
+        //         const value = Number(curr)
+        //         if (!Number.isNaN(value)) {
+        //             return prev + curr
+        //         } else {
+        //             return prev
+        //         }
+        //     }, 0)
+        //     sums[index] = sums[index].toFixed(2)
+        // } else {
+        //     sums[index] = '--'
+        // }
+    })
+    return sums
+}
+
+const searchHandle = () => {
+    getTableData()
+}
+
+const changeInputHandle = () => {
+    getTableData()
+}
+
+const selectDate = (num) => {
+    if (typeof num === 'number') {
+        searchParams.date = [getDateByStep(searchParams.date[0], num), getDateByStep(searchParams.date[1], num)]
+    }
+    getTableData()
+}
+
+const resetHandle = () => {
+    searchParams.name = ''
+    searchParams.openOrClose = ''
+    searchParams.date = [new Date(), new Date()]
+    searchParams.startDate = ''
+    searchParams.endDate = ''
+    searchParams.status = 0
+    getTableData()
+}
+
+const submitHandle = async () => {
+    if (!submitData.name.length) {
+        ElMessage.error('请选择角色')
+        return
+    }
+    const params = {
+        date: dateFormat(new Date(submitData.date), 'yyyy-MM-dd'),
+        num: (submitData.num + submitData.subNum) || 0,
+        name: submitData.name.join(','),
+        remark: submitData.remark,
+    }
+    const res = await fetchInsertIncome(params)
+    if (res.success) {
+        submitData.name = [...accountName.value]
+        submitData.num = 0
+        submitData.subNum = 0
+        submitData.remark = ''
+        ElMessage.success('录入成功')
+    }
+}
+
+const _rate_ = 11 / 26
+const formatSubmitNum = () => {
+    const { account = '' } = store.state.app.USER_INFO
+    if (account) submitData.name = [...account.split(',').slice(0, 2)]
+    const num = orderCountNum.value.totalProfit || 0
+    submitData.num = Number((num * _rate_).toFixed(2))
+    submitData.remark = `大号${submitData.num}，小号{${submitData.subNum}}`
+}
+const formatSubmitRestNum = () => {
+    const { account = '' } = store.state.app.USER_INFO
+    if (account) submitData.name = [account.split(',').reverse()[0]]
+    const num = orderCountNum.value.totalProfit || 0
+    submitData.num = Number((num - Number((num * _rate_).toFixed(2)) * 2).toFixed(2))
+    submitData.subNum = 0
+    submitData.remark = ''
+}
+const inputSubNumHandle = () => {
+    if (submitData.name.length > 1) {
+        submitData.remark = `大号${submitData.num}，小号{${submitData.subNum}}`
+    }
+}
+
+const showSubmitViewHandle = () => {
+    importDialogVisible.value = true
+    submitData.date = Date.parse(searchParams.date[0]) === Date.parse(searchParams.date[1]) ? searchParams.date[0] : new Date()
+}
+
+window._rerenderRecordTable_ = () => {
+    getTableData()
+}
+
+const initTable = () => {
+    if (activeOrderTab.value === 'table') {
+        nextTick(() => {
+            if (!orderTableHeight.value) {
+                orderTableHeight.value = tableTabWrap.value.getBoundingClientRect().height
+                    - searchInputWrap.value.getBoundingClientRect().height
+                    - 48
+                // searchParams.pageSize = Math.ceil((orderTableHeight.value - 80) / 40)
+                // searchParams.pageSize = searchParams.pageSize < 0 ? 10 : searchParams.pageSize
+            }
+            getTableData()
+        })
+    }
+}
+
+watch(isLogin, (value) => {
+    if (value) {
+        initTable()
+    } else {
+        setOrderList([]) // 清空数据
+    }
+})
+
+watch(activeOrderTab, () => {
+    initTable()
+})
+
+onMounted(() => {
+    initTable()
+})
 </script>
 
 <style scoped>
