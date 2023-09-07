@@ -40,6 +40,13 @@
                 </el-select>
             </div>
             <div class="search-item-wrap">
+                <span>买/卖：</span>
+                <el-select v-model="searchParams.buyOrSale" @change="changeInputHandle" clearable style="width: 90px;">
+                    <el-option label="买" :value="1"></el-option>
+                    <el-option label="卖" :value="0"></el-option>
+                </el-select>
+            </div>
+            <div class="search-item-wrap">
                 <span>状态：</span>
                 <el-select v-model="searchParams.status" @change="changeInputHandle" style="width: 80px;">
                     <el-option label="全部" :value="0"></el-option>
@@ -48,6 +55,7 @@
                 </el-select>
             </div>
             <div class="search-item-wrap">
+                <el-button type="primary" @click="autoSubmit">一键录入</el-button>
                 <el-button type="primary" @click="showSubmitViewHandle">收益录入</el-button>
                 <el-button type="primary" @click="searchHandle">搜索</el-button>
                 <el-button @click="resetHandle">重置</el-button>
@@ -177,12 +185,14 @@
 <script setup>
 import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
 import { useStore } from 'vuex'
-import { fetchDeleteOrder, fetchCancelOrder, fetchInsertIncome } from '@/api'
-import { parseDateParams, getGapDate, getMonthShortcuts, getDateByStep } from '@/libs/util'
+import { fetchDeleteOrder, fetchCancelOrder, fetchInsertIncome, fetchIncomeLatestInfo, 
+    fetchfutureLatestInfo, fetchOrderInfoHandle, fetchOrderInfoByUserIdHandle } from '@/api'
+import { parseDateParams, getGapDate, getMonthShortcuts, getDateByStep, getBelongDealDate } from '@/libs/util'
 import { ElMessage } from 'element-plus'
 import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import { dateFormat } from 'umob'
 
+const _rate_ = 11 / 26
 const monthShortcuts = getMonthShortcuts(5)
 const store = new useStore()
 const searchInputWrap = ref()
@@ -204,6 +214,7 @@ const searchParams = reactive({
     date: [new Date(), new Date()],
     name: '',
     openOrClose: '',
+    buyOrSale: '',
     startDate: '',
     endDate: '',
     status: 0,
@@ -227,10 +238,7 @@ const overMediaCritical = computed(() => store.getters['app/overMediaCritical'])
 
 const accountName = computed(() => {
     const { account = '' } = store.state.app.USER_INFO
-    if (account) {
-        submitData.name = [...account.split(',').slice(0, 2)]
-        return account.split(',')
-    }
+    if (account) return account.split(',')
     return []
 })
 
@@ -337,6 +345,7 @@ const selectDate = (num) => {
 const resetHandle = () => {
     searchParams.name = ''
     searchParams.openOrClose = ''
+    searchParams.buyOrSale = ''
     searchParams.date = [new Date(), new Date()]
     searchParams.startDate = ''
     searchParams.endDate = ''
@@ -351,7 +360,7 @@ const submitHandle = async () => {
     }
     const params = {
         date: dateFormat(new Date(submitData.date), 'yyyy-MM-dd'),
-        num: (submitData.num + submitData.subNum) || 0,
+        num: Number((submitData.num + submitData.subNum).toFixed(5)) || 0,
         name: submitData.name.join(','),
         remark: submitData.remark,
     }
@@ -365,17 +374,14 @@ const submitHandle = async () => {
     }
 }
 
-const _rate_ = 11 / 26
 const formatSubmitNum = () => {
-    const { account = '' } = store.state.app.USER_INFO
-    if (account) submitData.name = [...account.split(',').slice(0, 2)]
+    submitData.name = accountName.value.slice(0, 2)
     const num = orderCountNum.value.totalProfit || 0
     submitData.num = Number((num * _rate_).toFixed(2))
     submitData.remark = `大号${submitData.num}，小号{${submitData.subNum}}`
 }
 const formatSubmitRestNum = () => {
-    const { account = '' } = store.state.app.USER_INFO
-    if (account) submitData.name = [account.split(',').reverse()[0]]
+    submitData.name = [accountName.value[accountName.value.length - 1]]
     const num = orderCountNum.value.totalProfit || 0
     submitData.num = Number((num - Number((num * _rate_).toFixed(2)) * 2).toFixed(2))
     submitData.subNum = 0
@@ -389,7 +395,99 @@ const inputSubNumHandle = () => {
 
 const showSubmitViewHandle = () => {
     importDialogVisible.value = true
+    submitData.name = accountName.value.slice(0, 2) // 默认选择账户前2位角色
     submitData.date = Date.parse(searchParams.date[0]) === Date.parse(searchParams.date[1]) ? searchParams.date[0] : new Date()
+}
+
+const autoSubmit = async () => {
+    const latestIncomeRes = await fetchIncomeLatestInfo()
+    const latestFutureRes = await fetchfutureLatestInfo()
+    let latestIncomeDate = latestIncomeRes.data.date
+    let latestFutureDate = latestFutureRes.data.date ? getBelongDealDate(latestFutureRes.data.date) : latestFutureRes.data.date
+    async function submitIncomeItem () {
+        if (latestIncomeDate && latestFutureDate && (latestIncomeDate < latestFutureDate)) {
+            latestIncomeDate = getDateByStep(latestIncomeDate, 1)
+
+            const params = parseDateParams([latestIncomeDate, latestIncomeDate])
+            const result = await fetchOrderInfoHandle(params)
+            const totalProfit = result.totalProfit || 0
+
+            if (accountName.value.length) {
+                if (isAdministrator.value) {
+                    params.uid = '654321'
+                    const subResult = await fetchOrderInfoByUserIdHandle(params) // 获取小号数据
+                    if (!subResult.success) return
+
+                    const subTotalProfit = subResult.totalProfit || 0
+                    let incomeParams1 = null
+                    let incomeParams2 = null
+                    let res1 = { success: true }
+                    let res2 = { success: true }
+                    const num1 = Number((totalProfit * _rate_).toFixed(2))
+                    const num2 = subTotalProfit / 2
+
+                    if (!totalProfit && !subTotalProfit) { // 当天无数据，录入下一条
+                        await submitIncomeItem()
+                    } else if (!totalProfit && subTotalProfit) { // 仅有小号数据
+                        incomeParams1 = { // 账户前2角色
+                            date: latestIncomeDate,
+                            num: num2,
+                            name: accountName.value.slice(0, 2).join(','),
+                            remark: `大号0，小号{${num2}}`,
+                        }
+                    } else {
+                        incomeParams1 = { // 账户前2角色
+                            date: latestIncomeDate,
+                            num: Number((num1 + num2).toFixed(5)),
+                            name: accountName.value.slice(0, 2).join(','),
+                            remark: `大号${num1}，小号{${num2}}`,
+                        }
+                        incomeParams2 = { // 账户末尾角色
+                            date: latestIncomeDate,
+                            num: Number((totalProfit - num1 * 2).toFixed(2)),
+                            name: accountName.value[accountName.value.length - 1],
+                            remark: '',
+                        }
+                    }
+
+                    if (incomeParams1) res1 = await fetchInsertIncome(incomeParams1)
+                    if (incomeParams2) res2 = await fetchInsertIncome(incomeParams2)
+
+                    if (res1.success && res2.success) {
+                        ElMessage.success(`${latestIncomeDate} 录入成功`)
+                        await submitIncomeItem()
+                    } else {
+                        ElMessage.error(`${latestIncomeDate} 录入失败`)
+                    }
+                } else {
+                    if (!totalProfit) { // 当天无数据，录入下一条
+                        await submitIncomeItem()
+                    } else {
+                        const incomeParams = {
+                            date: latestIncomeDate,
+                            num: totalProfit,
+                            name: accountName.value[0],
+                            remark: '',
+                        }
+                        const res = await fetchInsertIncome(incomeParams)
+                        if (res.success) { // 录入下一条
+                            ElMessage.success(`${latestIncomeDate} 录入成功`)
+                            await submitIncomeItem()
+                        } else {
+                            ElMessage.error(`${latestIncomeDate} 录入失败`)
+                        }
+                    }
+                }
+            } else {
+                ElMessage.error('角色信息错误')
+            }
+        } else {
+            setTimeout(() => {
+                ElMessage.success('录入完成')
+            })
+        }
+    }
+    submitIncomeItem()
 }
 
 window._rerenderRecordTable_ = () => {

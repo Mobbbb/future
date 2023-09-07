@@ -98,6 +98,28 @@ export const fetchOrderInfo = (params) => {
     })
 }
 
+export const fetchOrderInfoByUserId = (params) => {
+    return axios.request({
+        url: prefixApi + '/other/orderInfoByUserId',
+        method: 'post',
+        data: params,
+    })
+}
+
+export const fetchOrderInfoByUserIdHandle = async (params) => {
+    const res = await fetchOrderInfoByUserId(params)
+    const data = res.data || {}
+    const { result = [], commission, profit, totalProfit, total } = data
+    return {
+        commission,
+        profit,
+        totalProfit,
+        total: total || 0,
+        result,
+        success: res.success,
+    }
+}
+
 export const fetchOrderInfoHandle = async (params) => {
     const res = await fetchOrderInfo(params)
     const data = res.data || {}
@@ -154,5 +176,19 @@ export const fetchFutureDayLineList = (params) => {
         url: prefixApi + '/other/futureDayShareInfo',
         method: 'post',
         data: params,
+    })
+}
+
+export const fetchIncomeLatestInfo = () => {
+    return axios.request({
+        url: prefixApi + '/other/incomeLatestInfo',
+        method: 'get',
+    })
+}
+
+export const fetchfutureLatestInfo = () => {
+    return axios.request({
+        url: prefixApi + '/other/futureLatestInfo',
+        method: 'get',
     })
 }
