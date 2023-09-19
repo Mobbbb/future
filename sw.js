@@ -1,3 +1,4 @@
+const preCacheName = 'future'
 importScripts('https://mobbbb.top/resource/workbox-v4.3.1/workbox-sw.js')
 workbox.setConfig({
     debug: false,
@@ -65,7 +66,7 @@ var cacheFirstOptions = {
     }
 }
 
-var chunksCacheName = 'chunks'
+var chunksCacheName = preCacheName + '-chunks'
 function urlHashFilter(url) {
     var requestUrl = new URL(url);
     var name = requestUrl.pathname.split('.');
@@ -123,7 +124,7 @@ function handlerUpdateAPI(_ref3) {
     var event = _ref3.event
     if (event.request.headers.get('accept').indexOf('application/json') > -1) {
         return workbox.strategies.networkFirst({
-            cacheName: 'api',
+            cacheName: preCacheName + '-api',
             plugins: [
                 new workbox.expiration.Plugin({
                     maxEntries: 20,
@@ -137,7 +138,7 @@ function handlerUpdateAPI(_ref3) {
         })
     } else if (event.request.headers.get('accept').indexOf('text/html') > -1) {
         return workbox.strategies.staleWhileRevalidate({ // 先缓存后网络
-            cacheName: 'page',
+            cacheName: preCacheName + '-page',
             plugins: [
                 new workbox.expiration.Plugin({
                     maxEntries: 20,
@@ -177,7 +178,7 @@ workbox.routing.registerRoute(
 workbox.routing.registerRoute(
     new RegExp(eval('/^https?:\\/\\/' + location.host + '(.*).(png|gif|jpg|jpeg|webp)$/')), 
     workbox.strategies.cacheFirst({
-        cacheName: 'images',
+        cacheName: preCacheName + '-images',
         plugins: [
             new workbox.expiration.Plugin({
                 maxAgeSeconds: 365 * 24 * 60 * 60,
@@ -195,7 +196,7 @@ workbox.routing.registerRoute(
 workbox.routing.registerRoute(
     new RegExp('^https?:\/\/(.*)bootcdn\.(.*)\.(js|css|woff)$'),
     workbox.strategies.cacheFirst({
-        cacheName: 'statics',
+        cacheName: preCacheName + '-statics',
         plugins: [
             new workbox.expiration.Plugin({
                 maxAgeSeconds: 365 * 24 * 60 * 60
