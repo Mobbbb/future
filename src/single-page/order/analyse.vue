@@ -268,12 +268,13 @@
                     <el-date-picker
                         v-model="kLineDate"
                         type="month"
+                        format="YYMM"
                         :clearable="false"
                         :editable="false"
                         @change="changeKLineDate"
-                        class="analyse-date-picker"
+                        class="analyse-date-picker contract-picker"
                         popper-class="date-picker-popper month-picker-popper"
-                        style="width: 100px;" />
+                        style="width: 50px;" />
                 </div>
                 <div id="lineChart"></div>
             </el-card>
@@ -299,13 +300,14 @@ const K_LINE_DATE_KEY_NAME = computed(() => `K-LINE-DATE-${store.state.app.USER_
 
 let barChartIns = null
 let lineChartIns = null
-const monthShortcuts = getMonthShortcuts()
+const monthShortcuts = getMonthShortcuts(4)
 const shortcuts = [
     { text: '今日', value: () => getGapDate() },
     { text: '近7天', value: () => getGapDate(7) },
     { text: '近30天', value: () => getGapDate(30) },
     { text: '近365天', value: () => getGapDate(365) },
     ...monthShortcuts,
+    { text: '全部', value: () => getGapDate(365 * ((new Date()).getFullYear() - 2018)) },
 ]
 const analyseResult = reactive({
     buyRate: 0,
@@ -812,6 +814,9 @@ onBeforeUnmount(() => {
 }
 .analyse-date-picker .el-input__inner {
     height: 28px;
-    padding-right: 4px;
+    padding: 0 0 0 10px!important;
+}
+.contract-picker .el-input__prefix {
+    display: none;
 }
 </style>
