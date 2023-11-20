@@ -809,10 +809,13 @@ onBeforeUnmount(() => {
 .analyse-date-picker.el-input__suffix {
     height: 28px;
 }
+.analyse-date-picker .el-input__inner {
+    height: 28px;
+}
 .analyse-select.el-select .el-input__inner {
     height: 28px;
 }
-.analyse-date-picker .el-input__inner {
+.contract-picker .el-input__inner {
     height: 28px;
     padding: 0 0 0 10px!important;
 }

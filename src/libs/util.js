@@ -16,7 +16,7 @@ export const parseDateParams = (dateParams) => {
         if (new Date(prevDay).getDay() === 6) { // 前一天是周六
             prevDay -= 1 * 24 * 60 * 60 * 1000
         }
-        params.startDate = dateFormat(prevDay) + ' 21:00:00'
+        params.startDate = dateFormat(prevDay) + ' 20:55:00'
     }
     if (dateParams[1]) {
         let endDay = Date.parse(new Date(dateParams[1]))
@@ -29,7 +29,7 @@ export const parseDateParams = (dateParams) => {
             }
         }
 
-        params.endDate = dateFormat(endDay) + ' 20:59:59'
+        params.endDate = dateFormat(endDay) + ' 20:54:59'
     }
     return params
 }
@@ -95,7 +95,7 @@ export const getBelongDealDateGap = (time) => {
             date.setTime(date.getTime() + 3600 * 1000 * 24 * 2)
         }
 
-        return [`${strDate} 21:00:00`, `${dateFormat(date)} 20:59:59`]
+        return [`${strDate} 20:55:00`, `${dateFormat(date)} 20:54:59`]
     } else {
         date.setTime(date.getTime() - 3600 * 1000 * 24 * 1)
 
@@ -105,7 +105,7 @@ export const getBelongDealDateGap = (time) => {
             date.setTime(date.getTime() - 3600 * 1000 * 24 * 1)
         }
 
-        return [`${dateFormat(date)} 21:00:00`, `${strDate} 20:59:59`]
+        return [`${dateFormat(date)} 20:55:00`, `${strDate} 20:54:59`]
     }
 }
 
