@@ -1,5 +1,5 @@
 <template>
-    <div class="order-wrap" ref="tableTabWrap">
+    <div class="future-wrap" ref="tableTabWrap">
         <div class="form-wrap" ref="formWrap">
             <el-form 
                 :model="formData"
@@ -300,10 +300,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.order-wrap {
-    height: 100%;
-    width: 100%;
-}
 .opening-order-table {
     width: calc(100% - 48px);
     font-size: 12px;

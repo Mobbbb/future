@@ -249,3 +249,7 @@ input {
 .change-date-icon:last-of-type {
     margin-left: 6px;
 }
+
+.future-wrap {
+    height: 100%;
+}

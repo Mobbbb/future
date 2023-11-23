@@ -34,4 +34,14 @@
     .page-nav-wrap .el-menu-item {
         padding: 0 12px;
     }
+    .order-tab .el-tabs__item {
+        padding: 0 16px;
+    }
+}
+
+@media screen and (max-width: 880px) {
+    .line-chart-wrap #lineChart{
+        width: 100%!important;
+        min-width: 100%!important;
+    }
 }

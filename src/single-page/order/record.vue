@@ -1,5 +1,5 @@
 <template>
-    <div class="record-wrap" ref="tableTabWrap">
+    <div class="future-wrap record-wrap" ref="tableTabWrap">
         <div class="table-search-input-wrap" ref="searchInputWrap">
             <div class="search-item-wrap">
                 <span>起止日期：</span>
@@ -528,8 +528,6 @@ onMounted(() => {
 
 <style scoped>
 .record-wrap {
-    width: 100%;
-    height: 100%;
     background: #f5f5f5;
 }
 .order-table {

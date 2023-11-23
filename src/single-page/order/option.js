@@ -338,7 +338,7 @@ export const getBarOption = (data) => {
     return option
 }
 
-export const getLineOption = (params, config) => {
+export const getDoubleKLineOption = (params, config) => {
     const {
         lineXAxis1,
         lineXAxis2,
@@ -552,6 +552,91 @@ export const getLineOption = (params, config) => {
     }
 }
 
+export const getKLineOption = (params) => {
+    const { x, y, year, name } = params
+
+    let totalPrice = []
+    y.forEach(item => {
+        totalPrice = totalPrice.concat(item)
+    })
+    let combineArr = new Set(totalPrice)
+    combineArr.delete(null)
+    let min = Math.min(...combineArr)
+    const minLength = String(min).length
+    let formatRate = Math.pow(10, (minLength - 2))
+    formatRate = formatRate < 1 ? 1 : formatRate
+    min = Math.floor(min / formatRate) * formatRate
+
+    return {
+        tooltip: {
+            trigger: 'axis',
+        },
+        axisPointer: {
+            show: true,
+        }, 
+        title: {
+            text: `${year}年春节`,
+            x: 'center',
+        },
+        grid: [
+            {
+                left: 40,
+                right: 20,
+                bottom: '10%',
+                top: 30,
+                containLabel: false,
+            },
+        ],
+        xAxis: [
+            {
+                type: 'category',
+                axisLine: {
+                    onZero: true,
+                    lineStyle: {
+                        color: '#d0d0d0',
+                        width: 1,
+                    },
+                },
+                axisLabel: {
+                    textStyle: {
+                        color: '#8e8e8e',
+                        fontSize,
+                    },
+                },
+                data: x,
+            },
+        ],
+        yAxis: [
+            {
+                name: `${name.slice(name.length - 2, name.length)}合约`,
+                type: 'value',
+                nameGap: 10,
+                min,
+                axisLabel: {
+                    textStyle: {
+                        color: '#8e8e8e',
+                        fontSize,
+                    },
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: '#f1f3f8',
+                        type: 'dashed',
+                    },
+                },
+            },
+        ],
+        series: [
+            {
+                name: '多单',
+                type: 'candlestick',
+                data: y,
+            },
+        ]
+    }
+}
+
 export const getOrderLineOption = (data) => {
     return {
         tooltip: {
@@ -649,5 +734,99 @@ export const getOrderLineOption = (data) => {
                 animationDuration: 300,
             }
         ]
+    }
+}
+
+export const getArrLineOption = (data, name) => {
+    const series = []
+    let xAxis = []
+    let totalPrice = []
+    Object.keys(data).forEach(key => {
+        totalPrice = totalPrice.concat(data[key].map(item => item.value))
+        xAxis = data[key].length > xAxis.length ? data[key].map(item => item.index) : xAxis
+        series.push({
+            name: key,
+            type: 'line',
+            data: data[key],
+            smooth: true,
+            connectNulls: true,
+            symbol: 'none',
+            lineStyle: {
+                width: 1,
+            },
+            itemStyle: {
+                // color: colorArr[index],
+            },
+            label: {
+                show: false,
+                position: 'insideTopRight'
+            },
+        })
+    })
+    xAxis = xAxis.map(item => xAxis.length - item)
+    
+    let combineArr = new Set(totalPrice)
+    combineArr.delete(null)
+    let min = Math.min(...combineArr)
+    const minLength = String(min).length
+    let formatRate = Math.pow(10, (minLength - 2))
+    formatRate = formatRate < 1 ? 1 : formatRate
+    min = Math.floor(min / formatRate) * formatRate
+
+    return {
+        grid: [{
+            left: 45,
+            right: 10,
+            top: 30,
+            containLabel: false,
+        }],
+        legend: {
+            bottom: 10,
+        },
+        title: {
+            text: `${name < 10 ? '0' + name : name}合约`,
+            x: 'center',
+        },
+        tooltip: { trigger: 'axis' },
+        xAxis: [{
+            type: 'category',
+            boundaryGap: false,
+            axisLine: {
+                lineStyle: {
+                    color: '#d0d0d0',
+                    width: 1,
+                },
+            },
+            axisLabel: {
+                textStyle: {
+                    color: '#8e8e8e',
+                    fontSize: 12,
+                },
+                // rotate: 45,
+            },
+            data: xAxis,
+        }],
+        yAxis: [{
+            name: '',
+            min,
+            nameTextStyle: {
+                padding: [0, 0, 0, 0],
+            },
+            type: 'value',
+            axisLabel: {
+                textStyle: {
+                    color: '#8e8e8e',
+                    fontSize: 10,
+                },
+            },
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    color: '#f1f3f8',
+                    type: 'dashed',
+                },
+            },
+        }],
+        series,
     }
 }

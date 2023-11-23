@@ -85,6 +85,26 @@ export const formatPriceLineData = (designatedFutureLists) => {
     }
 }
 
+export const formatFutureFestivalData = (data) => {
+    const yearMap = {}
+    data.forEach(item => {
+        const key = item.date.slice(0, 4)
+        if (yearMap[key]) {
+            yearMap[key].y.push([item.open, item.close, item.min, item.max])
+            yearMap[key].x.push(item.date.slice(5, 10))
+        } else {
+            yearMap[key] = {
+                y: [[item.open, item.close, item.min, item.max]],
+                x: [item.date.slice(5, 10)],
+                year: item.date.slice(2, 4),
+                name: item.name,
+            }
+        }
+    })
+
+    return Object.keys(yearMap).map(key => yearMap[key])
+}
+
 export const formatDayLineData = (designatedOpenFutureLists, futureDayLineList) => {
     const dayLineDateMap = {} // date-dayLineItem
     const dayFutureMap = {

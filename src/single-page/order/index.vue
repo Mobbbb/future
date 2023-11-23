@@ -10,6 +10,9 @@
             <el-tab-pane label="账户分析" name="analyse">
                 <Analyse></Analyse>
             </el-tab-pane>
+            <el-tab-pane label="数据分析" name="data">
+                <Data></Data>
+            </el-tab-pane>
         </el-tabs>
     </div>
 </template>
@@ -20,6 +23,7 @@ import { useStore } from 'vuex'
 import Order from './order.vue'
 import Analyse from './analyse.vue'
 import Record from './record.vue'
+import Data from './data.vue'
 
 export default {
     name: 'order',
@@ -27,6 +31,7 @@ export default {
         Order,
         Analyse,
         Record,
+        Data,
     },
     setup() {
         const store = new useStore()

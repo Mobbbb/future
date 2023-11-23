@@ -1,5 +1,5 @@
 <template>
-    <div class="analyse-wrap">
+    <div class="future-wrap">
         <div class="search-input-wrap">
             <div class="search-item-wrap">
                 <span style="margin-right: 8px;">日期</span>
@@ -287,12 +287,12 @@ import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } 
 import { useStore } from 'vuex'
 import { parseDateParams, getGapDate, getMonthShortcuts } from '@/libs/util'
 import festivalMap, { festivalList } from '@/config/festivalMap'
-import { getBarOption, getLineOption } from './option'
+import { getBarOption, getDoubleKLineOption } from './option'
 import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import MonthlyCalendar from '@/components/monthly-calendar.vue'
 import { dateFormat, calculateDate, toMonth } from 'umob'
 import { formatPriceLineData, formatBasicData, formatCalendarData } from '@/libs/data-processing'
-import { fetchOrderInfoHandle  } from '@/api'
+import { fetchOrderInfoHandle } from '@/api'
 
 const store = new useStore()
 
@@ -421,7 +421,7 @@ const initDayLineChart = async () => {
 
     nextTick(() => {
         const params = formatPriceLineData(designatedFutureLists)
-        const option = getLineOption(params, enFutureMap.value[dayLineFutureName.value])
+        const option = getDoubleKLineOption(params, enFutureMap.value[dayLineFutureName.value])
 
         destroyLineChart()
         lineChartIns = echarts.init(document.getElementById('lineChart'))
@@ -619,9 +619,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.analyse-wrap {
-    height: 100%;
-}
 .search-input-wrap {
     color: #606266;
     padding: 0 0 0 12px;
