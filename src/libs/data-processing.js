@@ -86,23 +86,37 @@ export const formatPriceLineData = (designatedFutureLists) => {
 }
 
 export const formatFutureFestivalData = (data) => {
-    const yearMap = {}
+    const typeMap = {}
     data.forEach(item => {
-        const key = item.date.slice(0, 4)
-        if (yearMap[key]) {
-            yearMap[key].y.push([item.open, item.close, item.min, item.max])
-            yearMap[key].x.push(item.date.slice(5, 10))
+        if (typeMap[item.type]) {
+            typeMap[item.type].push(item)
         } else {
-            yearMap[key] = {
-                y: [[item.open, item.close, item.min, item.max]],
-                x: [item.date.slice(5, 10)],
-                year: item.date.slice(2, 4),
-                name: item.name,
-            }
+            typeMap[item.type] = [item]
         }
     })
 
-    return Object.keys(yearMap).map(key => yearMap[key])
+    let festivalData = []
+    Object.keys(typeMap).forEach(key => {
+        const yearMap = {}
+        const res = typeMap[key].sort(sortCallback({ key: 'date', type: 'asc' }))
+        res.forEach(item => {
+            const key = item.date.slice(0, 4)
+            if (yearMap[key]) {
+                yearMap[key].y.push([item.open, item.close, item.min, item.max])
+                yearMap[key].x.push(item.date.slice(5, 10))
+            } else {
+                yearMap[key] = {
+                    y: [[item.open, item.close, item.min, item.max]],
+                    x: [item.date.slice(5, 10)],
+                    year: item.date.slice(0, 4),
+                    name: item.name,
+                    type: item.type,
+                }
+            }
+        })
+        festivalData = festivalData.concat(Object.keys(yearMap).map(key => yearMap[key]).sort(sortCallback({ key: 'year', type: 'desc' })))
+    })
+    return festivalData
 }
 
 export const formatDayLineData = (designatedOpenFutureLists, futureDayLineList) => {

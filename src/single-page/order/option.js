@@ -1,6 +1,13 @@
 import { genVH } from '@/libs/util'
+import { CHUNJIE_YEAR_MAP } from '@/config/festivalMap'
 
 const fillColor = ['#e82b42', '#11a642', '#ffb347']
+
+const festivalMap = {
+    0: '春节',
+    1: '国庆',
+    2: '五一',
+}
 
 const areaColorArr = [
     new echarts.graphic.LinearGradient(0, 0, 0, 1, [
@@ -553,12 +560,28 @@ export const getDoubleKLineOption = (params, config) => {
 }
 
 export const getKLineOption = (params) => {
-    const { x, y, year, name } = params
+    const { x, y, year, name, type } = params
 
     let totalPrice = []
-    y.forEach(item => {
-        totalPrice = totalPrice.concat(item)
-    })
+    y.forEach(item => totalPrice = totalPrice.concat(item))
+    
+    let compareDate = ''
+    if (type === 0) {
+        compareDate = CHUNJIE_YEAR_MAP[year]
+    } else if (type === 1) {
+        compareDate = '10-01'
+    } else {
+        compareDate = '05-01'
+    }
+
+    let chunjieDate = ''
+    for (let i = 0; i < x.length; i++) {
+        if (compareDate < x[i]) {
+            chunjieDate = x[i - 1] || ''
+            break
+        }
+    }
+
     let combineArr = new Set(totalPrice)
     combineArr.delete(null)
     let min = Math.min(...combineArr)
@@ -575,15 +598,17 @@ export const getKLineOption = (params) => {
             show: true,
         }, 
         title: {
-            text: `${year}年春节`,
+            text: `${year.slice(0, 4)}年${festivalMap[type]}`,
+            subtext: `${name.slice(name.length - 2, name.length)}合约`,
             x: 'center',
+            itemGap: 5,
         },
         grid: [
             {
                 left: 40,
                 right: 20,
                 bottom: '10%',
-                top: 30,
+                top: 50,
                 containLabel: false,
             },
         ],
@@ -608,10 +633,14 @@ export const getKLineOption = (params) => {
         ],
         yAxis: [
             {
-                name: `${name.slice(name.length - 2, name.length)}合约`,
+                name: '',
                 type: 'value',
-                nameGap: 10,
+                nameGap: 20,
+                boundaryGap: false,
                 min,
+                max: function (value) {
+                    return parseInt((value.max / 100)) * 100 + 200
+                },
                 axisLabel: {
                     textStyle: {
                         color: '#8e8e8e',
@@ -632,8 +661,55 @@ export const getKLineOption = (params) => {
                 name: '多单',
                 type: 'candlestick',
                 data: y,
+                markLine: {
+                  symbol: ['none', 'none'],
+                  data: [
+                        [
+                            {
+                                name: 'from lowest to highest',
+                                type: 'min',
+                                valueDim: 'lowest',
+                                symbol: 'circle',
+                                symbolSize: 0,
+                                label: {
+                                    show: false
+                                },
+                                emphasis: {
+                                    label: {
+                                        show: false
+                                    }
+                                }
+                            },
+                            {
+                                type: 'max',
+                                valueDim: 'highest',
+                                symbol: 'circle',
+                                symbolSize: 0,
+                                label: {
+                                    show: false
+                                },
+                                emphasis: {
+                                    label: {
+                                        show: false
+                                    }
+                                }
+                            },
+                        ],
+                        {
+                            xAxis: chunjieDate,
+                            lineStyle: {
+                                color: '#d0d0d0',
+                                opacity: 0.5,
+                            },
+                            label: {
+                                position: 'end',
+                                distance: [0, -20],
+                            },
+                        },
+                    ],
+                },
             },
-        ]
+        ],
     }
 }
 

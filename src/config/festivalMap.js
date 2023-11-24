@@ -76,11 +76,15 @@ const festivalMap = {
     '01-01': '元旦',
 }
 
+const _CHUNJIE_YEAR_MAP_ = {}
 Object.keys(festivalMap).forEach(date => {
     if (festivalMap[date] === CHUNJIE) {
         const d = new Date(date)
+        _CHUNJIE_YEAR_MAP_[date.slice(0, 4)] = date.slice(5, 10)
         festivalMap[dateFormat(d.setTime(d.getTime() - 3600 * 1000 * 24 * 1))] = '除夕'
     }
 })
+
+export const CHUNJIE_YEAR_MAP = _CHUNJIE_YEAR_MAP_
 
 export default festivalMap

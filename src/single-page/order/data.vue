@@ -270,5 +270,6 @@ onBeforeUnmount(() => {
 #lineChart {
     width: 50%;
     height: 300px;
+    margin-bottom: 12px;
 }
 </style>
