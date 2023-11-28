@@ -1,5 +1,6 @@
 import { genVH } from '@/libs/util'
 import { CHUNJIE_YEAR_MAP } from '@/config/festivalMap'
+import { weekdayMap } from './index'
 
 const fillColor = ['#e82b42', '#11a642', '#ffb347']
 
@@ -701,8 +702,9 @@ export const getKLineOption = (params) => {
                 const color = data[0].value[2] > data[0].value[1] ? '#eb5454' : '#47b262'
 
                 return `
-                        <div style="border: 1px solid rgb(255, 255, 255);">        
-                            <div style="line-height: 1;">${circleDom(color, 9, 3, 7)}开盘
+                        <div style="border: 1px solid rgb(255, 255, 255);">
+                            <div style="line-height: 1;">${data[0].name} - ${weekdayMap[new Date(`${year}-${data[0].name}`).getDay()]}</div>
+                            <div style="line-height: 1; margin-top: 10px;">${circleDom(color, 9, 3, 7)}开盘
                                 <span style="font-weight: bold;margin-left: 20px; float: right;">${data[0].value[1]}</span>
                             </div>
                             <div style="line-height: 1; margin-top: 10px;">${circleDom(color, 9, 3, 7)}收盘

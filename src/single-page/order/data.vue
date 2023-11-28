@@ -2,11 +2,7 @@
     <div class="future-wrap">
         <div class="search-input-wrap">
             <el-select class="analyse-select" v-model="weekDay" @change="changeWeekday">
-                <el-option label="星期一" :value="1"></el-option>
-                <el-option label="星期二" :value="2"></el-option>
-                <el-option label="星期三" :value="3"></el-option>
-                <el-option label="星期四" :value="4"></el-option>
-                <el-option label="星期五" :value="5"></el-option>
+                <el-option :label="item" :value="Number(key)" v-for="(item, key) in weekdayMap"></el-option>
             </el-select>
         </div>
         <div class="analyse-content-wrap">
@@ -42,6 +38,7 @@ import { getArrLineOption, getKLineOption } from './option'
 import { dateFormat, calculateDate, toMonth } from 'umob'
 import { fetchFutureFestivalInfo } from '@/api'
 import { formatFutureFestivalData } from '@/libs/data-processing'
+import { weekdayMap } from './index'
 
 const store = new useStore()
 

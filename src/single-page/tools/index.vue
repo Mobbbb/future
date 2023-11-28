@@ -230,7 +230,6 @@ import { ref, onMounted, computed } from 'vue'
 import { useStore } from 'vuex'
 import config, { PC } from '@/config'
 import md5 from '@/libs/md5'
-import { numMap } from '../order/index.js'
 
 export default {
     name: 'home',
@@ -407,7 +406,6 @@ export default {
         }
 
         return {
-            numMap,
             lot,
             saleOrBuy,
             pricePrev,
