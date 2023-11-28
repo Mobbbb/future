@@ -1,14 +1,7 @@
 import { genVH } from '@/libs/util'
-import { CHUNJIE_YEAR_MAP } from '@/config/festivalMap'
-import { weekdayMap } from './index'
+import { CHUNJIE_YEAR_MAP, festivalTypeMap, weekdayMap } from '@/config/festivalMap'
 
 const fillColor = ['#e82b42', '#11a642', '#ffb347']
-
-const festivalMap = {
-    0: '春节',
-    1: '国庆',
-    2: '五一',
-}
 
 const areaColorArr = [
     new echarts.graphic.LinearGradient(0, 0, 0, 1, [
@@ -737,7 +730,7 @@ export const getKLineOption = (params) => {
             },
         }, 
         title: {
-            text: `${year.slice(0, 4)}年${festivalMap[type]}`,
+            text: `${year.slice(0, 4)}年${festivalTypeMap[type]}`,
             subtext: `${name.slice(name.length - 2, name.length)}合约`,
             x: 'center',
             itemGap: 5,

@@ -38,7 +38,7 @@ import { getArrLineOption, getKLineOption } from './option'
 import { dateFormat, calculateDate, toMonth } from 'umob'
 import { fetchFutureFestivalInfo } from '@/api'
 import { formatFutureFestivalData } from '@/libs/data-processing'
-import { weekdayMap } from './index'
+import { weekdayMap } from '@/config/festivalMap'
 
 const store = new useStore()
 

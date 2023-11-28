@@ -87,4 +87,18 @@ Object.keys(festivalMap).forEach(date => {
 
 export const CHUNJIE_YEAR_MAP = _CHUNJIE_YEAR_MAP_
 
+export const festivalTypeMap = {
+    0: CHUNJIE,
+    1: '国庆',
+    2: '五一',
+}
+
+export const weekdayMap = {
+    1: '星期一',
+    2: '星期二',
+    3: '星期三',
+    4: '星期四',
+    5: '星期五',
+}
+
 export default festivalMap

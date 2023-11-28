@@ -11,3 +11,6 @@ export default {
     device: deviceMatch[0] || PC,
     env,
 }
+
+// buyOrSale    1: 买，0: 卖
+// openOrClose  1: 开，0: 平
