@@ -263,9 +263,10 @@ onBeforeUnmount(() => {
     display: flex;
     flex-wrap: wrap;
     width: 100%;
+    justify-content: space-between;
 }
 #lineChart {
-    width: 50%;
+    width: calc(50% - 14px);
     height: 300px;
     margin-bottom: 12px;
 }

@@ -99,7 +99,7 @@ const app = {
         },
     },
     actions: {
-        async INIT_USER({ commit }) {
+        async INIT_USER({ commit, dispatch }) {
             const userId = getCookie('future-uid')
             if (userId) { // 获取用户相关信息
                 commit('SET_USER_INFO', { userId })
@@ -112,6 +112,10 @@ const app = {
                         avatar,
                         account,
                         inDayFirstLists: inDayFirstLists.split(',')
+                    })
+                    dispatch('updateLocalAvatar', {
+                        uid,
+                        avatar,
                     })
                 }
             }
@@ -148,6 +152,22 @@ const app = {
                 token: getCookie('future-token'),
             })
             localStorage.setItem('future-login-list', JSON.stringify(loginList))
+        },
+        updateLocalAvatar({}, data) {
+            const { uid, avatar } = data
+            let loginList = localStorage.getItem('future-login-list')
+            if (loginList) {
+                loginList = JSON.parse(loginList)
+            } else {
+                loginList = []
+            }
+            for (let i = 0; i < loginList.length; i++) {
+                if (loginList[i].uid === uid && loginList[i].avatar !== avatar) {
+                    loginList[i].avatar = avatar
+                    localStorage.setItem('future-login-list', JSON.stringify(loginList))
+                    break
+                }
+            }
         },
         removeLoginStorage({ state }) {
             let loginList = localStorage.getItem('future-login-list')

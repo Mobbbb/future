@@ -737,11 +737,11 @@ export const getKLineOption = (params) => {
         },
         grid: [
             {
-                left: 40,
-                right: 20,
+                left: 5,
+                right: 5,
                 bottom: '10%',
                 top: 50,
-                containLabel: false,
+                containLabel: true,
             },
         ],
         xAxis: [
@@ -923,12 +923,15 @@ export const getArrLineOption = (data, name) => {
     min = Math.floor(min / formatRate) * formatRate
 
     return {
-        grid: [{
-            left: 45,
-            right: 10,
-            top: 30,
-            containLabel: false,
-        }],
+        grid: [
+            {
+                left: 5,
+                right: 5,
+                bottom: '10%',
+                top: 50,
+                containLabel: true,
+            },
+        ],
         legend: {
             bottom: 10,
         },
@@ -998,7 +1001,7 @@ export const getArrLineOption = (data, name) => {
             axisLabel: {
                 textStyle: {
                     color: '#8e8e8e',
-                    fontSize: 10,
+                    fontSize,
                 },
             },
             splitLine: {
