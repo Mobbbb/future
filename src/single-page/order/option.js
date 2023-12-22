@@ -469,7 +469,7 @@ export const getDoubleKLineOption = (params, config) => {
                 axisLabel: {
                     textStyle: {
                         color: '#8e8e8e',
-                        fontSize,
+                        fontSize: 10,
                     },
                 },
                 data: lineXAxis1,
@@ -487,7 +487,7 @@ export const getDoubleKLineOption = (params, config) => {
                 axisLabel: {
                     textStyle: {
                         color: '#8e8e8e',
-                        fontSize,
+                        fontSize: 10,
                     },
                 },
                 data: lineXAxis2,
@@ -503,7 +503,7 @@ export const getDoubleKLineOption = (params, config) => {
                 axisLabel: {
                     textStyle: {
                         color: '#8e8e8e',
-                        fontSize,
+                        fontSize: 10,
                     },
                 },
                 splitLine: {
@@ -524,7 +524,7 @@ export const getDoubleKLineOption = (params, config) => {
                 axisLabel: {
                     textStyle: {
                         color: '#8e8e8e',
-                        fontSize,
+                        fontSize: 10,
                     },
                 },
                 splitLine: {
@@ -886,31 +886,45 @@ export const getKLineOption = (params) => {
     }
 }
 
+const skipMap = {
+    '5': '20',
+    '6': '20',
+    '7': '20',
+    '8': '20',
+    '9': '20',
+    '10': '20',
+    '11': '20',
+    '12': '20',
+    '1': '21',
+    '2': '21',
+}
 export const getArrLineOption = (data, name) => {
     const series = []
     let xAxis = []
     let totalPrice = []
     Object.keys(data).forEach(key => {
-        totalPrice = totalPrice.concat(data[key].map(item => item.value))
-        xAxis = data[key].length > xAxis.length ? data[key].map(item => item.index) : xAxis
-        series.push({
-            name: key,
-            type: 'line',
-            data: data[key],
-            smooth: true,
-            connectNulls: true,
-            symbol: 'none',
-            lineStyle: {
-                width: 1,
-            },
-            itemStyle: {
-                // color: colorArr[index],
-            },
-            label: {
-                show: false,
-                position: 'insideTopRight'
-            },
-        })
+        if (skipMap[name.toString()] !== key) {
+            totalPrice = totalPrice.concat(data[key].map(item => item.value))
+            xAxis = data[key].length > xAxis.length ? data[key].map(item => item.index) : xAxis
+            series.push({
+                name: key,
+                type: 'line',
+                data: data[key],
+                smooth: true,
+                connectNulls: true,
+                symbol: 'none',
+                lineStyle: {
+                    width: 1,
+                },
+                itemStyle: {
+                    // color: colorArr[index],
+                },
+                label: {
+                    show: false,
+                    position: 'insideTopRight'
+                },
+            })
+        }
     })
     xAxis = xAxis.map(item => xAxis.length - item)
     
@@ -933,7 +947,7 @@ export const getArrLineOption = (data, name) => {
             },
         ],
         legend: {
-            bottom: 10,
+            bottom: genVH(4),
         },
         axisPointer: {
             show: true,
@@ -945,6 +959,7 @@ export const getArrLineOption = (data, name) => {
         title: {
             text: `${name < 10 ? '0' + name : name}合约`,
             x: 'center',
+            y: genVH(10),
         },
         tooltip: {
             trigger: 'axis',

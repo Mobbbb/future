@@ -224,6 +224,7 @@ onBeforeUnmount(() => {
     background: linear-gradient(90deg, #fff, rgba(243, 63, 109, 1) 100%);
     top: 0.5px;
     bottom: 0.5px;
+    transition: .3s all linear(0 0%, 0 1.8%, 0.01 3.6%, 0.03 6.35%, 0.07 9.1%, 0.13 11.4%, 0.27 15%, 0.34 16.1%, 0.54 18.35%, 0.66 20.6%, 0.72 22.4%, 0.77 24.6%, 0.81 27.3%, 0.85 30.4%, 0.88 35.1%, 0.92 40.6%, 0.94 47.2%, 0.96 55%, 0.98 64%, 0.99 74.4%, 1 86.4%, 1 100%);
 }
 .total-analyse-wrap .right-bar {
     right: 0;
@@ -239,6 +240,7 @@ onBeforeUnmount(() => {
     transform: skewX(-30deg);
     background: white;
     z-index: 3;
+    transition: .3s all linear(0 0%, 0 1.8%, 0.01 3.6%, 0.03 6.35%, 0.07 9.1%, 0.13 11.4%, 0.27 15%, 0.34 16.1%, 0.54 18.35%, 0.66 20.6%, 0.72 22.4%, 0.77 24.6%, 0.81 27.3%, 0.85 30.4%, 0.88 35.1%, 0.92 40.6%, 0.94 47.2%, 0.96 55%, 0.98 64%, 0.99 74.4%, 1 86.4%, 1 100%);
 }
 .total-analyse-value {
     color: white;
@@ -268,6 +270,6 @@ onBeforeUnmount(() => {
 #lineChart {
     width: calc(50% - 14px);
     height: 300px;
-    margin-bottom: 12px;
+    margin-bottom: 1.5vh;
 }
 </style>
