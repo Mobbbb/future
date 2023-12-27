@@ -39,12 +39,14 @@ import { dateFormat, calculateDate, toMonth } from 'umob'
 import { fetchFutureFestivalInfo } from '@/api'
 import { formatFutureFestivalData } from '@/libs/data-processing'
 import { weekdayMap } from '@/config/festivalMap'
+import { getBelongDealDateD } from '@/libs/util'
 
 const store = new useStore()
 
 const lineChartIns = ref([])
 const kLineChartIns = ref([])
-const weekDay = ref((new Date()).getDay())
+
+const weekDay = ref(getBelongDealDateD(new Date()).getDay())
 const upRate = ref(50)
 const lineChartArr = ref([])
 const kLineChartArr = ref([])

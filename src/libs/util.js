@@ -76,6 +76,22 @@ export const getBelongDealDate = (time) => {
     return dateFormat(date)
 }
 
+export const getBelongDealDateD = (time) => {
+    const date = time
+    const hours = time.getHours()
+
+    if (hours >= 21) { // 9点之后，区间往后延一天
+        date.setTime(date.getTime() + 3600 * 1000 * 24 * 1)
+    }
+    if (new Date(date).getDay() === 0) { // 明天是周日
+        date.setTime(date.getTime() + 3600 * 1000 * 24 * 1)
+    } else if (new Date(date).getDay() === 6) { // 明天是周六
+        date.setTime(date.getTime() + 3600 * 1000 * 24 * 2)
+    }
+
+    return date
+}
+
 /**
  * @description 获取归属的交易日期区间
  * @param {String} time yyyy-MM-dd hh:mm:ss
