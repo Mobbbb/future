@@ -776,7 +776,7 @@ export const getKLineOption = (params) => {
                 axisLabel: {
                     textStyle: {
                         color: '#8e8e8e',
-                        fontSize,
+                        fontSize: 12,
                     },
                 },
                 splitLine: {
@@ -1016,7 +1016,7 @@ export const getArrLineOption = (data, name) => {
             axisLabel: {
                 textStyle: {
                     color: '#8e8e8e',
-                    fontSize,
+                    fontSize: 12,
                 },
             },
             splitLine: {

@@ -391,7 +391,7 @@ const initCalendar = async (date) => {
     let dateRange = []
     if (dayCalendarShowStatus.value) {
         const dateParam = date && dateFormat(date) || calendarDate.value
-        const day = new Date(dateParam.slice(0, 4), dateParam.slice(6, 7), 0).getDate()
+        const day = new Date(dateParam.slice(0, 4), dateParam.slice(5, 7), 0).getDate()
         dateRange = [dateParam.slice(0, 8) + '01', `${dateParam.slice(0, 8)}${day}`]
     } else {
         const year = date || new Date(calendarYear.value).getFullYear()
