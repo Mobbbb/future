@@ -15,7 +15,7 @@
             </el-tab-pane>
             <el-tab-pane label="收益列表" name="table">
                 <div class="table-wrap">
-                    <el-table class="income-table" :data="showListData" height="100%" :show-summary="isAdministrator"
+                    <el-table class="income-table" :data="showListData" height="100%" show-summary
                         :summary-method="getSummaries" :row-class-name="tableRowClassName" :class="greenTotalCell"
                         row-key="id" style="font-size: 12px;">
                         <el-table-column prop="date" label="日期" width="120" />
@@ -303,6 +303,11 @@ const getTableData = async () => {
         if (xTotalNum < 0) greenTotalCell.value += 'green-total-cell2 '
         if (totalNum < 0) greenTotalCell.value += 'green-total-cell3 '
     } else {
+        totalNum = 0
+        data.forEach(item => totalNum += item.num)
+        if (totalNum < 0) greenTotalCell.value += 'green-total-cell1 '
+        if (xTotalNum < 0) greenTotalCell.value += 'normal-total-cell '
+        if (totalNum < 0) greenTotalCell.value += 'normal-total-cell '
         tableData.value = data
     }
 }
@@ -374,19 +379,33 @@ const tableRowClassName = ({ row }) => {
 const getSummaries = (param) => {
     const { columns } = param
     const sums = []
-    columns.forEach((column, index) => {
-        if (index === 0) {
-            sums[index] = '总计'
-        } else if (column.property === 'dNum') {
-            sums[index] = dtotalNum.toFixed(2)
-        } else if (column.property === 'xNum') {
-            sums[index] = xTotalNum.toFixed(2)
-        } else if (column.property === 'num') {
-            sums[index] = totalNum.toFixed(2)
-        } else {
-            sums[index] = '--'
-        }
-    })
+    if (isAdministrator.value) {
+        columns.forEach((column, index) => {
+            if (index === 0) {
+                sums[index] = '总计'
+            } else if (column.property === 'dNum') {
+                sums[index] = dtotalNum.toFixed(2)
+            } else if (column.property === 'xNum') {
+                sums[index] = xTotalNum.toFixed(2)
+            } else if (column.property === 'num') {
+                sums[index] = totalNum.toFixed(2)
+            } else {
+                sums[index] = '--'
+            }
+        })
+    } else {
+        console.log(columns)
+        columns.forEach((column, index) => {
+            if (index === 0) {
+                sums[index] = '总计'
+            } else if (column.property === 'num') {
+                sums[index] = totalNum.toFixed(2)
+            } else {
+                sums[index] = '--'
+            }
+        })
+    }
+    
     return sums
 }
 
@@ -501,6 +520,14 @@ onMounted(() => {
 }
 .green-total-cell3 .el-table__footer .el-table__cell:nth-of-type(4) {
     color: rgb(14, 157, 88);
+}
+.normal-total-cell .el-table__footer .el-table__cell:nth-of-type(3) {
+    color: var(--el-table-text-color);
+    font-weight: normal;
+}
+.normal-total-cell .el-table__footer .el-table__cell:nth-of-type(4) {
+    color: var(--el-table-text-color);
+    font-weight: normal;
 }
 .income-table .others-row .el-table__cell {
     background: var(--el-color-info-light-9);

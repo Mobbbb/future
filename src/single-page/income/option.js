@@ -78,6 +78,24 @@ export const getOption = (dim = [], onlyShowLast = 0) => {
                 opacity: 0.9,
                 color: areaColorArr[index]
             },
+            markLine: {
+                data: [
+                    {
+                        name: '最低点',
+                        type: 'min',
+                        label: {
+                            position: 'insideMiddleBottom',
+                        },
+                    },
+                    {
+                        name: '最高点',
+                        type: 'max',
+                        label: {
+                            position: 'insideMiddleTop',
+                        },
+                    },
+                ],
+            },
         })
     })
 
@@ -96,9 +114,9 @@ export const getOption = (dim = [], onlyShowLast = 0) => {
         tooltip: {
             position: function (point, params, dom, rect, size) {
                 if (point[0] < size.viewSize[0] / 2) { // 左侧
-                    return [point[0], point[1] - size.contentSize[1] - 50]
+                    return [point[0], point[1] - size.contentSize[1] - 10]
                 } else {
-                    return [point[0] - size.contentSize[0], point[1] - size.contentSize[1] - 50]
+                    return [point[0] - size.contentSize[0], point[1] - size.contentSize[1] - 10]
                 }
             },
         },
