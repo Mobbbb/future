@@ -53,9 +53,9 @@ export const fetchInsertLog = (params) => {
     })
 }
 
-export const fetchIncomeData = () => {
+export const fetchRebateInfo = () => {
     return axios.request({
-        url: '/resource/future/income.json',
+        url: prefixApi + '/other/rebateInfo',
         method: 'get',
     })
 }

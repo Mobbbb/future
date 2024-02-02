@@ -42,6 +42,19 @@
                     :total="tableData.length"
                     class="gc-pagination" />
             </el-tab-pane>
+            <el-tab-pane label="返利列表" name="rebate">
+                <el-table class="income-table" :data="rebateData" height="100%" show-summary style="font-size: 12px;">
+                    <el-table-column prop="date" label="日期" width="120" />
+                    <el-table-column prop="month" label="返利月份" />
+                    <el-table-column prop="num" label="返利" />
+                    <el-table-column prop="commission" label="总计手续费" />
+                    <el-table-column prop="rate" label="返利率" >
+                        <template #default="scope">
+                            <span style="color: rgb(235, 68, 54);">{{ scope.row.rate }}</span>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </el-tab-pane>
         </el-tabs>
         <div class="no-data-class login-wrap" v-else>
             <div>
@@ -67,7 +80,7 @@
 import { ref, nextTick, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { useStore } from 'vuex'
 import { getOption } from './option'
-import { fetchIncomeInfo, fetchDeleteIncome, updateFlagStatus, fetchFlag } from '@/api'
+import { fetchIncomeInfo, fetchDeleteIncome, updateFlagStatus, fetchFlag, fetchRebateInfo } from '@/api'
 import { festivalList } from '@/config/festivalMap'
 import { DocumentAdd, DocumentRemove, Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -75,6 +88,7 @@ import { dateGap, dateFormat, extractStr } from 'umob'
 
 const store = new useStore()
 const tableData = ref([])
+const rebateData = ref([])
 const chartDataArr1 = ref([])
 const chartDataArr2 = ref([])
 const currentPage = ref(1)
@@ -144,9 +158,22 @@ const handleClick = async () => {
         getTotalIncome()
     } else if (activeName.value === 'table') {
         getTableData()
-    } else {
+    } else if (activeName.value === 'day') {
         getDayIncome()
+    } else {
+        getRebateInfo()
     }
+}
+
+const getRebateInfo = async () => {
+    const res = await fetchRebateInfo()
+    const data = res.data || []
+
+    data.forEach(item => {
+        item.rate = (item.num / item.commission * 100).toFixed(2) + '%'
+    })
+
+    rebateData.value = data
 }
 
 const getTableData = async () => {
@@ -394,7 +421,6 @@ const getSummaries = (param) => {
             }
         })
     } else {
-        console.log(columns)
         columns.forEach((column, index) => {
             if (index === 0) {
                 sums[index] = '总计'

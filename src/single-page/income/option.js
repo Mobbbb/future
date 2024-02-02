@@ -78,7 +78,7 @@ export const getOption = (dim = [], onlyShowLast = 0) => {
                 opacity: 0.9,
                 color: areaColorArr[index]
             },
-            markLine: {
+            markLine: !index ? {
                 data: [
                     {
                         name: '最低点',
@@ -95,7 +95,7 @@ export const getOption = (dim = [], onlyShowLast = 0) => {
                         },
                     },
                 ],
-            },
+            } : {},
         })
     })
 
