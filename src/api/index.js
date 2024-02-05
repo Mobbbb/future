@@ -171,9 +171,17 @@ export const fetchOpeningOrderInfo = () => {
     })
 }
 
-export const fetchFutureDayLineList = (params) => {
+export const fetchFutureDayShareInfo = (params) => {
     return axios.request({
         url: prefixApi + '/other/futureDayShareInfo',
+        method: 'post',
+        data: params,
+    })
+}
+
+export const fetchFutureDayLineInfo = (params) => {
+    return axios.request({
+        url: prefixApi + '/other/futureDayLineInfo',
         method: 'post',
         data: params,
     })

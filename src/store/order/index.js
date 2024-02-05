@@ -1,4 +1,10 @@
-import { fetchOrderInfoHandle, fetchOpeningOrderInfo, fetchFutureConfigInfo, fetchFutureDayLineList  } from '@/api'
+import {
+    fetchOrderInfoHandle,
+    fetchOpeningOrderInfo,
+    fetchFutureConfigInfo,
+    fetchFutureDayShareInfo,
+    fetchFutureDayLineInfo,
+} from '@/api'
 
 const order = {
     namespaced: true,
@@ -9,7 +15,8 @@ const order = {
             openingOrderGroup: {},
             futureConfigInfo: [],
 
-            futureDayLineList: [],
+            futureDayShareInfo: [],
+            futureDayLineInfo: [],
         }
     },
     getters: {
@@ -35,8 +42,8 @@ const order = {
         },
     },
     mutations: {
-        setFutureDayLineList(state, value) {
-            state.futureDayLineList = value
+        setFutureDayShareInfo(state, value) {
+            state.futureDayShareInfo = value
         },
         setFutureConfigInfo(state, value) {
             state.futureConfigInfo = value
@@ -50,6 +57,9 @@ const order = {
         setOpeningOrderGroup(state, value) {
             state.openingOrderGroup = value
         },
+        setFutureDayLineInfo(state, value) {
+            state.futureDayLineInfo = value
+        },
     },
     actions: {
         async getOrderData({ commit }, params) {
@@ -62,10 +72,15 @@ const order = {
             const futureConfigInfo = res.data || []
             commit('setFutureConfigInfo', futureConfigInfo)
         },
-        async getFutureDayLineList({ commit }, params) {
-            const res = await fetchFutureDayLineList(params)
+        async getFutureDayShareInfo({ commit }, params) {
+            const res = await fetchFutureDayShareInfo(params)
             const info = res.data || []
-            commit('setFutureDayLineList', info)
+            commit('setFutureDayShareInfo', info)
+        },
+        async getFutureDayLineInfo({ commit }, params) {
+            const res = await fetchFutureDayLineInfo(params)
+            const info = res.data || []
+            commit('setFutureDayLineInfo', info)
         },
         async getOpeningOrderData({ commit }) {
             const res = await fetchOpeningOrderInfo()

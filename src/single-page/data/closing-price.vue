@@ -1,5 +1,5 @@
 <template>
-    <div class="future-wrap">
+    <div class="closing-price-wrap">
         <div class="search-input-wrap">
             <el-select class="analyse-select" v-model="weekDay" @change="changeWeekday">
                 <el-option :label="item" :value="Number(key)" v-for="(item, key) in weekdayMap"></el-option>
@@ -19,12 +19,7 @@
             </div>
             <el-card class="analyse-card" style="margin: 12px;">
                 <div class="line-chart-wrap">
-                    <div id="lineChart" :class="`k-line-chart-${index}`" v-for="(item, index) in kLineChartArr"></div>
-                </div>
-            </el-card>
-            <el-card class="analyse-card" style="margin: 12px;">
-                <div class="line-chart-wrap">
-                    <div id="lineChart" :class="`line-chart-${index}`" v-for="(item, index) in lineChartArr"></div>
+                    <div id="ClosingLineChart" :class="`${prevClassName}-${index}`" v-for="(item, index) in lineChartArr"></div>
                 </div>
             </el-card>
         </div>
@@ -34,30 +29,25 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useStore } from 'vuex'
-import { getArrLineOption, getKLineOption } from './option'
-import { dateFormat, calculateDate, toMonth } from 'umob'
-import { fetchFutureFestivalInfo } from '@/api'
-import { formatFutureFestivalData } from '@/libs/data-processing'
+import { getArrLineOption } from './option'
 import { weekdayMap } from '@/config/festivalMap'
 import { getBelongDealDateD } from '@/libs/util'
 
 const store = new useStore()
 
+const prevClassName = 'close-line-chart'
 const lineChartIns = ref([])
-const kLineChartIns = ref([])
-
 const weekDay = ref(getBelongDealDateD(new Date()).getDay())
 const upRate = ref(50)
 const lineChartArr = ref([])
-const kLineChartArr = ref([])
-const activeOrderTab = computed(() => store.state.app.activeOrderTab)
-const futureDayLineList = computed(() => store.state.order.futureDayLineList)
+const activeDataTab = computed(() => store.state.app.activeDataTab)
+const futureDayShareInfo = computed(() => store.state.order.futureDayShareInfo)
 
 const barWidth = computed(() => {
     return parseFloat(upRate.value) < 20 ? 20 : upRate.value
 })
 
-const getFutureDayLineList = (params) => store.dispatch('order/getFutureDayLineList', params)
+const getFutureDayShareInfo = (params) => store.dispatch('order/getFutureDayShareInfo', params)
 
 const changeWeekday = () => {
     formatData()
@@ -68,37 +58,10 @@ const destroyLineChart = () => {
         lineChartIns.value.forEach((item, index) => {
             item.clear()
             item.dispose()
-            document.getElementsByClassName(`line-chart-${index}`)[0].removeAttribute('_echarts_instance_')
+            document.getElementsByClassName(`${prevClassName}-${index}`)[0].removeAttribute('_echarts_instance_')
         })
         lineChartIns.value = []
     }
-}
-
-const destroyKLineChart = () => {
-    if (kLineChartIns.value.length) {
-        kLineChartIns.value.forEach((item, index) => {
-            item.clear()
-            item.dispose()
-            document.getElementsByClassName(`k-line-chart-${index}`)[0].removeAttribute('_echarts_instance_')
-        })
-        kLineChartIns.value = []
-    }
-}
-
-const initFestivalKLine = async () => {
-    const res = await fetchFutureFestivalInfo()
-    const { data = [] } = res
-    const formatData = formatFutureFestivalData(data)
-    kLineChartArr.value = formatData
-    nextTick(() => {
-        destroyKLineChart()
-        kLineChartArr.value.forEach((item, index) => {
-            const option = getKLineOption(item)
-            const chartIns = echarts.init(document.getElementsByClassName(`k-line-chart-${index}`)[0])
-            chartIns.setOption(option)
-            kLineChartIns.value.push(chartIns)
-        })
-    })
 }
 
 const initLineChart = async () => {
@@ -106,7 +69,7 @@ const initLineChart = async () => {
         destroyLineChart()
         lineChartArr.value.forEach((item, index) => {
             const option = getArrLineOption(item, index + 1)
-            const chartIns = echarts.init(document.getElementsByClassName(`line-chart-${index}`)[0])
+            const chartIns = echarts.init(document.getElementsByClassName(`${prevClassName}-${index}`)[0])
             chartIns.setOption(option)
             lineChartIns.value.push(chartIns)
         })
@@ -118,7 +81,7 @@ const formatData = () => {
     let countDown = 0
     let cursor = null
     let yearMonthMap = {}
-    futureDayLineList.value.reduce((prevReturnVal, cur) => {
+    futureDayShareInfo.value.reduce((prevReturnVal, cur) => {
         if (new Date(cur.date).getDay() === weekDay.value && prevReturnVal) {
             if (cur.rof === 0) {
                 countDown ++ // 跌
@@ -172,20 +135,19 @@ const formatData = () => {
     upRate.value = (countUp / (countUp + countDown) * 100).toFixed(1)
 }
 
-const initAnalyseData = async () => {
-    await getFutureDayLineList({ name: 'eb' })
+const initAnalyseData = async () => { // 获取收盘价
+    await getFutureDayShareInfo({ name: 'eb' })
     formatData()
     initLineChart()
 }
 
 const getDataWhileActive = () => {
-    if (activeOrderTab.value === 'data') {
+    if (activeDataTab.value === 'close') {
         initAnalyseData()
-        initFestivalKLine()
     }
 }
 
-watch(activeOrderTab, () => {
+watch(activeDataTab, () => {
     getDataWhileActive()
 })
 
@@ -195,7 +157,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     destroyLineChart()
-    destroyKLineChart()
 })
 </script>
 
@@ -269,7 +230,7 @@ onBeforeUnmount(() => {
     width: 100%;
     justify-content: space-between;
 }
-#lineChart {
+#ClosingLineChart {
     width: calc(50% - 14px);
     height: 300px;
     margin-bottom: 1.5vh;

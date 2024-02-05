@@ -21,6 +21,7 @@ const app = {
             activeNavIndex: initPath,
             activeIncomeTab: 'day',
             activeOrderTab: 'order',
+            activeDataTab: 'close',
 
             showLoginDrawerStatus: false,
             closeSettingShowStatus: false,
@@ -63,6 +64,9 @@ const app = {
         },
         setActiveOrderTab(state, value) {
             state.activeOrderTab = value
+        },
+        setActiveDataTab(state, value) {
+            state.activeDataTab = value
         },
         setGoodsType(state, value) {
             state.goods.type = value

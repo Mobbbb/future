@@ -119,7 +119,7 @@ export const formatFutureFestivalData = (data) => {
     return festivalData
 }
 
-export const formatDayLineData = (designatedOpenFutureLists, futureDayLineList) => {
+export const formatDayLineData = (designatedOpenFutureLists, futureDayShareInfo) => {
     const dayLineDateMap = {} // date-dayLineItem
     const dayFutureMap = {
         buy: {}, // date-futureList
@@ -144,7 +144,7 @@ export const formatDayLineData = (designatedOpenFutureLists, futureDayLineList) 
         dayLineDateMap[realDate] = null // 设置默认数据
     })
 
-    futureDayLineList.forEach(item => {
+    futureDayShareInfo.forEach(item => {
         dayLineDateMap[item.date] = item.close
         if (!dayFutureMap.buy[item.date]) { // 补充空数据
             dayFutureMap.buy[item.date] = null
