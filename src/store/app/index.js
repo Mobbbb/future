@@ -21,7 +21,7 @@ const app = {
             activeNavIndex: initPath,
             activeIncomeTab: 'day',
             activeOrderTab: 'order',
-            activeDataTab: 'close',
+            activeDataTab: 'dayKline',
 
             showLoginDrawerStatus: false,
             closeSettingShowStatus: false,

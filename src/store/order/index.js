@@ -5,6 +5,7 @@ import {
     fetchFutureDayShareInfo,
     fetchFutureDayLineInfo,
 } from '@/api'
+import { sortCallback } from 'umob'
 
 const order = {
     namespaced: true,
@@ -80,6 +81,7 @@ const order = {
         async getFutureDayLineInfo({ commit }, params) {
             const res = await fetchFutureDayLineInfo(params)
             const info = res.data || []
+            info.sort(sortCallback({ key: 'date', type: 'asc' }))
             commit('setFutureDayLineInfo', info)
         },
         async getOpeningOrderData({ commit }) {

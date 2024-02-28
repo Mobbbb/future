@@ -385,7 +385,134 @@ export const getArrLineOption = (data, name) => {
     }
 }
 
-export const getDayKLineOption = (data) => {
+export const dayLineGirdHeight = 100
+export const dayLineGirdGap = 20
+export const getDayKLineOption = (dateArr, yearMap) => {
+    const upColor = '#ec0000'
+    const upBorderColor = '#8A0000'
+    const downColor = '#00da3c'
+    const downBorderColor = '#008F28'
+
+    const gridArr = []
+    const xAxisArr = []
+    const yAxisArr = []
+    const seriesArr = []
+    const dataZoomArr = []
+
+    Object.keys(yearMap).forEach((key, index) => {
+        const isLastOne = Object.keys(yearMap).length - 1 === index
+        dataZoomArr.push(index)
+        gridArr.push({
+            top: 12 + dayLineGirdHeight * index + dayLineGirdGap * index,
+            left: '7%',
+            right: 12,
+            height: dayLineGirdHeight,
+        })
+        xAxisArr.push({
+            gridIndex: index,
+            type: 'category',
+            boundaryGap: false,
+            // inverse: true,
+            axisLine: { onZero: false },
+            splitLine: { show: false },
+            min: 'dataMin',
+            max: 'dataMax',
+            axisTick: {
+                show: isLastOne,
+            },
+            axisLine: {
+                show: isLastOne,
+                onZero: true,
+                lineStyle: {
+                    color: '#d0d0d0',
+                    width: 1,
+                },
+            },
+            axisLabel: {
+                show: isLastOne,
+                textStyle: {
+                    color: '#8e8e8e',
+                    fontSize,
+                },
+            },
+            data: dateArr,
+        })
+        yAxisArr.push({
+            gridIndex: index,
+            scale: true,
+            axisLabel: {
+                textStyle: {
+                    color: '#8e8e8e',
+                    fontSize,
+                },
+            },
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    color: '#f1f3f8',
+                    type: 'dashed',
+                },
+            },
+        })
+        seriesArr.push({
+            type: 'candlestick',
+            itemStyle: {
+                color: upColor,
+                color0: downColor,
+                borderColor: upBorderColor,
+                borderColor0: downBorderColor,
+            },
+            data: yearMap[key],
+            xAxisIndex: index,
+            yAxisIndex: index,
+        })
+    })
+
+    return {
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: 'line',
+            },
+            show: true,
+            position: function (pos, params, dom, rect, size) {
+                // 鼠标在左侧时 tooltip 显示到右侧，鼠标在右侧时 tooltip 显示到左侧。
+                var obj = { top: 20 }
+                obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 5
+                return obj
+            }
+        },
+        axisPointer: {
+            link: [
+                {
+                    xAxisIndex: 'all'
+                }
+            ],
+        }, 
+        grid: gridArr,
+        xAxis: xAxisArr,
+        yAxis: yAxisArr,
+        dataZoom: [
+            {
+                type: 'inside',
+                xAxisIndex: dataZoomArr,
+                start: 0,
+                end: 100,
+            },
+            {
+                show: true,
+                xAxisIndex: dataZoomArr,
+                type: 'slider',
+                bottom: 10,
+                start: 0,
+                end: 100,
+            },
+        ],
+        series: seriesArr,
+    }
+}
+
+export const getTotalKLineOption = (data) => {
     const upColor = '#ec0000'
     const upBorderColor = '#8A0000'
     const downColor = '#00da3c'
@@ -401,20 +528,33 @@ export const getDayKLineOption = (data) => {
                 type: 'line',
             },
             show: true,
+            position: function (pos, params, dom, rect, size) {
+                // 鼠标在左侧时 tooltip 显示到右侧，鼠标在右侧时 tooltip 显示到左侧。
+                var obj = { top: 20 }
+                obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 5
+                return obj
+            }
         },
+        axisPointer: {
+            link: [
+                {
+                    xAxisIndex: 'all'
+                }
+            ]
+        }, 
         grid: [
             {
-                top: 20,
+                top: 12,
                 left: '7%',
                 right: 12,
-                bottom: 160,
+                bottom: 140,
             },
             {
                 left: '7%',
                 right: 12,
                 height: 80,
-                bottom: 50,
-            },
+                bottom: 50
+            }
         ],
         xAxis: [
             {
@@ -516,7 +656,7 @@ export const getDayKLineOption = (data) => {
                 },
                 encode: {
                     x: 0,
-                    y: [1, 4, 3, 2]
+                    y: [1, 4, 3, 2],
                 },
             },
             {
@@ -530,12 +670,9 @@ export const getDayKLineOption = (data) => {
                 large: true,
                 encode: {
                     x: 0,
-                    y: 5
+                    y: 5,
                 },
             },
         ],
     }
 }
-// TODO
-// 涨跌判断
-// 样式

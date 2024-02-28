@@ -384,11 +384,14 @@ const showLoginHandle = () => {
 
 const initData = async () => {
     if (isLogin.value) {
-        await getTableData()
         if (activeName.value === 'add') {
+            await getTableData()
             getTotalIncome()
         } else if (activeName.value === 'day') {
+            await getTableData()
             getDayIncome()
+        } else if (activeName.value === 'rebate') {
+            getRebateInfo()
         }
     }
 }

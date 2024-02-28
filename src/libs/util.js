@@ -144,3 +144,35 @@ export const getDateByStep = (date, num) => {
 
     return currentDate
 }
+
+export function calculatePearsonCorrelation(data1, data2) {
+    // 计算平均值函数
+    function mean(data) {
+        return data.reduce((acc, val) => acc + val, 0) / data.length
+    }
+
+    // 计算皮尔逊相关系数函数
+    function pearsonCorrelation(data1, data2) {
+        if (data1.length !== data2.length) {
+            throw "两组数据长度不相等"
+        }
+
+        const mean1 = mean(data1)
+        const mean2 = mean(data2)
+
+        let numerator = 0
+        let denominator1 = 0
+        let denominator2 = 0
+
+        for (let i = 0; i < data1.length; i++) {
+            numerator += (data1[i] - mean1) * (data2[i] - mean2)
+            denominator1 += Math.pow(data1[i] - mean1, 2)
+            denominator2 += Math.pow(data2[i] - mean2, 2)
+        }
+
+        return numerator / Math.sqrt(denominator1 * denominator2)
+    }
+
+    // 计算皮尔逊相关系数
+    return pearsonCorrelation(data1, data2)
+}

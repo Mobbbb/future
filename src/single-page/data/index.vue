@@ -1,14 +1,14 @@
 <template>
     <div class="data-page-wrap">
         <el-tabs v-model="activeName" class="data-tab">
-            <el-tab-pane label="主力收盘价" name="close">
-                <ClosingPrice></ClosingPrice>
+            <el-tab-pane label="日K" name="dayKline">
+                <DayKline></DayKline>
             </el-tab-pane>
             <el-tab-pane label="节假日" name="festival">
                 <Festival></Festival>
             </el-tab-pane>
-            <el-tab-pane label="日线" name="dayKLine">
-                <DayKLine></DayKLine>
+            <el-tab-pane label="主力收盘价" name="close">
+                <ClosingPrice></ClosingPrice>
             </el-tab-pane>
         </el-tabs>
     </div>
@@ -19,7 +19,7 @@ import { computed } from 'vue'
 import { useStore } from 'vuex'
 import Festival from './festival.vue'
 import ClosingPrice from './closing-price.vue'
-import DayKLine from './day-kline.vue'
+import DayKline from './day-kline.vue'
 
 const store = new useStore()
 const setActiveDataTab = (value) => store.commit('app/setActiveDataTab', value)
