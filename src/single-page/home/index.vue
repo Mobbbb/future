@@ -1,6 +1,6 @@
 <template>
     <div class="home-wrap" v-loading="isLoading">     
-        <div class="list-wrap">
+        <div class="list-wrap" ref="listWrap">
             <div class="article-item-wrap mobile-wrap" v-for="item in showListData" :key="item.id" @click="clickHandle(item)">
                 <div class="article-title">
                     <span class="html-content" v-html="item.htmlContent" :ref="el => setItemRef(el, item.index)"></span>
@@ -18,6 +18,7 @@
             v-model:currentPage="currentPage"
             :page-size="pageSize"
             :total="homeListData.length"
+            @current-change="pageChange"
             class="gc-pagination" />
         <Refresh @on-click="refreshHandle" :showRedPoint="showRedPoint"></Refresh>
     </div>
@@ -41,6 +42,7 @@ export default {
         const isLoading = ref(false)
         const showRedPoint = ref(false)
         const newStatus = ref(null)
+        const listWrap = ref(null)
         const htmlContent = {}
         const homeListData = computed(() => store.state.app.homeListData.filter(item => !item.hideDefault))
 
@@ -99,6 +101,10 @@ export default {
                 localStorage.setItem('message-status', newStatus.value)
             }
         }
+
+        const pageChange = () =>{
+            listWrap.value.scrollTop = 0
+        }
         
 
         onMounted(async () => {
@@ -123,6 +129,7 @@ export default {
         return {
             currentPage,
             pageSize,
+            listWrap,
             htmlContent,
             homeListData,
             showListData,
@@ -131,6 +138,7 @@ export default {
             clickHandle,
             setItemRef,
             refreshHandle,
+            pageChange,
         }
     },
 }
