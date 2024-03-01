@@ -1,5 +1,10 @@
 <template>
     <div class="festival-wrap">
+        <div class="search-input-wrap">
+            <el-select class="analyse-select" v-model="dataFutureBreed">
+                <el-option label="苯乙烯" value="eb"></el-option>
+            </el-select>
+        </div>
         <el-card class="analyse-card" style="margin: 12px;">
             <div class="line-chart-wrap">
                 <div id="FestivalLineChart" :class="`${prevClassName}-${index}`" v-for="(item, index) in kLineChartArr"></div>
@@ -21,6 +26,16 @@ const prevClassName = 'k-line-chart'
 const kLineChartIns = ref([])
 const kLineChartArr = ref([])
 const activeDataTab = computed(() => store.state.app.activeDataTab)
+const dataFutureBreed = computed({
+    get() {
+        return store.state.order.dataFutureBreed
+    },
+    set(value) {
+        setDataFutureBreed(value)
+    },
+})
+
+const setDataFutureBreed = (data) => store.commit('order/setDataFutureBreed', data)
 
 const destroyKLineChart = () => {
     if (kLineChartIns.value.length) {
@@ -34,7 +49,7 @@ const destroyKLineChart = () => {
 }
 
 const initFestivalKLine = async () => { // 获取节假日k线
-    const res = await fetchFutureFestivalInfo()
+    const res = await fetchFutureFestivalInfo({ name: dataFutureBreed.value })
     const { data = [] } = res
     const formatData = formatFutureFestivalData(data)
     kLineChartArr.value = formatData
@@ -69,6 +84,18 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.search-input-wrap {
+    color: #606266;
+    padding: 0 0 0 12px;
+    font-size: 12px;
+    border-bottom: 2px solid #e4e7ed;
+    box-sizing: border-box;
+    height: 42px;
+}
+.analyse-select {
+    width: 120px;
+    margin-right: 12px;
+}
 .line-chart-wrap {
     display: flex;
     flex-wrap: wrap;

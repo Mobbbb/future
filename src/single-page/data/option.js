@@ -8,7 +8,7 @@ function circleDom(color, size, left = 0, right = 4) {
 }
 
 export const getKLineOption = (params) => {
-    const { x, y, year, name, type } = params
+    const { x, y, year, name, number, type } = params
 
     let totalPrice = []
     y.forEach(item => totalPrice = totalPrice.concat(item))
@@ -85,7 +85,7 @@ export const getKLineOption = (params) => {
         }, 
         title: {
             text: `${year.slice(0, 4)}年${festivalTypeMap[type]}`,
-            subtext: `${name.slice(name.length - 2, name.length)}合约`,
+            subtext: name + number,
             x: 'center',
             itemGap: 5,
         },

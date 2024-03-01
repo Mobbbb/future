@@ -18,6 +18,7 @@ const order = {
 
             futureDayShareInfo: [],
             futureDayLineInfo: [],
+            dataFutureBreed: 'eb',
         }
     },
     getters: {
@@ -43,6 +44,9 @@ const order = {
         },
     },
     mutations: {
+        setDataFutureBreed(state, value) {
+            state.dataFutureBreed = value
+        },
         setFutureDayShareInfo(state, value) {
             state.futureDayShareInfo = value
         },

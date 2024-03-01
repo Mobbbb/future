@@ -110,6 +110,7 @@ export const formatFutureFestivalData = (data) => {
                     x: [item.date.slice(5, 10)],
                     year: item.date.slice(0, 4),
                     name: item.name,
+                    number: item.number,
                     type: item.type,
                 }
             }

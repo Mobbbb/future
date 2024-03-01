@@ -1,5 +1,10 @@
 <template>
     <div class="closing-price-wrap">
+        <div class="search-input-wrap">
+            <el-select class="analyse-select" v-model="dataFutureBreed">
+                <el-option label="苯乙烯" value="eb"></el-option>
+            </el-select>
+        </div>
         <div class="analyse-content-wrap">
             <el-card class="analyse-card" style="margin: 12px;">
                 <div class="line-chart-wrap">
@@ -22,7 +27,16 @@ const lineChartIns = ref([])
 const lineChartArr = ref([])
 const activeDataTab = computed(() => store.state.app.activeDataTab)
 const futureDayShareInfo = computed(() => store.state.order.futureDayShareInfo)
+const dataFutureBreed = computed({
+    get() {
+        return store.state.order.dataFutureBreed
+    },
+    set(value) {
+        setDataFutureBreed(value)
+    },
+})
 
+const setDataFutureBreed = (data) => store.commit('order/setDataFutureBreed', data)
 const getFutureDayShareInfo = (params) => store.dispatch('order/getFutureDayShareInfo', params)
 
 const destroyLineChart = () => {
@@ -90,7 +104,7 @@ const formatData = () => {
 }
 
 const initAnalyseData = async () => { // 获取收盘价
-    await getFutureDayShareInfo({ name: 'eb' })
+    await getFutureDayShareInfo({ name: dataFutureBreed.value })
     formatData()
     initLineChart()
 }
@@ -115,6 +129,18 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.search-input-wrap {
+    color: #606266;
+    padding: 0 0 0 12px;
+    font-size: 12px;
+    border-bottom: 2px solid #e4e7ed;
+    box-sizing: border-box;
+    height: 42px;
+}
+.analyse-select {
+    width: 120px;
+    margin-right: 12px;
+}
 .line-chart-wrap {
     display: flex;
     flex-wrap: wrap;

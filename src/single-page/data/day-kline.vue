@@ -4,6 +4,9 @@
             <el-select class="analyse-select" v-model="weekDay" @change="changeWeekday">
                 <el-option :label="item" :value="Number(key)" v-for="(item, key) in weekdayMap"></el-option>
             </el-select>
+            <el-select class="analyse-select" v-model="dataFutureBreed">
+                <el-option label="苯乙烯" value="eb"></el-option>
+            </el-select>
         </div>
         <div class="analyse-content-wrap">
             <div class="total-analyse-wrap">
@@ -49,7 +52,16 @@ const barWidth = computed(() => {
     return parseFloat(upRate.value) < 20 ? 20 : upRate.value
 })
 
+const dataFutureBreed = computed({
+    get() {
+        return store.state.order.dataFutureBreed
+    },
+    set(value) {
+        setDataFutureBreed(value)
+    },
+})
 
+const setDataFutureBreed = (data) => store.commit('order/setDataFutureBreed', data)
 const getFutureDayLineInfo = (params) => store.dispatch('order/getFutureDayLineInfo', params)
 
 const changeWeekday = () => {
@@ -72,7 +84,7 @@ const destroyKLineChart = () => {
 }
 
 const initDayKLine = async () => {
-    await getFutureDayLineInfo({ name: 'eb', startDate: '2020-01-01' })
+    await getFutureDayLineInfo({ name: dataFutureBreed.value, startDate: '2020-01-01' })
     
     destroyKLineChart()
 
@@ -183,6 +195,10 @@ onBeforeUnmount(() => {
     box-sizing: border-box;
     height: 42px;
 }
+.analyse-select {
+    width: 120px;
+    margin-right: 12px;
+}
 .total-analyse-wrap {
     text-align: center;
     position: relative;
@@ -233,10 +249,6 @@ onBeforeUnmount(() => {
 .total-analyse-value-right {
     left: 30px;
     right: unset;
-}
-.analyse-select {
-    width: 120px;
-    margin-right: 12px;
 }
 #TotalLineChart {
     height: 300px;

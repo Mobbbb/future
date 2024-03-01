@@ -201,9 +201,10 @@ export const fetchfutureLatestInfo = () => {
     })
 }
 
-export const fetchFutureFestivalInfo = () => {
+export const fetchFutureFestivalInfo = (params) => {
     return axios.request({
         url: prefixApi + '/other/futureFestivalInfo',
         method: 'get',
+        params,
     })
 }
