@@ -6,6 +6,10 @@ export const genVH = (length) => {
     return length * clientHeight / 800
 }
 
+export function circleDom(color, size, left = 0, right = 4) {
+    return `<span style="display: inline-block; width: ${size}px; height: ${size}px; border-radius: 50%; background: ${color}; margin: 0 ${right}px 2px ${left}px;vertical-align: middle;"></span>`
+}
+
 export const parseDateParams = (dateParams) => {
     const params = {}
     if (dateParams[0]) {

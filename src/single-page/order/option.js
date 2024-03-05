@@ -1,5 +1,4 @@
-import { genVH } from '@/libs/util'
-import { CHUNJIE_YEAR_MAP, festivalTypeMap, weekdayMap } from '@/config/festivalMap'
+import { genVH, circleDom } from '@/libs/util'
 
 const fillColor = ['#e82b42', '#11a642', '#ffb347']
 
@@ -120,10 +119,6 @@ function getYAxisIndexSeries(series, dataSource, option) {
     if (Object.keys(yAxisIndexSeries).length > 1) { // 存在多条y轴
         splitLineAlign(dataSource, yAxisIndexSeries, option)
     }
-}
-
-function circleDom(color, size, left = 0, right = 4) {
-    return `<span style="display: inline-block; width: ${size}px; height: ${size}px; border-radius: 50%; background: ${color}; margin: 0 ${right}px 0 ${left}px;vertical-align: middle;"></span>`
 }
 
 export const getBarOption = (data) => {

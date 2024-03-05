@@ -20,11 +20,11 @@
                     <div class="parallelogram" :style="{ left: `calc(${barWidth}% - 27px / 2)` }"></div>
                 </div>
             </div>
-            <el-card class="analyse-card" style="margin: 12px;">
+            <el-card class="day-kline-card" style="margin: 12px;">
                 <div id="TotalLineChart"></div>
             </el-card>
-            <el-card class="analyse-card" style="margin: 12px;">
-                <div id="DayLineChart" :style="{ height: `${dayLineChartHeight}px`, marginBottom: '1.5vh', }"></div>
+            <el-card class="day-kline-card" style="margin: 12px;">
+                <div id="DayLineChart" :style="{ height: `${dayLineChartHeight}px` }"></div>
             </el-card>
         </div>
     </div>
@@ -33,7 +33,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useStore } from 'vuex'
-import { getArrLineOption, getDayKLineOption, dayLineGirdHeight, dayLineGirdGap, getTotalKLineOption } from './option'
+import { getDayKLineOption, dayLineGirdHeight, dayLineGirdGap, getTotalKLineOption } from './option'
 import { weekdayMap } from '@/config/festivalMap'
 import { getBelongDealDateD, calculatePearsonCorrelation } from '@/libs/util'
 import { sortCallback } from 'umob'
@@ -102,6 +102,7 @@ const initDayKLine = async () => {
                 item.min,
                 item.max,
                 item.date.slice(5, 10),
+                item.date.slice(0, 4),
             ]]
         } else {
             yearMap[item.date.slice(0, 4)].push([
@@ -110,6 +111,7 @@ const initDayKLine = async () => {
                 item.min,
                 item.max,
                 item.date.slice(5, 10),
+                item.date.slice(0, 4),
             ])
         }
         totalLineData.push([
@@ -126,12 +128,14 @@ const initDayKLine = async () => {
     dateArr.forEach((itemDate, index) => {
         Object.keys(yearMap).forEach(key => {
             if (!yearMap[key][index] || yearMap[key][index][4] !== itemDate) {
+                // 日期补全
                 yearMap[key].splice(index, 0, [
                     null,
                     null,
                     null,
                     null,
                     itemDate,
+                    key,
                 ])
             }
         })
@@ -251,7 +255,13 @@ onBeforeUnmount(() => {
     right: unset;
 }
 #TotalLineChart {
-    height: 300px;
-    margin-bottom: 1.5vh;
+    height: 350px;
+}
+</style>
+
+<style>
+.day-kline-card .el-card__body {
+    padding-left: 14px;
+    padding-right: 12px;
 }
 </style>

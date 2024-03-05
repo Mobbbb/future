@@ -38,10 +38,3 @@
         padding: 0 16px;
     }
 }
-
-@media screen and (max-width: 880px) {
-    .line-chart-wrap #lineChart{
-        width: 100%!important;
-        min-width: 100%!important;
-    }
-}

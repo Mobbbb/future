@@ -7,7 +7,11 @@
         </div>
         <el-card class="analyse-card" style="margin: 12px;">
             <div class="line-chart-wrap">
-                <div id="FestivalLineChart" :class="`${prevClassName}-${index}`" v-for="(item, index) in kLineChartArr"></div>
+                <div id="FestivalLineChart"
+                    :style="config.ltMinWidth ? { width: '100%' } : {} "
+                    :class="`${prevClassName}-${index}`"
+                    v-for="(item, index) in kLineChartArr">
+                </div>
             </div>
         </el-card>
     </div>
@@ -16,9 +20,10 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useStore } from 'vuex'
-import { getKLineOption } from './option'
+import { getFestivalKLineOption } from './option'
 import { fetchFutureFestivalInfo } from '@/api'
 import { formatFutureFestivalData } from '@/libs/data-processing'
+import config from '@/config'
 
 const store = new useStore()
 
@@ -56,7 +61,7 @@ const initFestivalKLine = async () => { // 获取节假日k线
     nextTick(() => {
         destroyKLineChart()
         kLineChartArr.value.forEach((item, index) => {
-            const option = getKLineOption(item)
+            const option = getFestivalKLineOption(item)
             const chartIns = echarts.init(document.getElementsByClassName(`${prevClassName}-${index}`)[0])
             chartIns.setOption(option)
             kLineChartIns.value.push(chartIns)

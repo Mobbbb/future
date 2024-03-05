@@ -1,13 +1,9 @@
-import { genVH } from '@/libs/util'
+import { genVH, circleDom } from '@/libs/util'
 import { CHUNJIE_YEAR_MAP, festivalTypeMap, weekdayMap } from '@/config/festivalMap'
 
 const fontSize = genVH(10)
 
-function circleDom(color, size, left = 0, right = 4) {
-    return `<span style="display: inline-block; width: ${size}px; height: ${size}px; border-radius: 50%; background: ${color}; margin: 0 ${right}px 0 ${left}px;vertical-align: middle;"></span>`
-}
-
-export const getKLineOption = (params) => {
+export const getFestivalKLineOption = (params) => {
     const { x, y, year, name, number, type } = params
 
     let totalPrice = []
@@ -252,7 +248,7 @@ const skipMap = {
     '1': '21',
     '2': '21',
 }
-export const getArrLineOption = (data, name) => {
+export const getCloseLineOption = (data, name) => {
     const series = []
     let xAxis = []
     let totalPrice = []
@@ -404,7 +400,7 @@ export const getDayKLineOption = (dateArr, yearMap) => {
         dataZoomArr.push(index)
         gridArr.push({
             top: 12 + dayLineGirdHeight * index + dayLineGirdGap * index,
-            left: '7%',
+            left: 40,
             right: 12,
             height: dayLineGirdHeight,
         })
@@ -475,9 +471,50 @@ export const getDayKLineOption = (dateArr, yearMap) => {
                 type: 'line',
             },
             show: true,
+            padding: [0, 10, 12, 10],
+            formatter: function(data) {
+                let str = ''
+                let str1 = ''
+                const sortData = data.sort((a ,b) => a.data[6] - b.data[6])
+                sortData.forEach(item => {
+                    if (item.data[1] && item.data[2]) {
+                        const color = item.data[1] > item.data[2] ? '#47b262' : '#eb5454'
+                        str += `
+                            <div style="line-height: 1; margin-top: 12px;">${circleDom(color, 10)}<span>${item.data[6]}</span></div>          
+                            <div style="line-height: 1; margin-top: 8px;">
+                                开<span style="font-weight: bold;margin-left: 10px; float: right;">${item.data[1]}</span>
+                            </div>
+                            <div style="line-height: 1; margin-top: 8px;">
+                                收<span style="font-weight: bold;margin-left: 10px; float: right;color: ${color};">${item.data[2]}</span>
+                            </div>
+                        `
+                        str1 += `
+                            <div style="line-height: 1; margin-top: 12px;margin-left: -2px;transform: scale(0.9);"><span>${item.data[5]}</span></div>    
+                            <div style="line-height: 1; margin-top: 8px;">
+                                高<span style="font-weight: bold;margin-left: 10px; float: right;">${item.data[4]}</span>
+                            </div>      
+                            <div style="line-height: 1; margin-top: 8px;">
+                                低<span style="font-weight: bold;margin-left: 10px; float: right;">${item.data[3]}</span>
+                            </div>
+                        `
+                    }
+                })
+
+                return `
+                    <div style="display: flex;">
+                        <div style="border: 1px solid rgb(255, 255, 255);margin-right: 16px;">
+                            ${str}
+                        </div>
+                        <div style="border: 1px solid rgb(255, 255, 255);">
+                            ${str1}
+                        </div>
+                    </div>
+                `
+            },
             position: function (pos, params, dom, rect, size) {
                 // 鼠标在左侧时 tooltip 显示到右侧，鼠标在右侧时 tooltip 显示到左侧。
-                var obj = { top: 20 }
+                var obj = { top: pos[1] - 40 < 0 ? 0 : pos[1] - 40 }
+                if (pos[1] > 500) obj = { bottom: 0 }
                 obj[['left', 'right'][+(pos[0] < size.viewSize[0] / 2)]] = 5
                 return obj
             }
@@ -545,12 +582,12 @@ export const getTotalKLineOption = (data) => {
         grid: [
             {
                 top: 12,
-                left: '7%',
+                left: 40,
                 right: 12,
                 bottom: 140,
             },
             {
-                left: '7%',
+                left: 40,
                 right: 12,
                 height: 80,
                 bottom: 50

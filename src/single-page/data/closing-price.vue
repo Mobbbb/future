@@ -8,7 +8,11 @@
         <div class="analyse-content-wrap">
             <el-card class="analyse-card" style="margin: 12px;">
                 <div class="line-chart-wrap">
-                    <div id="ClosingLineChart" :class="`${prevClassName}-${index}`" v-for="(item, index) in lineChartArr"></div>
+                    <div id="ClosingLineChart"
+                        :style="config.ltMinWidth ? { width: '100%' } : {}"
+                        :class="`${prevClassName}-${index}`"
+                        v-for="(item, index) in lineChartArr">
+                    </div>
                 </div>
             </el-card>
         </div>
@@ -18,7 +22,8 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useStore } from 'vuex'
-import { getArrLineOption } from './option'
+import { getCloseLineOption } from './option'
+import config from '@/config'
 
 const store = new useStore()
 
@@ -54,7 +59,7 @@ const initLineChart = async () => {
     nextTick(() => {
         destroyLineChart()
         lineChartArr.value.forEach((item, index) => {
-            const option = getArrLineOption(item, index + 1)
+            const option = getCloseLineOption(item, index + 1)
             const chartIns = echarts.init(document.getElementsByClassName(`${prevClassName}-${index}`)[0])
             chartIns.setOption(option)
             lineChartIns.value.push(chartIns)
