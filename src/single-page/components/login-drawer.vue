@@ -20,7 +20,7 @@
                 </div>
                 <div class="input-item-wrap">
                     <span>密码：</span>
-                    <el-input v-model="password" @keyup.enter="enterHandle" show-password placeholder="请输入密码"></el-input>
+                    <el-input v-model="password" @keyup.enter="enterHandle" type="password" placeholder="请输入密码"></el-input>
                 </div>
                 <div class="login-btn-wrap">
                     <gc-button type="active" @on-click="clickLogin" :width="70">登录</gc-button>

@@ -713,3 +713,99 @@ export const getTotalKLineOption = (data) => {
         ],
     }
 }
+
+export const getPositionOption = (data) => {
+    return {
+        grid: [
+            {
+                left: 5,
+                right: 5,
+                bottom: 50,
+                top: 20,
+                containLabel: true,
+            },
+        ],
+        legend: {
+            bottom: genVH(4),
+        },
+        axisPointer: {
+            show: true,
+            label: {
+                precision: 0,
+                padding: [5, 5, 5, 5],
+            },
+        },
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                animation: false
+            },
+            formatter: `{b}: {c}`,
+        },
+        xAxis: [{
+            type: 'category',
+            boundaryGap: false,
+            axisLine: {
+                lineStyle: {
+                    color: '#d0d0d0',
+                    width: 1,
+                },
+            },
+            axisLabel: {
+                textStyle: {
+                    color: '#8e8e8e',
+                    fontSize,
+                },
+                // rotate: 45,
+            },
+            data: data.map(item => item.date).concat([null]),
+        }],
+        dataZoom: [
+            {
+                show: true,
+                type: 'slider',
+                bottom: 10,
+                start: 70,
+                end: 100,
+            },
+        ],
+        yAxis: [{
+            name: '',
+            nameTextStyle: {
+                padding: [0, 0, 0, 0],
+            },
+            type: 'value',
+            axisLabel: {
+                textStyle: {
+                    color: '#8e8e8e',
+                    fontSize,
+                },
+            },
+            splitLine: {
+                show: true,
+                lineStyle: {
+                    color: '#f1f3f8',
+                    type: 'dashed',
+                },
+            },
+        }],
+        series: [{
+            name: '',
+            type: 'line',
+            data: data.map(item => item.num).concat([null]),
+            smooth: true,
+            connectNulls: true,
+            symbol: 'none',
+            lineStyle: {
+                width: 1,
+            },
+            itemStyle: {
+                // color: colorArr[index],
+            },
+            label: {
+                show: false,
+                position: 'insideTopRight'
+            },
+        }],
+    }
+}

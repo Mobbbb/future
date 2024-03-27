@@ -121,7 +121,9 @@ const getDataWhileActive = () => {
 }
 
 watch(activeDataTab, () => {
-    getDataWhileActive()
+    if (!lineChartIns.value.length) {
+        getDataWhileActive()
+    }
 })
 
 onMounted(() => {
@@ -136,11 +138,10 @@ onBeforeUnmount(() => {
 <style scoped>
 .search-input-wrap {
     color: #606266;
-    padding: 0 0 0 12px;
+    padding: 12px 0 12px 12px;
     font-size: 12px;
     border-bottom: 2px solid #e4e7ed;
     box-sizing: border-box;
-    height: 42px;
 }
 .analyse-select {
     width: 120px;

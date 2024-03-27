@@ -6,13 +6,7 @@
             </el-select>
         </div>
         <el-card class="analyse-card" style="margin: 12px;">
-            <div class="line-chart-wrap">
-                <div id="FestivalLineChart"
-                    :style="config.ltMinWidth ? { width: '100%' } : {} "
-                    :class="`${prevClassName}-${index}`"
-                    v-for="(item, index) in kLineChartArr">
-                </div>
-            </div>
+            <div id="PositionChart" :style="config.ltMinWidth ? { width: '100%' } : {} "></div>
         </el-card>
     </div>
 </template>
@@ -20,16 +14,15 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useStore } from 'vuex'
-import { getFestivalKLineOption } from './option'
-import { fetchFutureFestivalInfo } from '@/api'
+import { getFestivalKLineOption, getPositionOption } from './option'
+import { fetchFuturePositionInfo } from '@/api'
 import { formatFutureFestivalData } from '@/libs/data-processing'
 import config from '@/config'
 
 const store = new useStore()
 
 const prevClassName = 'k-line-chart'
-const kLineChartIns = ref([])
-const kLineChartArr = ref([])
+let chartIns = null
 const activeDataTab = computed(() => store.state.app.activeDataTab)
 const dataFutureBreed = computed({
     get() {
@@ -43,40 +36,31 @@ const dataFutureBreed = computed({
 const setDataFutureBreed = (data) => store.commit('order/setDataFutureBreed', data)
 
 const destroyKLineChart = () => {
-    if (kLineChartIns.value.length) {
-        kLineChartIns.value.forEach((item, index) => {
-            item.clear()
-            item.dispose()
-            document.getElementsByClassName(`${prevClassName}-${index}`)[0].removeAttribute('_echarts_instance_')
-        })
-        kLineChartIns.value = []
+    if (chartIns) {
+        chartIns.clear()
+        chartIns.dispose()
+        document.getElementById('PositionChart').removeAttribute('_echarts_instance_')
+        chartIns = null
     }
 }
 
 const initFestivalKLine = async () => { // 获取节假日k线
-    const res = await fetchFutureFestivalInfo({ name: dataFutureBreed.value })
+    const res = await fetchFuturePositionInfo({ name: dataFutureBreed.value })
     const { data = [] } = res
-    const formatData = formatFutureFestivalData(data)
-    kLineChartArr.value = formatData
-    nextTick(() => {
-        destroyKLineChart()
-        kLineChartArr.value.forEach((item, index) => {
-            const option = getFestivalKLineOption(item)
-            const chartIns = echarts.init(document.getElementsByClassName(`${prevClassName}-${index}`)[0])
-            chartIns.setOption(option)
-            kLineChartIns.value.push(chartIns)
-        })
-    })
+
+    const option = getPositionOption(data)
+    chartIns = echarts.init(document.getElementById('PositionChart'))
+    chartIns.setOption(option)
 }
 
 const getDataWhileActive = () => {
-    if (activeDataTab.value === 'festival') {
+    if (activeDataTab.value === 'position') {
         initFestivalKLine()
     }
 }
 
 watch(activeDataTab, () => {
-    if (!kLineChartArr.value.length) {
+    if (!chartIns) {
         getDataWhileActive()
     }
 })
@@ -108,9 +92,8 @@ onBeforeUnmount(() => {
     width: 100%;
     justify-content: space-between;
 }
-#FestivalLineChart {
-    width: calc(50% - 14px);
+#PositionChart {
+    width: 100%;
     height: 300px;
-    margin-bottom: 1.5vh;
 }
 </style>

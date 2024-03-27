@@ -1,8 +1,11 @@
 <template>
     <div class="data-page-wrap">
-        <el-tabs v-model="activeName" class="data-tab">
+        <el-tabs v-model="activeName" class="data-tab" v-if="isLogin">
             <el-tab-pane label="日K" name="dayKline">
                 <DayKline></DayKline>
+            </el-tab-pane>
+            <el-tab-pane label="持仓" name="position">
+                <Position></Position>
             </el-tab-pane>
             <el-tab-pane label="节假日" name="festival">
                 <Festival></Festival>
@@ -11,6 +14,7 @@
                 <ClosingPrice></ClosingPrice>
             </el-tab-pane>
         </el-tabs>
+        <LoginTips v-else></LoginTips>
     </div>
 </template>
 
@@ -20,9 +24,13 @@ import { useStore } from 'vuex'
 import Festival from './festival.vue'
 import ClosingPrice from './closing-price.vue'
 import DayKline from './day-kline.vue'
+import Position from './position.vue'
+import LoginTips from '@/single-page/components/login-tips.vue'
 
 const store = new useStore()
 const setActiveDataTab = (value) => store.commit('app/setActiveDataTab', value)
+
+const isLogin = computed(() => store.getters['app/isLogin'])
 
 const activeName = computed({
     get() {
@@ -36,7 +44,7 @@ const activeName = computed({
 
 <style scoped>
 .data-page-wrap {
-    background: #fff;
+    background: #f5f5f5;;
     position: relative;
     height: 100%;
     box-sizing: border-box;
@@ -47,8 +55,13 @@ const activeName = computed({
 .data-tab {
     height: 100%;
 }
+.data-tab .el-tabs__header {
+    margin-bottom: 1px;
+    background: white;
+}
 .data-tab .el-tabs__content {
     height: calc(100% - 55px);
+    background: white;
 }
 .data-tab .el-tab-pane {
     height: 100%;

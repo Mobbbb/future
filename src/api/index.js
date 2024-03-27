@@ -187,6 +187,14 @@ export const fetchFutureDayLineInfo = (params) => {
     })
 }
 
+export const fetchFuturePositionInfo = (params) => {
+    return axios.request({
+        url: prefixApi + '/other/futurePositionInfo',
+        method: 'post',
+        data: params,
+    })
+}
+
 export const fetchIncomeLatestInfo = () => {
     return axios.request({
         url: prefixApi + '/other/incomeLatestInfo',

@@ -56,12 +56,7 @@
                 </el-table>
             </el-tab-pane>
         </el-tabs>
-        <div class="no-data-class login-wrap" v-else>
-            <div>
-                <blockquote>您当前还未登录</blockquote>
-                <div class="no-data-btn" @click="showLoginHandle">前往登录</div>
-            </div>
-        </div>
+        <LoginTips v-else></LoginTips>
         <el-dialog v-model="centerDialogVisible"
             title="警告"
             width="280px">
@@ -85,6 +80,7 @@ import { festivalList } from '@/config/festivalMap'
 import { DocumentAdd, DocumentRemove, Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { dateGap, dateFormat, extractStr } from 'umob'
+import LoginTips from '@/single-page/components/login-tips.vue'
 
 const store = new useStore()
 const tableData = ref([])
@@ -486,19 +482,6 @@ onMounted(() => {
     border-left: 4px solid #dfe2e5;
     margin: 12px 0;
     padding: 8px 0 8px 12px;
-}
-.no-data-class .no-data-btn {
-    color: #3eaf7c;
-    font-weight: 500;
-    font-size: 16px;
-    transition: color .2s ease;
-}
-.no-data-class .no-data-btn:hover {
-    cursor: pointer;
-    color: #79cea8;
-}
-.login-wrap {
-    padding-bottom: 30vh;
 }
 </style>
 
