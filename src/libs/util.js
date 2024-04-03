@@ -131,10 +131,18 @@ export const getBelongDealDateGap = (time) => {
 
 export const getMonthShortcuts = (num = 5) => {
     const now = dateFormat(new Date(), 'yyyy-MM')
-    return dateGap(calculateDate(now, -num + 1), now).map(item => ({
-        text: item.split('-').join('.'),
-        value: [`${item}-01`, dateFormat(new Date(...item.split('-'), 0))],
-    })).reverse()
+    return dateGap(calculateDate(now, -num + 1), now).map(item => {
+        const endDate = new Date(...item.split('-'), 0)
+        if (endDate.getDay() === 0) { // 月底是周日
+            endDate.setTime(endDate.getTime() - 3600 * 1000 * 24 * 2)
+        } else if (endDate.getDay() === 6) { // 月底是周六
+            endDate.setTime(endDate.getTime() - 3600 * 1000 * 24 * 1)
+        }
+        return {
+            text: item.split('-').join('.'),
+            value: [`${item}-01`, dateFormat(endDate)],
+        }
+    }).reverse()
 }
 
 export const getDateByStep = (date, num) => {
