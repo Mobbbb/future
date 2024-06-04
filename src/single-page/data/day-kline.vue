@@ -36,7 +36,6 @@ import { useStore } from 'vuex'
 import { getDayKLineOption, dayLineGirdHeight, dayLineGirdGap, getTotalKLineOption } from './option'
 import { weekdayMap } from '@/config/festivalMap'
 import { getBelongDealDateD, calculatePearsonCorrelation } from '@/libs/util'
-import { sortCallback } from 'umob'
 
 const store = new useStore()
 

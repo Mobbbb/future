@@ -44,7 +44,7 @@
             </el-tab-pane>
             <el-tab-pane label="返利列表" name="rebate">
                 <el-table class="income-table" :data="rebateData" height="100%" show-summary style="font-size: 12px;">
-                    <el-table-column prop="date" label="日期" width="120" />
+                    <el-table-column prop="date" label="实际返利日期" width="120" />
                     <el-table-column prop="month" label="返利月份" />
                     <el-table-column prop="num" label="返利" />
                     <el-table-column prop="commission" label="总计手续费" />
@@ -79,7 +79,7 @@ import { fetchIncomeInfo, fetchDeleteIncome, updateFlagStatus, fetchFlag, fetchR
 import { festivalList } from '@/config/festivalMap'
 import { DocumentAdd, DocumentRemove, Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { dateGap, dateFormat, extractStr } from 'umob'
+import { dateGap, dateFormat, extractStr, sortCallback } from 'umob'
 import LoginTips from '@/single-page/components/login-tips.vue'
 
 const store = new useStore()
@@ -164,6 +164,8 @@ const handleClick = async () => {
 const getRebateInfo = async () => {
     const res = await fetchRebateInfo()
     const data = res.data || []
+
+    data.sort(sortCallback({ key: 'date', type: 'desc' }))
 
     data.forEach(item => {
         item.rate = (item.num / item.commission * 100).toFixed(2) + '%'
