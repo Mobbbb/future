@@ -1,7 +1,7 @@
-import { fetchInsertLog, fetchUserInfo, fetchListData } from '@/api'
+import { fetchUserInfo, fetchListData } from '@/api'
 import { whiteUserList, administrator, initPath } from '@/router/config'
-import router, { clearPrivateRoute } from '@/router'
-import { delCookie, getUrlParams, dateFormat, getCookie } from 'umob'
+import { clearPrivateRoute } from '@/router'
+import { delCookie, getCookie } from 'umob'
 
 const app = {
     namespaced: true,
@@ -122,15 +122,6 @@ const app = {
                         avatar,
                     })
                 }
-            }
-        },
-        async fetchInsertLogHandle({}, routerName) {
-            if (location.hostname !== 'localhost' && getUrlParams('log') !== '0') {
-                await fetchInsertLog({
-                    userAgent: navigator.userAgent,
-                    createTime: dateFormat(new Date()),
-                    routerName: routerName || router.currentRoute.value.path,
-                })
             }
         },
         logoutAction({ commit, dispatch }) {

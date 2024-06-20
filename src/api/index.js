@@ -45,14 +45,6 @@ export const updateFlagStatus = (params) => {
     })
 }
 
-export const fetchInsertLog = (params) => {
-    return axios.request({
-        url: prefixApi + '/other/insertLog',
-        method: 'post',
-        data: params,
-    })
-}
-
 export const fetchRebateInfo = () => {
     return axios.request({
         url: prefixApi + '/other/rebateInfo',
