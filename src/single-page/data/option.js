@@ -400,9 +400,9 @@ export const getDayKLineOption = (dateArr, yearMap) => {
         dataZoomArr.push(index)
         gridArr.push({
             top: 12 + dayLineGirdHeight * index + dayLineGirdGap * index,
-            left: 40,
+            left: 55,
             right: 12,
-            height: dayLineGirdHeight,
+            height: dayLineGirdHeight - 10,
         })
         xAxisArr.push({
             gridIndex: index,
@@ -439,7 +439,7 @@ export const getDayKLineOption = (dateArr, yearMap) => {
             axisLabel: {
                 textStyle: {
                     color: '#8e8e8e',
-                    fontSize,
+                    fontSize: 13,
                 },
             },
             splitLine: {
@@ -582,12 +582,12 @@ export const getTotalKLineOption = (data) => {
         grid: [
             {
                 top: 12,
-                left: 40,
+                left: 55,
                 right: 12,
                 bottom: 140,
             },
             {
-                left: 40,
+                left: 55,
                 right: 12,
                 height: 80,
                 bottom: 50
@@ -637,7 +637,7 @@ export const getTotalKLineOption = (data) => {
                 axisLabel: {
                     textStyle: {
                         color: '#8e8e8e',
-                        fontSize,
+                        fontSize: 14,
                     },
                 },
             },
