@@ -67,7 +67,8 @@ export const routes = [
 ]
 
 export const administrator = '123456'
-export const whiteUserList = ['654321', administrator]
+export const smurfUser = '654321'
+export const whiteUserList = [smurfUser, administrator]
 export const privateRoute = [homeRoute]
 export const privateRouteName = privateRoute.map(item => item.name)
 

@@ -192,6 +192,7 @@ import { parseDateParams, getGapDate, getMonthShortcuts, getDateByStep, getBelon
 import { ElMessage } from 'element-plus'
 import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import { dateFormat } from 'umob'
+import { smurfUser } from '@/router/config'
 
 const _rate_ = 11 / 26
 const monthShortcuts = getMonthShortcuts(5)
@@ -415,7 +416,7 @@ const autoSubmit = async () => {
 
             if (accountName.value.length) {
                 if (isAdministrator.value) {
-                    params.uid = '654321'
+                    params.uid = smurfUser
                     const subResult = await fetchOrderInfoByUserIdHandle(params) // 获取小号数据
                     if (!subResult.success) return
 

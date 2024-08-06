@@ -1,6 +1,6 @@
 <template>
     <div class="income-wrap">
-        <el-tabs v-model="activeName" @tab-click="handleClick" class="chart-tab" v-if="isLogin">
+        <el-tabs v-model="activeName" @tab-click="tabClick" class="chart-tab" v-if="isLogin">
             <el-tab-pane label="日收益" name="day">
                 <div id="incomeChart1" v-if="isShowChart"></div>
                 <div class="no-data-class" v-if="!isShowChart">
@@ -13,7 +13,7 @@
                     <div><blockquote>暂无数据</blockquote></div>
                 </div>
             </el-tab-pane>
-            <el-tab-pane label="收益列表" name="table">
+            <el-tab-pane label="收益列表" name="income">
                 <div class="table-wrap">
                     <el-table class="income-table" :data="showListData" height="100%" show-summary
                         :summary-method="getSummaries" :row-class-name="tableRowClassName" :class="greenTotalCell"
@@ -41,6 +41,25 @@
                     :page-size="pageSize"
                     :total="tableData.length"
                     class="gc-pagination" />
+            </el-tab-pane>
+            <el-tab-pane label="结算" name="settlement" v-if="isAdministrator">
+                <div>
+                    <el-card>
+                        大号待结算：
+                        <span class="card-item-value" :style="dWaitToPayNum >= 0 ? { color: 'rgb(235, 68, 54)' } : { color: 'rgb(14, 157, 88)' }">
+                            {{ dWaitToPayNum }}
+                        </span>
+                    </el-card>
+                    <el-card>
+                        小号待结算：
+                        <span class="card-item-value" :style="dWaitToPayNum >= 0 ? { color: 'rgb(235, 68, 54)' } : { color: 'rgb(14, 157, 88)' }">
+                            {{ xWaitToPayNum }}
+                        </span>
+                    </el-card>
+                    <el-card>
+                        偏差值：<span class="card-item-value">{{ Math.abs(dWaitToPayNum - xWaitToPayNum).toFixed(2) }}</span>
+                    </el-card>
+                </div>
             </el-tab-pane>
             <el-tab-pane label="返利列表" name="rebate">
                 <el-table class="income-table" :data="rebateData" height="100%" show-summary style="font-size: 12px;">
@@ -75,11 +94,12 @@
 import { ref, nextTick, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { useStore } from 'vuex'
 import { getOption } from './option'
-import { fetchIncomeInfo, fetchDeleteIncome, updateFlagStatus, fetchFlag, fetchRebateInfo } from '@/api'
+import { fetchIncomeInfo, fetchDeleteIncome, updateFlagStatus, fetchFlag, fetchRebateInfo, fetchRebateInfoByUserId } from '@/api'
 import { festivalList } from '@/config/festivalMap'
 import { DocumentAdd, DocumentRemove, Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { dateGap, dateFormat, extractStr, sortCallback } from 'umob'
+import { smurfUser } from '@/router/config'
 import LoginTips from '@/single-page/components/login-tips.vue'
 
 const store = new useStore()
@@ -131,7 +151,7 @@ onBeforeUnmount(() => {
 
 const isShowChart = computed(() => chartDataArr1.value.length)
 
-const getDayIncome = () => {
+const renderDayIncomeChart = () => {
     if (!isShowChart.value) return
     nextTick(() => {
         document.getElementById('incomeChart1').removeAttribute('_echarts_instance_')
@@ -140,7 +160,7 @@ const getDayIncome = () => {
     })
 }
 
-const getTotalIncome = () => {
+const renderTotalIncomeChart = () => {
     if (!isShowChart.value) return
     nextTick(() => {
         document.getElementById('incomeChart2').removeAttribute('_echarts_instance_')
@@ -149,14 +169,19 @@ const getTotalIncome = () => {
     })
 }
 
-const handleClick = async () => {
-    if (activeName.value === 'add') {
-        getTotalIncome()
-    } else if (activeName.value === 'table') {
-        getTableData()
-    } else if (activeName.value === 'day') {
-        getDayIncome()
-    } else {
+const tabClick = async () => {
+    if (activeName.value === 'day') {
+        renderDayIncomeChart()
+    } else if (activeName.value === 'add') {
+        renderTotalIncomeChart()
+    } else if (activeName.value === 'income') {
+        // getIncomeInfo()
+    } else if (activeName.value === 'settlement') {
+        if (isAdministrator.value) {
+            await Promise.all([getRebateInfo(), getRebateInfoByUserId()])
+            calcSettlementValue()
+        }
+    } else if (activeName.value === 'rebate') {
         getRebateInfo()
     }
 }
@@ -174,13 +199,20 @@ const getRebateInfo = async () => {
     rebateData.value = data
 }
 
-const getTableData = async () => {
+let smurfUserRebateData = []
+const getRebateInfoByUserId = async () => {
+    const res = await fetchRebateInfoByUserId({ uid: smurfUser })
+    const data = res.data || []
+    smurfUserRebateData = data
+}
+
+const getIncomeInfo = async () => {
     const flagRes = await fetchFlag()
     if (Array.isArray(flagRes.data)) {
         const flagData = flagRes.data[0] || {}
         const { date_status = '' } = flagData
         if (date_status) {
-            flagDateArr.value = date_status.split(',')
+            flagDateArr.value = date_status.split(',').sort((a, b) => Date.parse(new Date(a)) - Date.parse(new Date(b)))
         }
     }
     const res = await fetchIncomeInfo()
@@ -337,6 +369,44 @@ const getTableData = async () => {
     }
 }
 
+const dWaitToPayNum = ref(0)
+const xWaitToPayNum = ref(0)
+const calcSettlementValue = () => {
+    dWaitToPayNum.value = 0
+    xWaitToPayNum.value = 0
+
+    const dDate = flagDateArr.value[0] // 大号日期
+    const xdate = flagDateArr.value[1] // 小号日期
+
+    tableData.value.forEach(item => {
+        if (item.date > dDate) {
+            item.children.forEach(cell => {
+                if (cell.name !== '其他') {
+                    dWaitToPayNum.value += cell.dNum
+                }
+            })
+        }
+        if (item.date > xdate) {
+            item.children.forEach(cell => {
+                if (cell.name !== '其他') {
+                    xWaitToPayNum.value += cell.xNum
+                }
+            })
+        }
+    })
+
+    rebateData.value.forEach(item => {
+        dWaitToPayNum.value += item.num
+    })
+
+    smurfUserRebateData.forEach(item => {
+        xWaitToPayNum.value += item.num
+    })
+
+    dWaitToPayNum.value = (dWaitToPayNum.value / 2).toFixed(2)
+    xWaitToPayNum.value = (xWaitToPayNum.value / 2).toFixed(2)
+}
+
 let currentDeleteItem = null
 const deleteRow = async (data) => {
     currentDeleteItem = data
@@ -347,7 +417,7 @@ const confirmDelete = async () => {
     if (currentDeleteItem) {
         const id = currentDeleteItem.row._id || currentDeleteItem.row.id
         await fetchDeleteIncome(id)
-        getTableData()
+        getIncomeInfo()
     }
     centerDialogVisible.value = false
 }
@@ -382,15 +452,9 @@ const showLoginHandle = () => {
 
 const initData = async () => {
     if (isLogin.value) {
-        if (activeName.value === 'add') {
-            await getTableData()
-            getTotalIncome()
-        } else if (activeName.value === 'day') {
-            await getTableData()
-            getDayIncome()
-        } else if (activeName.value === 'rebate') {
-            getRebateInfo()
-        }
+        await getIncomeInfo()
+
+        tabClick()
     }
 }
 
@@ -484,6 +548,10 @@ onMounted(() => {
     border-left: 4px solid #dfe2e5;
     margin: 12px 0;
     padding: 8px 0 8px 12px;
+}
+.card-item-value {
+    font-size: 16px;
+    font-weight: bold;
 }
 </style>
 

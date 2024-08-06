@@ -52,6 +52,14 @@ export const fetchRebateInfo = () => {
     })
 }
 
+export const fetchRebateInfoByUserId = async (params) => {
+    return axios.request({
+        url: prefixApi + '/other/getRebateInfoByUserId',
+        method: 'post',
+        data: params,
+    })
+}
+
 export const fetchIncomeInfo = () => {
     return axios.request({
         url: prefixApi + '/other/incomeInfo',
