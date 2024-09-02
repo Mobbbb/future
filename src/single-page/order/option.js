@@ -200,7 +200,7 @@ export const getBarOption = (data) => {
             axisLabel: {
                 textStyle: {
                     color: '#8e8e8e',
-                    fontSize,
+                    fontSize: 10,
                 },
             },
         },
@@ -227,7 +227,7 @@ export const getBarOption = (data) => {
                             // *$隐藏0坐标
                             return value !== '0' ? '#8e8e8e' : 'rgba(0, 0, 0, 0)'
                         },
-                        fontSize,
+                        fontSize: 10,
                     },
                 },
             },
@@ -254,7 +254,7 @@ export const getBarOption = (data) => {
                             // *$隐藏0坐标
                             return value !== '0' ? '#8e8e8e' : 'rgba(0, 0, 0, 0)'
                         },
-                        fontSize,
+                        fontSize: 10,
                     },
                 },
             }
@@ -273,7 +273,7 @@ export const getBarOption = (data) => {
                 borderColor: '#dedede',
             },
             textStyle: {
-                fontSize,
+                fontSize: 10,
             },
             backgroundColor: "#f6f7f8",
             dataBackground: {
@@ -312,7 +312,7 @@ export const getBarOption = (data) => {
                 },
                 label: {
                     show: false,
-                    fontSize,
+                    fontSize: 10,
                 },
             },
             {
@@ -323,7 +323,7 @@ export const getBarOption = (data) => {
                 },
                 label: {
                     show: false,
-                    fontSize,
+                    fontSize: 10,
                 },
                 yAxisIndex: 1,
             }

@@ -23,6 +23,14 @@ export const updateUserInDayFirstLists = (lists) => {
     })
 }
 
+export const updateUserEmail = (email) => {
+    return axios.request({
+        url: prefixApi + '/user/updateUserEmail',
+        method: 'post',
+        data: { email },
+    })
+}
+
 export const fetchListData = () => {
     return axios.request({
         url: '/resource/future/message.json',

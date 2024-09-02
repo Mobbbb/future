@@ -437,7 +437,7 @@ const initBasicInfo = async () => {
 
     const params = formatBasicData(enFutureNameMap.value, closeFutureLists.value)
 
-    barChartMaxWidth.value = Object.keys(params.chFutureMap).length * 60 < 500 ?  500 : Object.keys(params.chFutureMap).length * 60
+    barChartMaxWidth.value = Object.keys(params.chFutureMap).length * 80 < 500 ?  500 : Object.keys(params.chFutureMap).length * 80
     
     nextTick(() => {
         destroyBarChart()
