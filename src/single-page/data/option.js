@@ -1,7 +1,7 @@
 import { genVH, circleDom } from '@/libs/util'
 import { CHUNJIE_YEAR_MAP, festivalTypeMap, weekdayMap } from '@/config/festivalMap'
 
-const fontSize = genVH(10)
+const fontSize = 12
 
 export const getFestivalKLineOption = (params) => {
     const { x, y, year, name, number, type } = params
@@ -126,7 +126,7 @@ export const getFestivalKLineOption = (params) => {
                 axisLabel: {
                     textStyle: {
                         color: '#8e8e8e',
-                        fontSize: 12,
+                        fontSize,
                     },
                 },
                 splitLine: {
@@ -160,7 +160,7 @@ export const getFestivalKLineOption = (params) => {
                             label: {
                                 textStyle: {
                                     color: '#eb5454',
-                                    fontSize: 10,
+                                    fontSize,
                                 },
                                 position: 'insideBottom',
                                 distance: 0,
@@ -176,7 +176,7 @@ export const getFestivalKLineOption = (params) => {
                             label: {
                                 textStyle: {
                                     color: '#47b262',
-                                    fontSize: 10,
+                                    fontSize,
                                 },
                                 position: 'insideBottom',
                                 distance: -14,
@@ -350,7 +350,7 @@ export const getCloseLineOption = (data, name) => {
             axisLabel: {
                 textStyle: {
                     color: '#8e8e8e',
-                    fontSize: 12,
+                    fontSize,
                 },
                 // rotate: 45,
             },
@@ -366,7 +366,7 @@ export const getCloseLineOption = (data, name) => {
             axisLabel: {
                 textStyle: {
                     color: '#8e8e8e',
-                    fontSize: 12,
+                    fontSize,
                 },
             },
             splitLine: {
@@ -439,7 +439,7 @@ export const getDayKLineOption = (dateArr, yearMap) => {
             axisLabel: {
                 textStyle: {
                     color: '#8e8e8e',
-                    fontSize: 13,
+                    fontSize,
                 },
             },
             splitLine: {
@@ -637,7 +637,7 @@ export const getTotalKLineOption = (data) => {
                 axisLabel: {
                     textStyle: {
                         color: '#8e8e8e',
-                        fontSize: 14,
+                        fontSize,
                     },
                 },
             },
