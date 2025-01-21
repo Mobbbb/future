@@ -195,9 +195,11 @@ export const formatDayLineData = (designatedOpenFutureLists, futureDayShareInfo)
 }
 
 export const formatBasicData = (enFutureNameMap, basciInfo) => {
-    let buyNum = 0
+    let buyCloseHands = 0
+    let buyOpenHands = 0
     let buyWinNum = 0
-    let saleNum = 0
+    let saleCloseHands = 0
+    let saleOpenHands = 0
     let saleWinNum = 0
     let saleProfit = 0
     let saleProfitUp = 0
@@ -208,52 +210,70 @@ export const formatBasicData = (enFutureNameMap, basciInfo) => {
     let totalProfit = 0
 
     const chFutureMap = {} // 中文名-futureList
+    const chFutureOpenMap = {} // 中文名-futureList
     basciInfo.forEach(item => {
-        if (!chFutureMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]]) {
-            chFutureMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]] = {
-                winNum: 0,
-                totalNum: 0,
-                totalProfit: 0,
+        if (item.openOrClose === 0) {
+            if (!chFutureMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]]) {
+                chFutureMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]] = {
+                    winNum: 0,
+                    totalNum: 0,
+                    totalProfit: 0,
+                }
             }
-        }
-        if (item.totalProfit > 0) {
-            chFutureMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]].winNum ++
-        } 
-        chFutureMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]].totalNum ++
-        chFutureMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]].totalProfit += item.totalProfit
-
-        if (item.buyOrSale === 1) { // 平空单
-            saleNum ++
             if (item.totalProfit > 0) {
-                saleWinNum ++
-                saleProfitUp += item.totalProfit
-            } else {
-                saleProfitDown += item.totalProfit
+                chFutureMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]].winNum ++
+            } 
+            chFutureMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]].totalNum ++
+            chFutureMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]].totalProfit += item.totalProfit
+    
+            if (item.buyOrSale === 1) { // 平空单
+                saleCloseHands += item.hands
+                if (item.totalProfit > 0) {
+                    saleWinNum ++
+                    saleProfitUp += item.totalProfit
+                } else {
+                    saleProfitDown += item.totalProfit
+                }
+                saleProfit += item.totalProfit
+            } else { // 平多单
+                buyCloseHands += item.hands
+                if (item.totalProfit > 0) { // 盈利
+                    buyWinNum ++
+                    buyProfitUp += item.totalProfit
+                } else {
+                    buyProfitDown += item.totalProfit
+                }
+                buyProfit += item.totalProfit
             }
-            saleProfit += item.totalProfit
-        } else { // 平多单
-            buyNum ++
-            if (item.totalProfit > 0) { // 盈利
-                buyWinNum ++
-                buyProfitUp += item.totalProfit
-            } else {
-                buyProfitDown += item.totalProfit
+            totalProfit += item.totalProfit
+        } else {
+            if (!chFutureOpenMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]]) {
+                chFutureOpenMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]] = {
+                    buyOpenHands: 0,
+                    saleOpenHands: 0,
+                }
             }
-            buyProfit += item.totalProfit
+            // TODO 合约品种多空比、标准套利
+            if (item.buyOrSale === 1) { // 买开，开多
+                buyOpenHands += item.hands
+                chFutureOpenMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]].buyOpenHands ++
+            } else { // 卖开，开空
+                saleOpenHands += item.hands
+                chFutureOpenMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]].saleOpenHands ++
+            }
         }
-        totalProfit += item.totalProfit
     })
 
     return {
-        buyRate: (buyWinNum / buyNum * 100).toFixed(2) * 1 || 0,
-        saleRate: (saleWinNum / saleNum * 100).toFixed(2) * 1 || 0,
-        totalRate: ((saleWinNum + buyWinNum) / (buyNum + saleNum) * 100).toFixed(2) * 1 || 0,
-        preBuyProfit: (buyProfit / buyNum).toFixed(1) * 1 || 0,
+        buyRate: (buyWinNum / buyCloseHands * 100).toFixed(2) * 1 || 0,
+        saleRate: (saleWinNum / saleCloseHands * 100).toFixed(2) * 1 || 0,
+        totalRate: ((saleWinNum + buyWinNum) / (buyCloseHands + saleCloseHands) * 100).toFixed(2) * 1 || 0,
+        preBuyProfit: (buyProfit / buyCloseHands).toFixed(1) * 1 || 0,
         preBuyProfitUp: (buyProfitUp / buyWinNum).toFixed(1) * 1 || 0,
-        preBuyProfitDown: (buyProfitDown / (buyNum - buyWinNum)).toFixed(1) * 1 || 0,
-        preSaleProfit: (saleProfit / saleNum).toFixed(1) * 1 || 0,
+        preBuyProfitDown: (buyProfitDown / (buyCloseHands - buyWinNum)).toFixed(1) * 1 || 0,
+        preSaleProfit: (saleProfit / saleCloseHands).toFixed(1) * 1 || 0,
         preSaleProfitUp: (saleProfitUp / saleWinNum).toFixed(1) * 1 || 0,
-        preSaleProfitDown: (saleProfitDown / (saleNum - saleWinNum)).toFixed(1) * 1 || 0,
+        preSaleProfitDown: (saleProfitDown / (saleCloseHands - saleWinNum)).toFixed(1) * 1 || 0,
 
         saleProfit: bigNumTransform(saleProfit, { merge: false }),
         saleProfitUp: bigNumTransform(saleProfitUp, { merge: false }),
@@ -264,6 +284,9 @@ export const formatBasicData = (enFutureNameMap, basciInfo) => {
         totalProfit: totalProfit.toFixed(2) * 1 || 0,
 
         chFutureMap,
+        chFutureOpenMap,
+        buyOpenHands,
+        saleOpenHands,
     }
 }
 

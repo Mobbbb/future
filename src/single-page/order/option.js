@@ -121,7 +121,7 @@ function getYAxisIndexSeries(series, dataSource, option) {
     }
 }
 
-export const getBarOption = (data) => {
+export const getBarOption = (data, openDataMap) => {
     let sourceData = []
     Object.keys(data).forEach(key => {
         sourceData.push([key, data[key].totalProfit, data[key].winNum / data[key].totalNum * 100])
@@ -143,7 +143,7 @@ export const getBarOption = (data) => {
             show: false,
         },
         grid: {
-            top: 60,
+            top: 90,
             bottom: 35,
             left: 0,
             right: 5,
@@ -152,28 +152,39 @@ export const getBarOption = (data) => {
         tooltip: {
             trigger: 'axis',
             padding: 0,
-            textStyle: {
-                fontSize: genVH(12),
-            },
             alwaysShowContent: true,
             triggerOn: 'click',
             className: 'analyse-bar-tooltip',
-            formatter: function(data) {
-                const color = data[0].data[1] > 0 ? fillColor[0] : fillColor[1]
-                return `<div style="border: 1px solid #eeeeee;padding: 12px;border-radius: 4px;color: #000;display: flex;align-items: center;font-size: 14px;line-height: 14px;">
-                            ${data[0].data[0]}
-                            
-                            <div style="width: 11px;margin: 0 4px 0 12px;">
-                                <div style="width: 100%;height: 3px;background: ${fillColor[0]};border-radius: 3px;margin-bottom: 2px;"></div>
-                                <div style="width: 100%;height: 3px;background: ${fillColor[1]};border-radius: 3px;margin-top: 2px;"></div>
-                            </div>
-                            ${data[0].dimensionNames[1]}
-                            <span style="color: ${color};font-weight: bold;margin-left: 4px;">${Math.round(data[0].data[1])}</span>
+            formatter: function(params) {
+                const name = params[0].data[0]
+                const itemOpenData = openDataMap[name] || {}
+                const buyOpenHands = itemOpenData.buyOpenHands || 0
+                const saleOpenHands = itemOpenData.saleOpenHands || 0
+                const color = params[0].data[1] > 0 ? fillColor[0] : fillColor[1]
+                return `<div style="border: 1px solid #eeeeee;padding: 12px;border-radius: 4px;color: #000;font-size: 14px;line-height: 14px;">
+                            <div style="display: flex;align-items: center;">
+                                ${name}
+                                <div style="width: 11px;margin: 0 4px 0 12px;">
+                                    <div style="width: 100%;height: 3px;background: ${fillColor[0]};border-radius: 3px;margin-bottom: 2px;"></div>
+                                    <div style="width: 100%;height: 3px;background: ${fillColor[1]};border-radius: 3px;margin-top: 2px;"></div>
+                                </div>
+                                ${params[0].dimensionNames[1]}
+                                <span style="color: ${color};font-weight: bold;margin-left: 4px;">${Math.round(params[0].data[1])}</span>
 
-                            <div style="width: 6px;height: 6px;border-radius: 10px;background: ${fillColor[2]};margin: 0 4px 0 12px;"></div>
-                            ${data[0].dimensionNames[2]}
-                            <span style="color: ${color};font-weight: bold;margin-left: 4px;">${data[0].data[2].toFixed(2)}%</span>
-                        </div>`
+                                <div style="width: 6px;height: 6px;border-radius: 10px;background: ${fillColor[2]};margin: 0 4px 0 12px;"></div>
+                                ${params[0].dimensionNames[2]}
+                                <span style="color: ${color};font-weight: bold;margin-left: 4px;">${params[0].data[2].toFixed(2)}%</span>
+                            </div>
+                            <div style="display: flex;align-items: center;margin-top: 10px;font-size: 12px;">
+                                <span>多</span>
+                                <span style="font-weight: bold;margin: 0 14px 0 4px;">${buyOpenHands}手</span>
+                                <span>空</span>
+                                <span style="font-weight: bold;margin: 0 14px 0 4px;">${saleOpenHands}手</span>
+                                <span>多空比</span>
+                                <span style="font-weight: bold;margin-left: 4px;">${(buyOpenHands / saleOpenHands || 1).toFixed(2)}</span>
+                            </div>
+                        </div>
+                        `
             },
             position: [0, 0],
         },

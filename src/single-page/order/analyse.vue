@@ -52,6 +52,41 @@
                 </el-card>
             </div>
             <el-card class="analyse-card" style="margin: 12px;">
+                <div class="card-title">历史开仓<span class="card-title-date">({{displayTime}})</span></div>
+                <div class="card-column-wrap">
+                    <div class="card-item-wrap">
+                        <div class="card-item-title">多单开仓</div>
+                        <div class="card-item-combine-value">
+                            <div class="card-item-value">
+                                {{analyseResult.buyOpenHands}} <span class="card-item-unit">手</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-column-wrap">
+                    <div class="card-item-wrap">
+                        <div class="card-item-title">空单开仓</div>
+                        <div class="card-item-combine-value">
+                            <div class="card-item-value">
+                                {{analyseResult.saleOpenHands}} <span class="card-item-unit">手</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-column-wrap">
+                    <div class="card-item-wrap">
+                        <div class="card-item-title">多空比</div>
+                        <div class="card-item-combine-value">
+                            <div class="card-item-value">
+                                <div class="card-item-value">
+                                    {{((analyseResult.buyOpenHands / analyseResult.saleOpenHands) || 1).toFixed(2)}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </el-card>
+            <el-card class="analyse-card" style="margin: 12px;">
                 <div class="card-title">品种盈亏及胜率<span class="card-title-date">({{displayTime}})</span></div>
                 <div id="barChart" :style="{ width: `${barChartMaxWidth}px` }"></div>
             </el-card>
@@ -327,6 +362,8 @@ const analyseResult = reactive({
     preSaleProfit: 0,
     preSaleProfitUp: 0,
     preSaleProfitDown: 0,
+    buyOpenHands: 0,
+    saleOpenHands: 0,
 })
 const calendarDate = ref(dateFormat(new Date()))
 const calendarYear = ref(dateFormat(new Date()))
@@ -374,6 +411,11 @@ const getCloseFutureByDate = async (dateParams) => { // 所有平仓订单
         ...dateParams,
         openOrClose: 0,
     })
+    return response.result
+}
+
+const getFutureByDate = async (dateParams) => { // 所有订单
+    const response = await fetchOrderInfoHandle(dateParams)
     return response.result
 }
 
@@ -433,16 +475,16 @@ const initDayLineChart = async () => {
 const initBasicInfo = async () => {
     if (!isLogin.value) return
     const requestParams = parseDateParams(basicDate.value)
-    closeFutureLists.value = await getCloseFutureByDate(requestParams)
+    closeFutureLists.value = await getFutureByDate(requestParams)
 
     const params = formatBasicData(enFutureNameMap.value, closeFutureLists.value)
 
-    barChartMaxWidth.value = Object.keys(params.chFutureMap).length * 80 < 500 ?  500 : Object.keys(params.chFutureMap).length * 80
-    
+    barChartMaxWidth.value = Object.keys(params.chFutureMap).length * 100 < 500 ?  500 : Object.keys(params.chFutureMap).length * 100
+
     nextTick(() => {
         destroyBarChart()
         barChartIns = echarts.init(document.getElementById('barChart'))
-        barChartIns.setOption(getBarOption(params.chFutureMap))
+        barChartIns.setOption(getBarOption(params.chFutureMap, params.chFutureOpenMap))
         barChartIns.dispatchAction({
             type: 'showTip',
             seriesIndex: 0,
@@ -466,6 +508,9 @@ const initBasicInfo = async () => {
     analyseResult.buyProfitUp = params.buyProfitUp
     analyseResult.buyProfitDown = params.buyProfitDown
     analyseResult.totalProfit = params.totalProfit
+
+    analyseResult.buyOpenHands = params.buyOpenHands
+    analyseResult.saleOpenHands = params.saleOpenHands
 }
 
 const destroyBarChart = () => {
@@ -748,7 +793,7 @@ onBeforeUnmount(() => {
     max-width: 512px;
 }
 #barChart {
-    height: 37.5vh;
+    height: 40vh;
     max-width: 100%;
     background: white;
 }
