@@ -79,7 +79,7 @@
                         <div class="card-item-combine-value">
                             <div class="card-item-value">
                                 <div class="card-item-value">
-                                    {{((analyseResult.buyOpenHands / analyseResult.saleOpenHands) || 1).toFixed(2)}}
+                                    {{ analyseResult.saleOpenHands ? (analyseResult.buyOpenHands / analyseResult.saleOpenHands).toFixed(2) : '-'}}
                                 </div>
                             </div>
                         </div>

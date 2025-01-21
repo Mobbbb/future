@@ -181,7 +181,9 @@ export const getBarOption = (data, openDataMap) => {
                                 <span>空</span>
                                 <span style="font-weight: bold;margin: 0 14px 0 4px;">${saleOpenHands}手</span>
                                 <span>多空比</span>
-                                <span style="font-weight: bold;margin-left: 4px;">${(buyOpenHands / saleOpenHands || 1).toFixed(2)}</span>
+                                <span style="font-weight: bold;margin-left: 4px;">
+                                    ${saleOpenHands ? (buyOpenHands / saleOpenHands).toFixed(2) : '-'}
+                                </span>
                             </div>
                         </div>
                         `
