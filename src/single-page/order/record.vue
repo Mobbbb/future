@@ -188,7 +188,7 @@ import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { fetchDeleteOrder, fetchCancelOrder, fetchInsertIncome, fetchIncomeLatestInfo, 
     fetchfutureLatestInfo, fetchOrderInfoHandle, fetchOrderInfoByUserIdHandle } from '@/api'
-import { parseDateParams, getGapDate, getMonthShortcuts, getDateByStep, getBelongDealDate } from '@/libs/util'
+import { parseDateParams, getYesterDealDay, getMonthShortcuts, getDateByStep, getBelongDealDate } from '@/libs/util'
 import { ElMessage } from 'element-plus'
 import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import { dateFormat } from 'umob'
@@ -224,11 +224,11 @@ const searchParams = reactive({
     currentPage: 1,
 })
 
+const currentYear = (new Date()).getFullYear()
 const shortcuts = [
-    { text: '今日', value: () => [new Date(), new Date()] },
-    { text: '近7天', value: () => getGapDate(7) },
-    { text: '近30天', value: () => getGapDate(30) },
-    { text: '近365天', value: () => getGapDate(365) },
+    { text: '昨天', value: () => [getYesterDealDay(new Date()), getYesterDealDay(new Date())] },
+    { text: '今年', value: () => [new Date(currentYear, 0, 1), new Date(currentYear, 11, 31)] },
+    { text: '去年', value: () => [new Date(currentYear - 1, 0, 1), new Date(currentYear - 1, 11, 31)] },
     ...monthShortcuts,
 ]
 

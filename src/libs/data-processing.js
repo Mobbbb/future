@@ -218,6 +218,8 @@ export const formatBasicData = (enFutureNameMap, basciInfo) => {
                     winNum: 0,
                     totalNum: 0,
                     totalProfit: 0,
+                    longProfit: 0,
+                    shortProfit: 0,
                 }
             }
             if (item.totalProfit > 0) {
@@ -235,6 +237,7 @@ export const formatBasicData = (enFutureNameMap, basciInfo) => {
                     saleProfitDown += item.totalProfit
                 }
                 saleProfit += item.totalProfit
+                chFutureMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]].shortProfit += item.totalProfit
             } else { // 平多单
                 buyCloseHands += item.hands
                 if (item.totalProfit > 0) { // 盈利
@@ -244,6 +247,7 @@ export const formatBasicData = (enFutureNameMap, basciInfo) => {
                     buyProfitDown += item.totalProfit
                 }
                 buyProfit += item.totalProfit
+                chFutureMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]].longProfit += item.totalProfit
             }
             totalProfit += item.totalProfit
         } else {
@@ -253,7 +257,6 @@ export const formatBasicData = (enFutureNameMap, basciInfo) => {
                     saleOpenHands: 0,
                 }
             }
-            // TODO 合约品种多空比、标准套利
             if (item.buyOrSale === 1) { // 买开，开多
                 buyOpenHands += item.hands
                 chFutureOpenMap[enFutureNameMap[item.name.replace(/[^a-zA-Z]/g, '')]].buyOpenHands ++

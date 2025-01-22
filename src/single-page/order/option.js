@@ -143,7 +143,7 @@ export const getBarOption = (data, openDataMap) => {
             show: false,
         },
         grid: {
-            top: 90,
+            top: 110,
             bottom: 35,
             left: 0,
             right: 5,
@@ -157,28 +157,44 @@ export const getBarOption = (data, openDataMap) => {
             className: 'analyse-bar-tooltip',
             formatter: function(params) {
                 const name = params[0].data[0]
+                const itemData = data[name] || {}
+                const longProfit = itemData.longProfit || 0
+                const shortProfit = itemData.shortProfit || 0
                 const itemOpenData = openDataMap[name] || {}
                 const buyOpenHands = itemOpenData.buyOpenHands || 0
                 const saleOpenHands = itemOpenData.saleOpenHands || 0
-                const color = params[0].data[1] > 0 ? fillColor[0] : fillColor[1]
+
+                const totalProfitColor = params[0].data[1] > 0 ? fillColor[0] : fillColor[1]
+                const rateColor = params[0].data[2].toFixed(2) > 50 ? fillColor[0] : fillColor[1]
+                const longProfitColor = longProfit ? (longProfit > 0 ? fillColor[0] : fillColor[1]) : '#000'
+                const shortProfitColor = shortProfit ? (shortProfit > 0 ? fillColor[0] : fillColor[1]) : '#000'
+
+                let nameHtml = ''
+                if (name) nameHtml = `<span style="margin-right: 12px;">${name}</span>`
                 return `<div style="border: 1px solid #eeeeee;padding: 12px;border-radius: 4px;color: #000;font-size: 14px;line-height: 14px;">
                             <div style="display: flex;align-items: center;">
-                                ${name}
-                                <div style="width: 11px;margin: 0 4px 0 12px;">
+                                ${nameHtml}
+                                <div style="width: 11px;margin: 0 4px 0 0;">
                                     <div style="width: 100%;height: 3px;background: ${fillColor[0]};border-radius: 3px;margin-bottom: 2px;"></div>
                                     <div style="width: 100%;height: 3px;background: ${fillColor[1]};border-radius: 3px;margin-top: 2px;"></div>
                                 </div>
                                 ${params[0].dimensionNames[1]}
-                                <span style="color: ${color};font-weight: bold;margin-left: 4px;">${Math.round(params[0].data[1])}</span>
+                                <span style="color: ${totalProfitColor};font-weight: bold;margin-left: 4px;">${Math.round(params[0].data[1])}</span>
 
                                 <div style="width: 6px;height: 6px;border-radius: 10px;background: ${fillColor[2]};margin: 0 4px 0 12px;"></div>
                                 ${params[0].dimensionNames[2]}
-                                <span style="color: ${color};font-weight: bold;margin-left: 4px;">${params[0].data[2].toFixed(2)}%</span>
+                                <span style="color: ${rateColor};font-weight: bold;margin-left: 4px;">${params[0].data[2].toFixed(2)}%</span>
                             </div>
                             <div style="display: flex;align-items: center;margin-top: 10px;font-size: 12px;">
-                                <span>多</span>
+                                <span>平多盈亏</span>
+                                <span style="color: ${longProfitColor};font-weight: bold;margin: 0 16px 0 4px;">${Math.round(longProfit)}</span>
+                                <span>平空盈亏</span>
+                                <span style="color: ${shortProfitColor};font-weight: bold;margin-left: 4px;">${Math.round(shortProfit)}</span>
+                            </div>
+                            <div style="display: flex;align-items: center;margin-top: 10px;font-size: 12px;">
+                                <span>多开</span>
                                 <span style="font-weight: bold;margin: 0 14px 0 4px;">${buyOpenHands}手</span>
-                                <span>空</span>
+                                <span>空开</span>
                                 <span style="font-weight: bold;margin: 0 14px 0 4px;">${saleOpenHands}手</span>
                                 <span>多空比</span>
                                 <span style="font-weight: bold;margin-left: 4px;">

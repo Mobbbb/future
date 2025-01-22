@@ -59,6 +59,17 @@ export const getGapDate = (gap = 1) => {
     return [start, end]
 }
 
+export const getYesterDealDay = (date) => {
+    const innerDate = new Date(date)
+    innerDate.setTime(innerDate.getTime() - 3600 * 1000 * 24)
+    if (new Date(innerDate).getDay() === 0) { // 周日
+        innerDate.setTime(innerDate.getTime() - 3600 * 1000 * 24 * 2)
+    } else if (new Date(innerDate).getDay() === 6) { // 周六
+        innerDate.setTime(innerDate.getTime() - 3600 * 1000 * 24)
+    }
+    return innerDate
+}
+
 /**
  * @description 获取归属的交易日期
  * @param {String} time yyyy-MM-dd hh:mm:ss 实际交易日期

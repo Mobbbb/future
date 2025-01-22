@@ -321,7 +321,7 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useStore } from 'vuex'
-import { parseDateParams, getGapDate, getMonthShortcuts } from '@/libs/util'
+import { parseDateParams, getGapDate, getMonthShortcuts, getYesterDealDay } from '@/libs/util'
 import festivalMap, { festivalList } from '@/config/festivalMap'
 import { getBarOption, getDoubleKLineOption } from './option'
 import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
@@ -336,14 +336,14 @@ const K_LINE_DATE_KEY_NAME = computed(() => `K-LINE-DATE-${store.state.app.USER_
 
 let barChartIns = null
 let lineChartIns = null
+const currentYear = (new Date()).getFullYear()
 const monthShortcuts = getMonthShortcuts(4)
 const shortcuts = [
-    { text: '今日', value: () => getGapDate() },
-    { text: '近7天', value: () => getGapDate(7) },
-    { text: '近30天', value: () => getGapDate(30) },
-    { text: '近365天', value: () => getGapDate(365) },
+    { text: '昨天', value: () => [getYesterDealDay(new Date()), getYesterDealDay(new Date())] },
+    { text: '今年', value: () => [new Date(currentYear, 0, 1), new Date(currentYear, 11, 31)] },
+    { text: '去年', value: () => [new Date(currentYear - 1, 0, 1), new Date(currentYear - 1, 11, 31)] },
     ...monthShortcuts,
-    { text: '全部', value: () => getGapDate(365 * ((new Date()).getFullYear() - 2018)) },
+    { text: '全部', value: () => getGapDate(365 * (currentYear - 2010)) },
 ]
 const analyseResult = reactive({
     buyRate: 0,
@@ -793,7 +793,7 @@ onBeforeUnmount(() => {
     max-width: 512px;
 }
 #barChart {
-    height: 40vh;
+    height: 45vh;
     max-width: 100%;
     background: white;
 }
