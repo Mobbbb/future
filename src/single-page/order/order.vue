@@ -247,7 +247,7 @@ const orderPriceClick = (row, index) => {
 const rerenderTable = async () => {
     await getOpeningOrderData()
     nextTick(() => {
-        if (openingOrderList.value.length) {
+        if (openingOrderList.value.length && tableTabWrap.value && formWrap.value) {
             const bottomRestHeight = tableTabWrap.value.getBoundingClientRect().height - formWrap.value.getBoundingClientRect().height - 16
             const tableTotalHeight = (openingOrderList.value.length + 1) * 40
             if (bottomRestHeight < tableTotalHeight) {

@@ -56,8 +56,8 @@
                 </el-select>
             </div>
             <div class="search-item-wrap">
-                <el-button type="primary" @click="autoSubmit">一键录入</el-button>
-                <el-button type="primary" @click="showSubmitViewHandle">收益录入</el-button>
+                <el-button type="primary" v-if="isWhiteUser" @click="autoSubmit">一键录入</el-button>
+                <el-button type="primary" v-if="isWhiteUser" @click="showSubmitViewHandle">收益录入</el-button>
                 <el-button type="primary" @click="searchHandle">搜索</el-button>
                 <el-button @click="resetHandle">重置</el-button>
             </div>
@@ -187,7 +187,7 @@
 import { ref, reactive, computed, watch, nextTick, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { fetchDeleteOrder, fetchCancelOrder, fetchInsertIncome, fetchIncomeLatestInfo, 
-    fetchfutureLatestInfo, fetchOrderInfoHandle, fetchOrderInfoByUserIdHandle } from '@/api'
+    fetchFutureLatestInfo, fetchOrderInfoHandle, fetchOrderInfoByUserIdHandle } from '@/api'
 import { parseDateParams, getYesterDealDay, getMonthShortcuts, getDateByStep, getBelongDealDate } from '@/libs/util'
 import { ElMessage } from 'element-plus'
 import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
@@ -236,6 +236,7 @@ const orderList = computed(() => store.state.order.orderList)
 const activeOrderTab = computed(() => store.state.app.activeOrderTab)
 const isLogin = computed(() => store.getters['app/isLogin'])
 const isAdministrator = computed(() => store.getters['app/isAdministrator'])
+const isWhiteUser = computed(() => store.getters['app/isWhiteUser'])
 const overMediaCritical = computed(() => store.getters['app/overMediaCritical'])
 
 const accountName = computed(() => {
@@ -403,7 +404,7 @@ const showSubmitViewHandle = () => {
 
 const autoSubmit = async () => {
     const latestIncomeRes = await fetchIncomeLatestInfo()
-    const latestFutureRes = await fetchfutureLatestInfo()
+    const latestFutureRes = await fetchFutureLatestInfo()
     let latestIncomeDate = latestIncomeRes.data.date
     let latestFutureDate = latestFutureRes.data.date ? getBelongDealDate(latestFutureRes.data.date) : latestFutureRes.data.date
     async function submitIncomeItem () {

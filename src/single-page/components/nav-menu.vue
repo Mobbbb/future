@@ -5,12 +5,32 @@
                         class="el-menu-nav" 
                         mode="horizontal" 
                         :default-active="activeNavIndex" 
+                        :ellipsis="false"
                         router>
                 <template v-for="item in navMenus">
                     <el-menu-item :index="item.path" v-if="item.meta.level === 0" :key="item.path">
                         {{item.meta.name}}
                     </el-menu-item>
                 </template>
+                <el-menu-item class="download-menu-item" index="download" disabled v-if="!overMediaCritical">
+                    <el-popover placement="bottom" :width="300" trigger="hover">
+                        <template #reference>
+                            <div class="download-wrap" @click="clickDownload">
+                                <GcDownload></GcDownload>
+                                <span style="margin-left: 5px;">下载WIN客户端</span>
+                                <span class="new-icon">新</span>
+                            </div>
+                        </template>
+                        <div class="authority-wrap">
+                            <div class="authority authority4 even_row" content-text="同步期货市场监控中心数据">同步期货市场监控中心数据</div>
+                            <div class="authority authority2" content-text="实时语音播报">实时语音播报</div>
+                            <div class="authority authority3 even_row" content-text="图标闪烁提示">图标闪烁提示</div>
+                            <div class="authority authority5" content-text="邮件通知">邮件通知</div>
+                            <div class="authority authority6 even_row" content-text="单边监控消息提醒">单边监控消息提醒</div>
+                            <div class="authority authority7" content-text="套利监控消息提醒">套利监控消息提醒</div>
+                        </div>
+                    </el-popover>
+                </el-menu-item>
             </el-menu>
 
             <div class="nav-search-input-wrap" v-show="isHomeRoute">
@@ -49,7 +69,9 @@ import { mapState, mapGetters, mapMutations, mapActions } from 'vuex'
 import { routes, allRoutes, homeRoute } from '@/router/config'
 import LoginDrawer from './login-drawer.vue'
 import CloseSettingDrawer from './close-setting-drawer.vue'
+import GcDownload from '@/components/gc-download.vue'
 import { Avatar } from '@element-plus/icons-vue'
+import { getNewAppVersion } from '@/api'
 
 export default {
     name: 'nav-menu',
@@ -57,10 +79,12 @@ export default {
         LoginDrawer,
         CloseSettingDrawer,
         Avatar,
+        GcDownload,
     },
     data() {
         return {
             searchText: '',
+            downloadLink: '',
         }
     },
     computed: {
@@ -73,6 +97,7 @@ export default {
         ...mapGetters('app', [
             'isLogin',
             'isWhiteUser',
+            'overMediaCritical',
         ]),
         pageNavWrapStyle() {
             return {
@@ -114,6 +139,17 @@ export default {
         searchHandle() {
             this.$emit('on-search', this.searchText)
         },
+        async getNewAppVersionHandle() {
+            const response = await getNewAppVersion()
+            const data = response.data || {}
+            this.downloadLink = data.href || ''
+        },
+        clickDownload() {
+            window.open(this.downloadLink)
+        },
+    },
+    mounted() {
+        this.getNewAppVersionHandle()
     },
 }
 </script>
@@ -190,6 +226,61 @@ export default {
     max-width: 80px;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+.download-wrap {
+    display: flex;
+    align-items: center;
+    width: 200px;
+}
+.download-menu-item.is-disabled {
+    cursor: pointer;
+    opacity: 1;
+    color: #303133;
+}
+.new-icon {
+    display: block;
+    width: 34px;
+    height: 28px;
+    line-height: 28px;
+    font-size: 18px;
+    border-radius: 28px;
+    text-align: center;
+    background: #f85a54;
+    color: white;
+    transform: scale(0.6)
+}
+.authority-wrap {
+	border-radius: 2px;
+	width: 100%;
+	position: relative;
+	text-align: center;
+	border: 4px solid;
+	border-image: linear-gradient(317deg, #d89c75, #efdfd0) 4 4;
+	background: #746c63;
+	box-sizing: border-box;
+}
+.authority {
+	position: relative;
+	padding: 14px 0;
+	height: 30px;
+	line-height: 30px;
+	font-size: 16px;
+	text-align: center;
+	color: #fff;
+}
+.authority::before {
+    content: attr(content-text);
+    display: inline-block;
+    position: absolute;
+    left: 50%;
+    white-space: nowrap;
+    transform: translate(-50%);
+    color: #d89c75;
+    z-index: 2;
+    mask-image: -webkit-gradient(linear, 0 0, right 0, from(transparent), to(#d89c75));
+}
+.even_row {
+	background: rgba(0, 0, 0, .1);
 }
 </style>
 

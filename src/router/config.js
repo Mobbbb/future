@@ -58,19 +58,22 @@ export const notFoundRoute = {
     component: () => import('@/single-page/not-found-page/index.vue'),
 }
 
-export const routes = [
+
+export const allRoutes = [
     orderRoute,
     incomeRoute,
     dataRoute,
     toolsRoute,
     notFoundRoute,
+    homeRoute,
 ]
 
 export const administrator = '123456'
 export const smurfUser = '654321'
 export const whiteUserList = [smurfUser, administrator]
-export const privateRoute = [homeRoute]
+export const privateRoute = [homeRoute, incomeRoute]
 export const privateRouteName = privateRoute.map(item => item.name)
 
-export const allRoutes = [...routes,  ...privateRoute]
+export const routes = allRoutes.filter(item => !privateRouteName.includes(item.name))
+
 allRoutes[0].path = initPath

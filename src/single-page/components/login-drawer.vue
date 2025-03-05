@@ -1,5 +1,5 @@
 <template>
-    <el-drawer v-model="drawerShowStatus" :append-to-body="true" direction="rtl" :size="250" custom-class="login-drawer">
+    <el-drawer v-model="drawerShowStatus" :append-to-body="true" direction="rtl" :size="overMediaCritical ? 250 : 320" custom-class="login-drawer">
         <template #title>
             <h4>登录</h4>
         </template>
@@ -14,7 +14,7 @@
                 </div>
             </el-card>
             <el-card>
-                <div class="input-item-wrap">
+                <div class="input-item-wrap" style="margin-top: 4px;">
                     <span>账号：</span>
                     <el-input v-model="username" @keyup.enter="enterHandle" placeholder="请输入账号"></el-input>
                 </div>
@@ -23,7 +23,19 @@
                     <el-input v-model="password" @keyup.enter="enterHandle" type="password" placeholder="请输入密码"></el-input>
                 </div>
                 <div class="login-btn-wrap">
-                    <gc-button type="active" @on-click="clickLogin" :width="70">登录</gc-button>
+                    <gc-button type="active" @on-click="clickLogin" style="width: 100%;height: 32px;">登录</gc-button>
+                </div>
+                <div class="login-btn-tips">
+                    <QuestionTips :style="{ color: '#bbb', fontSize: '14px', marginRight: '6px' }">
+                        <p style="display: flex; align-items: center;">
+                            <el-icon><Search /></el-icon>
+                            <span class="login-text" style="margin-left: 4px;">微信搜索</span>
+                        </p>
+                        <p>Future助手</p>
+                        <template #content>
+                            <span class="login-text">{{ overMediaCritical ? '前往微信小程序注册' : '没有账号？去微信小程序注册一个 !' }}</span>
+                        </template>
+                    </QuestionTips>
                 </div>
             </el-card>
         </template>
@@ -34,8 +46,9 @@
 import { mapState, mapGetters ,mapMutations, mapActions } from 'vuex'
 import { fetchUserLogin } from '@/api/index'
 import { addPrivateRoute } from '@/router'
-import { Avatar } from '@element-plus/icons-vue'
+import { Avatar, Search } from '@element-plus/icons-vue'
 import GcButton from '@/components/gc-button.vue'
+import QuestionTips from '@/single-page/components/question-tips.vue'
 import { setCookie } from 'umob'
 
 export default {
@@ -43,6 +56,8 @@ export default {
     components: {
         GcButton,
         Avatar,
+        QuestionTips,
+        Search,
     },
     data() {
         return {
@@ -67,6 +82,7 @@ export default {
         ...mapGetters('app', [
             'isWhiteUser',
             'isLogin',
+            'overMediaCritical',
         ]),
     },
     watch: {
@@ -138,7 +154,7 @@ export default {
 
 <style scoped>
 .input-item-wrap {
-    margin-bottom: 12px;
+    margin-bottom: 24px;
     display: flex;
     align-items: center;
 }
@@ -227,6 +243,20 @@ export default {
     justify-content: center;
     color: #b4b6b9;
     margin-right: 12px;
+}
+.login-btn-tips {
+    font-size: 12px;
+    display: flex;
+    justify-content: right;
+    margin-top: 12px;
+}
+.login-btn-tips span {
+    color: #628dd1;
+    cursor: pointer;
+}
+.login-text {
+    height: 17px;
+    line-height: 17px;
 }
 </style>
 

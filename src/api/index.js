@@ -210,7 +210,7 @@ export const fetchIncomeLatestInfo = () => {
     })
 }
 
-export const fetchfutureLatestInfo = () => {
+export const fetchFutureLatestInfo = () => {
     return axios.request({
         url: prefixApi + '/other/futureLatestInfo',
         method: 'get',
@@ -222,5 +222,12 @@ export const fetchFutureFestivalInfo = (params) => {
         url: prefixApi + '/other/futureFestivalInfo',
         method: 'get',
         params,
+    })
+}
+
+export const getNewAppVersion = () => {
+    return axios.request({
+        url: prefixApi + '/other/getNewAppVersion',
+        method: 'get',
     })
 }
