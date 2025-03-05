@@ -225,210 +225,181 @@
     </div>
 </template>
 
-<script>
+<script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useStore } from 'vuex'
 import config, { PC } from '@/config'
 import md5 from '@/libs/md5'
 
-export default {
-    name: 'home',
-    setup() {
-        const store = new useStore()
+const store = new useStore()
 
-        const showNumber = ref(true)
-        const inputText = ref('')
-        const md5Result = ref('')
-        const isToday = ref(false)
-        const saleOrBuy = ref(1)
-        const columns = [
-            {
-                percent: 4 / 26,
-                label: '2 / 13',
-            },
-            {
-                percent: 11 / 26,
-                label: '11 / 26',
-            },
-            {
-                percent: 11 / 26,
-                label: '11 / 26',
-            },
-        ]
-        
-        const setGoodsLot = (value) => store.commit('app/setGoodsLot', value)
-        const setGoodsPricePrev = (value) => store.commit('app/setGoodsPricePrev', value)
-        const setGoodsPriceNext = (value) => store.commit('app/setGoodsPriceNext', value)
-        const setGoodsType = (value) => store.commit('app/setGoodsType', value)
-
-        const isInPc = computed(() => config.device === PC)
-        const spanNumberClass = computed(() => showNumber.value ? 'result-number' : '')
-        const goods = computed(() => store.state.app.goods)
-        const futureConfigInfo = computed(() => store.state.order.futureConfigInfo)
-        const futuresList = computed(() => store.getters['order/futuresList'])
-
-        const lot = computed({
-            get() {
-                return goods.value.lot
-            },
-            set(value) {
-                setGoodsLot(value)
-            },
-        })
-
-        const pricePrev = computed({
-            get() {
-                return goods.value.pricePrev
-            },
-            set(value) {
-                setGoodsPricePrev(value)
-            },
-        })
-
-        const priceNext = computed({
-            get() {
-                return goods.value.priceNext
-            },
-            set(value) {
-                setGoodsPriceNext(value)
-            },
-        })
-
-        const currentGoodsType = computed({
-            get() {
-                return goods.value.type
-            },
-            set(value) {
-                setGoodsType(value)
-            },
-        })
-
-        const tableData = computed(() => {
-            const obj = {}
-            columns.forEach((item, index) => {
-                obj[index] = (goodsResult.value * item.percent).toFixed(2)
-            })
-            return [obj]
-        })
-
-        const currentGoodsConfig = computed(() => {
-            return futureConfigInfo.value.filter(item => item.activeName === currentGoodsType.value)[0] || {}
-        })
-        
-        const goodsResult = computed(() => {
-            const { openCommissionType, closeCommissionType, num } = currentGoodsConfig.value
-
-            let totalOpenCommission = 0
-            let totalCloseCommission = 0
-
-            // 计算开仓总手续费
-            if (openCommissionType === 'number') {
-                totalOpenCommission += openCommission.value * goods.value.lot
-            } else {
-                totalOpenCommission += openCommission.value * goods.value.pricePrev * num * goods.value.lot
-            }
-
-            // 计算平仓总手续费
-            if (closeCommissionType === 'number') {
-                totalCloseCommission += closeCommission.value * goods.value.lot
-            } else {
-                totalCloseCommission += closeCommission.value * goods.value.priceNext * num * goods.value.lot
-            }
-
-            let deltaPrice = 0
-            if (saleOrBuy.value) { // 平多
-                // 平仓价 - 开仓价
-                deltaPrice = goods.value.priceNext - goods.value.pricePrev
-            } else {
-                deltaPrice = goods.value.pricePrev - goods.value.priceNext
-            }
-
-            return goods.value.lot * num * deltaPrice - totalOpenCommission - totalCloseCommission
-        })
-
-        const showToday = computed(() => {
-            const { closeCommission, dayCloseCommission } = currentGoodsConfig.value
-
-            return closeCommission !== dayCloseCommission
-        })
-
-        const openCommission = computed(() => {
-            const { dayOpenCommission } = currentGoodsConfig.value
-            let { openCommission: commission } = currentGoodsConfig.value
-
-            if (isToday.value) {
-                commission = dayOpenCommission
-            }
-
-            return commission
-        })
-
-        const closeCommission = computed(() => {
-            const { dayCloseCommission } = currentGoodsConfig.value
-            let { closeCommission: commission } = currentGoodsConfig.value
-
-            if (isToday.value) {
-                commission = dayCloseCommission
-            }
-
-            return commission
-        })
-
-        onMounted(async () => {
-            if (isInPc.value) {
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        showNumber.value = !showNumber.value
-                    }
-                })
-            }
-
-            try {
-                // 禁用双击缩放
-                document.addEventListener("touchstart", function(event) {
-                    if (event.touches.length > 1) {
-                        event.preventDefault()
-                    }
-                })
-            } catch (error) {}
-
-            if (futureConfigInfo.value.length) {
-                setGoodsType(futureConfigInfo.value[0].name)
-            }
-        })
-
-        const searchHandle = () => {
-            md5Result.value = md5(inputText.value)
-        }
-
-        const clickInput = (e) => {
-            e.preventDefault()
-        }
-
-        return {
-            lot,
-            saleOrBuy,
-            pricePrev,
-            priceNext,
-            md5Result,
-            inputText,
-            currentGoodsType,
-            currentGoodsConfig,
-            showToday,
-            openCommission,
-            closeCommission,
-            isToday,
-            goodsResult,
-            showNumber,
-            isInPc,
-            spanNumberClass,
-            columns,
-            tableData,
-            futuresList,
-            searchHandle,
-            clickInput,
-        }
+const showNumber = ref(true)
+const inputText = ref('')
+const md5Result = ref('')
+const isToday = ref(false)
+const saleOrBuy = ref(1)
+const columns = [
+    {
+        percent: 4 / 26,
+        label: '2 / 13',
     },
+    {
+        percent: 11 / 26,
+        label: '11 / 26',
+    },
+    {
+        percent: 11 / 26,
+        label: '11 / 26',
+    },
+]
+
+const setGoodsLot = (value) => store.commit('app/setGoodsLot', value)
+const setGoodsPricePrev = (value) => store.commit('app/setGoodsPricePrev', value)
+const setGoodsPriceNext = (value) => store.commit('app/setGoodsPriceNext', value)
+const setGoodsType = (value) => store.commit('app/setGoodsType', value)
+
+const isInPc = computed(() => config.device === PC)
+const spanNumberClass = computed(() => showNumber.value ? 'result-number' : '')
+const goods = computed(() => store.state.app.goods)
+const futureConfigInfo = computed(() => store.state.order.futureConfigInfo)
+const futuresList = computed(() => store.getters['order/futuresList'])
+
+const lot = computed({
+    get() {
+        return goods.value.lot
+    },
+    set(value) {
+        setGoodsLot(value)
+    },
+})
+
+const pricePrev = computed({
+    get() {
+        return goods.value.pricePrev
+    },
+    set(value) {
+        setGoodsPricePrev(value)
+    },
+})
+
+const priceNext = computed({
+    get() {
+        return goods.value.priceNext
+    },
+    set(value) {
+        setGoodsPriceNext(value)
+    },
+})
+
+const currentGoodsType = computed({
+    get() {
+        return goods.value.type
+    },
+    set(value) {
+        setGoodsType(value)
+    },
+})
+
+const tableData = computed(() => {
+    const obj = {}
+    columns.forEach((item, index) => {
+        obj[index] = (goodsResult.value * item.percent).toFixed(2)
+    })
+    return [obj]
+})
+
+const currentGoodsConfig = computed(() => {
+    return futureConfigInfo.value.filter(item => item.activeName === currentGoodsType.value)[0] || {}
+})
+
+const goodsResult = computed(() => {
+    const { openCommissionType, closeCommissionType, num } = currentGoodsConfig.value
+
+    let totalOpenCommission = 0
+    let totalCloseCommission = 0
+
+    // 计算开仓总手续费
+    if (openCommissionType === 'number') {
+        totalOpenCommission += openCommission.value * goods.value.lot
+    } else {
+        totalOpenCommission += openCommission.value * goods.value.pricePrev * num * goods.value.lot
+    }
+
+    // 计算平仓总手续费
+    if (closeCommissionType === 'number') {
+        totalCloseCommission += closeCommission.value * goods.value.lot
+    } else {
+        totalCloseCommission += closeCommission.value * goods.value.priceNext * num * goods.value.lot
+    }
+
+    let deltaPrice = 0
+    if (saleOrBuy.value) { // 平多
+        // 平仓价 - 开仓价
+        deltaPrice = goods.value.priceNext - goods.value.pricePrev
+    } else {
+        deltaPrice = goods.value.pricePrev - goods.value.priceNext
+    }
+
+    return goods.value.lot * num * deltaPrice - totalOpenCommission - totalCloseCommission
+})
+
+const showToday = computed(() => {
+    const { closeCommission, dayCloseCommission } = currentGoodsConfig.value
+
+    return closeCommission !== dayCloseCommission
+})
+
+const openCommission = computed(() => {
+    const { dayOpenCommission } = currentGoodsConfig.value
+    let { openCommission: commission } = currentGoodsConfig.value
+
+    if (isToday.value) {
+        commission = dayOpenCommission
+    }
+
+    return commission
+})
+
+const closeCommission = computed(() => {
+    const { dayCloseCommission } = currentGoodsConfig.value
+    let { closeCommission: commission } = currentGoodsConfig.value
+
+    if (isToday.value) {
+        commission = dayCloseCommission
+    }
+
+    return commission
+})
+
+onMounted(async () => {
+    if (isInPc.value) {
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                showNumber.value = !showNumber.value
+            }
+        })
+    }
+
+    try {
+        // 禁用双击缩放
+        document.addEventListener('touchstart', function(event) {
+            if (event.touches.length > 1) {
+                event.preventDefault()
+            }
+        })
+    } catch (error) {}
+
+    if (futureConfigInfo.value.length) {
+        setGoodsType(futureConfigInfo.value[0].name)
+    }
+})
+
+const searchHandle = () => {
+    md5Result.value = md5(inputText.value)
+}
+
+const clickInput = (e) => {
+    e.preventDefault()
 }
 </script>
 
