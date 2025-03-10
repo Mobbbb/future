@@ -1,10 +1,10 @@
 import axios, { prefixApi } from '@/libs/api.request'
 
-export const fetchUserLogin = (uid, password) => {
+export const fetchUserLogin = (uid, password, captcha) => {
     return axios.request({
         url: prefixApi + '/user/login',
         method: 'post',
-        data: { uid, password },
+        data: { uid, password, captcha },
     })
 }
 

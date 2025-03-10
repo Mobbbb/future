@@ -15,23 +15,24 @@
             </el-card>
             <el-card>
                 <div class="input-item-wrap" style="margin-top: 4px;">
-                    <span>账号：</span>
+                    <span class="input-text">账 号：</span>
                     <el-input v-model="username" @keyup.enter="enterHandle" placeholder="请输入账号"></el-input>
                 </div>
                 <div class="input-item-wrap">
-                    <span>密码：</span>
+                    <span class="input-text">密 码：</span>
                     <el-input v-model="password" @keyup.enter="enterHandle" type="password" placeholder="请输入密码"></el-input>
+                </div>
+                <div class="input-item-wrap" :style="captchaWrapStyle">
+                    <span class="input-text">验证码：</span>
+                    <el-input v-model="captcha" @keyup.enter="enterHandle" placeholder="请输入验证码" style="width: calc(100% - 55px);"></el-input>
+                    <img :src="`${prefixApi}/common/captcha?t=${captchaTime}`" @click="captchaTime = (new Date).getTime()" :style="captchaStyle" class="captcha-image">
                 </div>
                 <div class="login-btn-wrap">
                     <gc-button type="active" @on-click="clickLogin" style="width: 100%;height: 32px;">登录</gc-button>
                 </div>
                 <div class="login-btn-tips">
                     <QuestionTips :style="{ color: '#bbb', fontSize: '14px', marginRight: '6px' }">
-                        <p style="display: flex; align-items: center;">
-                            <el-icon><Search /></el-icon>
-                            <span class="login-text" style="margin-left: 4px;">微信搜索</span>
-                        </p>
-                        <p>Future助手</p>
+                        <img src="/resource/icon/small-program-qrcode.jpg" width="150" height="150">
                         <template #content>
                             <span class="login-text">{{ overMediaCritical ? '前往微信小程序注册' : '没有账号？去微信小程序注册一个 !' }}</span>
                         </template>
@@ -46,10 +47,11 @@
 import { mapState, mapGetters ,mapMutations, mapActions } from 'vuex'
 import { fetchUserLogin } from '@/api/index'
 import { addPrivateRoute } from '@/router'
-import { Avatar, Search } from '@element-plus/icons-vue'
+import { Avatar } from '@element-plus/icons-vue'
 import GcButton from '@/components/gc-button.vue'
 import QuestionTips from '@/single-page/components/question-tips.vue'
 import { setCookie } from 'umob'
+import { prefixApi } from '@/libs/api.request'
 
 export default {
     name: 'login-drawer',
@@ -57,13 +59,15 @@ export default {
         GcButton,
         Avatar,
         QuestionTips,
-        Search,
     },
     data() {
         return {
             username: '',
             password: '',
+            captcha: '',
             loginList: [],
+            captchaTime: (new Date).getTime(),
+            prefixApi,
         }
     },
     computed: {
@@ -84,6 +88,20 @@ export default {
             'isLogin',
             'overMediaCritical',
         ]),
+        captchaStyle() {
+            return this.overMediaCritical ? {
+                margin: '8px 0 0 0',
+                width: '112px',
+                height: '38px',
+            } : {}
+        },
+        captchaWrapStyle() {
+            return this.overMediaCritical ? {
+                flexWrap: 'wrap',
+                justifyContent: 'flex-end',
+                marginBottom: '16px',
+            } : {}
+        },
     },
     watch: {
         drawerShowStatus(value) {
@@ -109,9 +127,11 @@ export default {
         async clickLogin() {
             if (!this.username || !this.password) {
                 this.$message.error('账号/密码不得为空')
+            } else if (!this.captcha) {
+                this.$message.error('验证码不得为空')
             } else {
                 const isLogin = this.isLogin
-                const result = await fetchUserLogin(this.username, this.password)
+                const result = await fetchUserLogin(this.username, this.password, this.captcha)
                 if (isLogin) {
                     this.afterSwitchLoginSubmit(result)
                 } else {
@@ -244,6 +264,11 @@ export default {
     color: #b4b6b9;
     margin-right: 12px;
 }
+.input-text {
+    flex-shrink: 0;
+    width: 55px;
+    white-space: nowrap;
+}
 .login-btn-tips {
     font-size: 12px;
     display: flex;
@@ -257,6 +282,12 @@ export default {
 .login-text {
     height: 17px;
     line-height: 17px;
+}
+.captcha-image {
+    width: 100px;
+    height: 32px;
+    margin-left: 4px;
+    flex-shrink: 0;
 }
 </style>
 

@@ -247,7 +247,7 @@ export default {
     text-align: center;
     background: #f85a54;
     color: white;
-    transform: scale(0.6)
+    transform: scale(0.6);
 }
 .authority-wrap {
 	border-radius: 2px;

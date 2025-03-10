@@ -65,9 +65,9 @@ input::-moz-input-placeholder {
 input::-ms-input-placeholder {
     color: #C0C4CC;
 }
-input {
+/* input {
     -webkit-appearance: none;
-}
+} */
 
 .el-input {
     font-size: 13px!important;
