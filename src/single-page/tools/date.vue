@@ -41,11 +41,11 @@
                 <span v-show="!hideTime">小时和分钟</span>
             </div>
         </el-card>
-        <div class="btn-wrap" :style="style">
+        <div class="btn-wrap">
             <el-button size="small" type="primary" @click="calculate">计算</el-button>
             <el-checkbox size="small" v-model="hideTime" border style="margin-left: 12px;">隐藏时间</el-checkbox>
         </div>
-        <div class="result-wrap" :style="style">{{ result || '--' }}</div>
+        <div class="result-wrap">{{ result || '--' }}</div>
     </div>
 </template>
 
@@ -84,8 +84,6 @@ const overMediaCritical = computed(() => store.getters['app/overMediaCritical'])
 
 const style = computed(() => {
     return overMediaCritical.value ? {
-        textAlign: 'left',
-        justifyContent: 'flex-start',
         width: '100%',
     } : {}
 })
@@ -142,7 +140,6 @@ const calculate = () => {
 .calc-date-wrap {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
 }
 .card-wrap {
     width: 49%;
@@ -184,9 +181,8 @@ const calculate = () => {
 .btn-wrap {
     display: flex;
     align-items: center;
-    justify-content: center;
     width: 100%;
-    margin: 12px 1% 8px;
+    margin: 12px 1px 8px;
 }
 .result-wrap {
     color: #606266;
@@ -194,8 +190,8 @@ const calculate = () => {
     white-space: nowrap;
     height: 25px;
     width: 100%;
-    text-align: center;
-    margin: 0 1%;
+    text-align: left;
+    margin: 0 1px;
     margin-bottom: -10px;
 }
 </style>

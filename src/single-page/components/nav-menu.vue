@@ -176,10 +176,11 @@ export default {
     bottom: 0;
     right: 0;
     z-index: 1;
-    padding-right: 12px;
+    padding: 0 12px;
     display: flex;
     align-items: center;
     cursor: pointer;
+    background-color: white;
 }
 .avatar-image {
     width: 24px;
