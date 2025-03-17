@@ -24,8 +24,8 @@
                 </div>
                 <div class="input-item-wrap" :style="captchaWrapStyle">
                     <span class="input-text">验证码：</span>
-                    <el-input v-model="captcha" @keyup.enter="enterHandle" placeholder="请输入验证码" style="width: calc(100% - 55px);"></el-input>
-                    <img :src="`${prefixApi}/common/captcha?t=${captchaTime}`" @click="captchaTime = (new Date).getTime()" :style="captchaStyle" class="captcha-image">
+                    <el-input v-model="captcha" @keyup.enter="enterHandle" placeholder="验证码" style="width: calc(100% - 55px);"></el-input>
+                    <img :src="`${baseUrl}${prefixApi}/common/captcha?t=${captchaTime}`" @click="captchaTime = (new Date).getTime()" :style="captchaStyle" class="captcha-image">
                 </div>
                 <div class="login-btn-wrap">
                     <gc-button type="active" @on-click="clickLogin" style="width: 100%;height: 32px;">登录</gc-button>
@@ -51,7 +51,7 @@ import { Avatar } from '@element-plus/icons-vue'
 import GcButton from '@/components/gc-button.vue'
 import QuestionTips from '@/single-page/components/question-tips.vue'
 import { setCookie } from 'umob'
-import { prefixApi } from '@/libs/api.request'
+import { prefixApi, baseUrl } from '@/libs/api.request'
 
 export default {
     name: 'login-drawer',
@@ -68,6 +68,7 @@ export default {
             loginList: [],
             captchaTime: (new Date).getTime(),
             prefixApi,
+            baseUrl,
         }
     },
     computed: {
@@ -155,6 +156,8 @@ export default {
                 this.$message.success(msg)
                 this.username = ''
                 this.password = ''
+                this.captcha = ''
+                this.captchaTime = (new Date).getTime()
                 if (this.isWhiteUser) {
                     addPrivateRoute()
                 }
