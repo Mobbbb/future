@@ -14,11 +14,11 @@
                 </div>
             </el-card>
             <el-card>
-                <div class="login-title-wrap">
+                <div class="login-title-wrap" v-if="!overMediaCritical">
                     <div :class="quickLogin ? 'active-title' : ''" @click="quickLogin = true">微信登录</div>
                     <div :class="quickLogin ? '' : 'active-title'" @click="quickLogin = false">密码登录</div>
                 </div>
-                <div v-if="quickLogin" class="login-qrcode-wrap">
+                <div v-if="quickLogin && !overMediaCritical" class="login-qrcode-wrap">
                     <div class="loading-wrap" v-if="qrCodeStatus === 0">
                         <img :src="qrCodeSrc" class="login-qrcode" v-if="qrCodeSrc">
                         <img src="/resource/icon/code-loading.gif" class="login-qrcode loading-qrcode" v-else>
