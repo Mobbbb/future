@@ -141,8 +141,9 @@ export default {
         },
         async getNewAppVersionHandle() {
             const response = await getNewAppVersion()
-            const data = response.data || {}
-            this.downloadLink = data.href || ''
+            const data = response.data || []
+            const newItem = data[0] || {}
+            this.downloadLink = newItem.href || ''
         },
         clickDownload() {
             window.open(this.downloadLink)
